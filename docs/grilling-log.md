@@ -15,15 +15,26 @@ phải theo dõi được điều đó.
 
 | # | Câu hỏi | Đề xuất | Trạng thái |
 |---|---|---|---|
-| Q1 | "Vệ tinh" nằm ở đâu: (A) domain riêng, (B) subdomain, (C) trang chuyên ngành trong trangthietbi.vn | Kết hợp: (C) làm trụ cột cho mọi ngành; (A) domain riêng chỉ cho 1–2 trường hợp có lý do thương hiệu (vd. găng tay TOWA, nếu được hãng cho phép). Database quản lý cả hai loại. | CHỜ |
-| Q2 | Chỉ số chính đánh giá page | Số RFQ đủ chuẩn/tháng. Traffic, thứ hạng là chỉ số chẩn đoán. Doanh thu theo dõi khi CRM gắn được nguồn page. | CHỜ |
-| Q3 | Ngành đợt 1 | 4 ngành: Găng tay TOWA; PPE nhà máy điện tử; PPE nhà máy thực phẩm; PPE thép/dầu khí. VPP, quà tặng, MRO để đợt 2. | CHỜ |
-| Q4 | Ai vận hành hằng ngày | 1 nhân viên marketing chính + AI soạn nháp/cập nhật số liệu; anh Thụy duyệt và xem báo cáo tuần. Không yêu cầu biết code. | CHỜ |
-| Q5 | Database quản lý gì | Đợt 1: (1) danh mục page, (2) từ khoá, (3) nội dung & độ khác biệt, (4) hiệu quả (GSC + RFQ). Để sau: (5) liên kết nội bộ & backlink. | CHỜ |
+| # | Câu hỏi | Đề xuất | Quyết định | Trạng thái |
+|---|---|---|---|---|
+| Q1 | "Vệ tinh" nằm ở đâu | Kết hợp (C) trụ cột + (A) cho 1–2 thương hiệu | **(A) Domain riêng cho từng ngành** | ĐỔI |
+| Q2 | Chỉ số chính | Số RFQ/tháng | **Cả 3: traffic/thứ hạng, RFQ, doanh thu** | ĐỔI |
+| Q3 | Ngành & thứ tự | TOWA, PPE điện tử, thực phẩm, thép | **Văn phòng phẩm → PPE → Tool (MRO) → TOWA** | ĐỔI |
+| Q4 | Ai vận hành | Marketing + AI, anh duyệt | **"dev"** – cần làm rõ (vòng 2, Q6) | MỞ |
+| Q5 | Database quản lý gì | 4 lớp | **Theo thiết kế đa site của anh** – xem `database-schema.md` | CHỐT |
 
-## Vòng 2 – Dự kiến (mở sau khi chốt vòng 1)
+Hệ quả: đây là một **hệ thống CMS đa site tự xây** (một database, nhiều domain), không phải
+chỉ là file theo dõi page.
 
-- Công cụ database (Google Sheets / Notion / Airtable / database thật).
-- Cấu trúc URL và loại page.
-- Quy trình sản xuất và duyệt nội dung.
-- Kết nối Sapo, Google Search Console, CRM.
+## Vòng 2 – Kiến trúc & phạm vi
+
+| # | Câu hỏi | Đề xuất | Trạng thái |
+|---|---|---|---|
+| Q6 | "dev" nghĩa là ai xây và ai vận hành | Claude viết code trong repo; 1 dev (nội bộ/thuê) deploy & bảo trì server; marketing nhập nội dung qua trang quản trị | CHỜ |
+| Q7 | Nền tảng kỹ thuật | Laravel + MySQL 8 + Filament (trang quản trị); render phía server; 1 codebase phục vụ mọi domain | CHỜ |
+| Q8 | Hạ tầng | 1 VPS (Singapore hoặc VN) + Cloudflare; mỗi domain trỏ về cùng app | CHỜ |
+| Q9 | Bổ sung bảng cho Q2 | Thêm `users`, `gsc_page_daily`, cột trạng thái/giá trị/ngày chốt cho `leads` | CHỜ |
+| Q10 | Bổ sung bảng cho độ khác biệt | Thêm `standards`, `post_standard`, `products` (link sang trangthietbi.vn) | CHỜ |
+| Q11 | Chính sách liên kết giữa các site | Minh bạch chủ sở hữu D&T; link sang trangthietbi.vn theo ngữ cảnh mua hàng; không link chéo kiểu mạng lưới; cấm anchor từ khoá chính xác ở footer toàn site | CHỜ |
+| Q12 | Ngôn ngữ | Tiếng Việt trước; thêm cột `locale` ngay từ đầu để mở tiếng Anh cho FDI sau | CHỜ |
+| Q13 | Mautic & domain | Cần biết: Mautic đã chạy chưa; đã mua domain nào | CHỜ |
