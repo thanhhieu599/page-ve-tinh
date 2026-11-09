@@ -26,9 +26,16 @@ Mô hình: một database phục vụ nhiều site (đa site). Mọi bảng nộ
 - Xoá mềm (soft delete) cho bài viết.
 - Thời gian lưu UTC, hiển thị theo giờ Việt Nam.
 
-## Điểm còn mở (xem vòng 2 trong `grilling-log.md`)
+## Bổ sung đã chốt ở vòng 2
 
-- Bảng số liệu hiệu quả (GSC) và gắn doanh thu cho lead – phục vụ Q2 "cả 3 chỉ số".
-- Bảng tiêu chuẩn / sản phẩm – phục vụ độ khác biệt nội dung.
-- Bảng `users` (đang được tham chiếu bởi `post_revisions.user_id` nhưng chưa định nghĩa).
-- Cột ngôn ngữ (`locale`) nếu làm bản tiếng Anh cho khách FDI.
+| Bảng / thay đổi | Cột quan trọng | Lý do |
+|---|---|---|
+| `users` | name, email, password, roles (spatie/laravel-permission) | `post_revisions.user_id` cần bảng này |
+| `gsc_page_daily` | site_id, page_url, date, impressions, clicks, ctr, position | Đo traffic/thứ hạng (Q2), kéo tự động từ Search Console |
+| `leads` (thêm cột) | status (mới / đủ chuẩn / báo giá / thắng / thua), deal_value, won_at | Đo doanh thu theo site và bài (Q2) |
+| `standards` | code, name, field, issued_year | Ví dụ EN 388:2016, TCVN, ISO 22000 (Q10) |
+| `post_standard` | post_id, standard_id | Nhiều-nhiều |
+| `products` | site_id, name, sku, specs (JSON), buy_url (trangthietbi.vn) | Gắn sản phẩm vào bài, sinh schema Product (Q10) |
+| Cột `locale` | trên `posts`, `categories`, `faqs` | Mở tiếng Anh sau mà không đổi cấu trúc (Q12) |
+
+Database CMS tách riêng khỏi database Mautic (Q13).
