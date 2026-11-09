@@ -32,7 +32,7 @@ Mô hình: một database phục vụ nhiều site (đa site). Mọi bảng nộ
 |---|---|---|
 | `users` | name, email, password, roles (spatie/laravel-permission) | `post_revisions.user_id` cần bảng này |
 | `gsc_page_daily` | site_id, page_url, date, impressions, clicks, ctr, position | Đo traffic/thứ hạng (Q2), kéo tự động từ Search Console |
-| `leads` (thêm cột) | status (mới / đủ chuẩn / báo giá / thắng / thua), deal_value, won_at | Đo doanh thu theo site và bài (Q2) |
+| `leads` (thêm cột) | status (mới / đủ chuẩn / báo giá / thắng / thua), deal_value, won_at, consent_text, ip | Đo doanh thu (Q2); bằng chứng đồng ý (Q21) |
 | `standards` | code, name, field, issued_year | Ví dụ EN 388:2016, TCVN, ISO 22000 (Q10) |
 | `post_standard` | post_id, standard_id | Nhiều-nhiều |
 | `products` | site_id, name, sku, specs (JSON), buy_url (trangthietbi.vn) | Gắn sản phẩm vào bài, sinh schema Product (Q10) |

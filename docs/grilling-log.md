@@ -41,13 +41,27 @@ chỉ là file theo dõi page.
 
 ## Vòng 3 – Hạ tầng, tích hợp, vận hành
 
+| # | Câu hỏi | Quyết định | Trạng thái |
+|---|---|---|---|
+| Q14 | Một DB vs mỗi domain một hosting | **(a)** Một server ứng dụng + một DB; mọi domain trỏ về cùng app. Q8 đóng theo hướng này | CHỐT |
+| Q15 | Đẩy lead sang Mautic | Lưu `leads` trước → job Redis gọi Mautic REST API (tạo/cập nhật contact, tag site/ngành, UTM) → ghi `synced_to_mautic_at`; lỗi tự thử lại, quá 5 lần báo email dev | CHỐT |
+| Q16 | Cấu trúc URL | Chữ thường, không dấu, gạch ngang, < 75 ký tự; không "/" cuối, không `.html`; 301 mọi biến thể (có/không "/", chữ hoa, http→https, www↔không www). Danh mục `/danh-muc/{slug}`, SP `/san-pham/{slug}`, tiêu chuẩn `/tieu-chuan/{slug}`, tác giả `/tac-gia/{slug}`, tiếng Anh `/en/…`. **Bài viết: `/{slug}` hay `/kienthuc/{slug}` – vênh, chốt ở Q22** | CHỐT một phần |
+| Q17 | Duyệt bài & phân quyền | Nháp → Chờ duyệt → Đã đăng (+ hẹn giờ); Admin / Biên tập / Người viết; quyền theo site; nội dung PPE bắt buộc qua người duyệt có chuyên môn | CHỐT |
+| Q18 | Domain site VPP | **vpptrangthietbi.com.vn** | CHỐT |
+| Q19 | Môi trường & CI | Staging + production; GitHub Actions: test, Pint, PHPStan, test "tắt JS"; vào `main` qua PR; dev bấm deploy production | CHỐT |
+| Q20 | Sao lưu | spatie/laravel-backup hằng ngày ra kho ngoài server; giữ 30 ngày + 12 tháng; thử khôi phục mỗi quý | CHỐT |
+| Q21 | Form lead | Honeypot + Turnstile + giới hạn tần suất; ô đồng ý không tick sẵn; thêm cột `consent_text`, `ip` vào `leads` | CHỐT |
+
+## Vòng 4 – Phạm vi bản đầu (site VPP) & cách làm việc
+
 | # | Câu hỏi | Đề xuất | Trạng thái |
 |---|---|---|---|
-| Q14 | Giải mâu thuẫn Q7 (một DB) vs Q8 (mỗi domain một hosting) | Một server ứng dụng + một DB; mỗi domain trỏ về cùng app | CHỜ |
-| Q15 | Đẩy lead sang Mautic | Lưu DB trước → job hàng đợi Redis gọi Mautic API, tự thử lại; Mautic là bản sao | CHỜ |
-| Q16 | Cấu trúc URL | Bài `/{slug}`; danh mục `/danh-muc/{slug}`; SP `/san-pham/{slug}`; tiêu chuẩn `/tieu-chuan/{slug}`; tác giả `/tac-gia/{slug}`; tiếng Anh sau thêm `/en/` | CHỜ |
-| Q17 | Quy trình duyệt & phân quyền | Nháp → Chờ duyệt → Đã đăng; vai trò Admin / Biên tập / Người viết; quyền gán theo từng site | CHỜ |
-| Q18 | Domain site văn phòng phẩm | Cần tên domain (đã mua hay chưa) | CHỜ |
-| Q19 | Môi trường & kiểm soát chất lượng | Staging + production; GitHub Actions chạy test, Pint, PHPStan, kiểm tra "tắt JS"; merge qua PR | CHỜ |
-| Q20 | Sao lưu | spatie/laravel-backup hằng ngày ra kho ngoài server; giữ 30 ngày; thử khôi phục mỗi quý | CHỜ |
-| Q21 | Form lead: chống spam & đồng ý dữ liệu | Honeypot + Cloudflare Turnstile + giới hạn tần suất; ô đồng ý không tick sẵn; lưu nội dung câu đồng ý + IP + thời điểm | CHỜ |
+| Q22 | Tiền tố URL bài viết | `/kien-thuc/{slug}` (đúng quy tắc gạch ngang) | CHỜ |
+| Q23 | www hay không www | Không www: `https://vpptrangthietbi.com.vn` | CHỜ |
+| Q24 | Nguồn dữ liệu sản phẩm | Nhập CSV xuất từ Sapo; `buy_url` trỏ về trang SP trên trangthietbi.vn; không đồng bộ giá/tồn kho ở bản đầu | CHỜ |
+| Q25 | Trang quản trị | Filament (Laravel, Livewire) + plugin TipTap | CHỜ |
+| Q26 | Giao diện & tốc độ | Theme Blade + Tailwind; mục tiêu Core Web Vitals: LCP < 2.5s, CLS < 0.1, INP < 200ms | CHỜ |
+| Q27 | Điều kiện mở index | `noindex` đến khi có ≥ 20 bài đạt chuẩn + trang công ty/tác giả/chính sách | CHỜ |
+| Q28 | Đo lường | GA4 + Search Console mỗi site; sự kiện GA4 khi gửi form; UTM giữ đến khi tạo lead | CHỜ |
+| Q29 | Nơi quản lý đầu việc | GitHub Issues của repo `page-ve-tinh` | CHỜ |
+| Q30 | Phạm vi bản đầu (MVP) | Lõi đa site + site VPP: trang chủ, danh mục, bài, SP, tác giả, form RFQ, sitemap, schema, redirect, nhập GSC, đồng bộ Mautic | CHỜ |
