@@ -21,9 +21,4 @@ class CurrentSite
     {
         return $this->site;
     }
-
-    public function require(): Site
-    {
-        return $this->site ?? throw new \LogicException('Chưa xác định site cho request này.');
-    }
 }

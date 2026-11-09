@@ -21,6 +21,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
+            // UNIQUE(site_id, slug) đồng thời là index tra cứu (site_id, slug).
             $table->unique(['site_id', 'slug']);
             $table->index(['site_id', 'status', 'published_at']);
         });
