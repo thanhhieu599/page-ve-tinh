@@ -31,6 +31,17 @@ return [
             'AutoFormat.AutoParagraph' => true,
             'AutoFormat.RemoveEmpty' => true,
         ],
+        // Nội dung bài viết soạn bằng trình soạn thảo TipTap của Filament.
+        'post_content' => [
+            'HTML.Doctype' => 'HTML 4.01 Transitional',
+            'HTML.Allowed' => 'h2,h3,h4,p,br,hr,strong,b,em,i,u,s,sub,sup,code,pre,blockquote,'
+                .'ul,ol,li,a[href|title|rel|target],img[src|alt|width|height],'
+                .'table,thead,tbody,tr,th[colspan|rowspan],td[colspan|rowspan]',
+            'Attr.AllowedFrameTargets' => ['_blank'],
+            'AutoFormat.AutoParagraph' => false,
+            'AutoFormat.RemoveEmpty' => true,
+            'URI.AllowedSchemes' => ['http' => true, 'https' => true, 'mailto' => true, 'tel' => true],
+        ],
         'test' => [
             'Attr.EnableID' => 'true',
         ],

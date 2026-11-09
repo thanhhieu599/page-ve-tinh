@@ -6,6 +6,12 @@ return [
     | Ép mọi URL công khai về https. Tắt ở local và trong job kiểm tra
     | trình duyệt của CI (chạy http thuần), bật trên staging/production.
     */
+    /*
+    | Domain riêng của trang quản trị. Trang quản trị không chạy trên domain site
+    | công khai, để tách cookie đăng nhập và không bị quy tắc URL công khai can thiệp.
+    */
+    'admin_domain' => env('ADMIN_DOMAIN', 'admin.localhost'),
+
     'force_https' => (bool) env('FORCE_HTTPS', true),
 
     /*

@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use App\Http\Middleware\UseTenantAsCurrentSite;
+use App\Models\Site;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -26,8 +28,12 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
+            ->domain(config('sites.admin_domain'))
             ->path('admin')
+            ->brandName('D&T – Quản trị page vệ tinh')
             ->login()
+            ->tenant(Site::class, slugAttribute: 'domain')
+            ->tenantMiddleware([UseTenantAsCurrentSite::class], isPersistent: true)
             ->colors([
                 'primary' => Color::Amber,
             ])
