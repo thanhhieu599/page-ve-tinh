@@ -82,4 +82,4 @@ chỉ là file theo dõi page.
 | Q35 | Giá cũ | Quá 14 ngày chưa cập nhật → tự ẩn, hiện "Liên hệ báo giá"; schema Product chỉ khai giá khi còn hạn; trang quản trị cảnh báo SP sắp hết hạn giá | CHỐT |
 | Q36 | Tồn kho | Không hiển thị | CHỐT |
 
-**Buổi chất vấn kết thúc: mọi nhánh đã có quyết định.** Bản tóm tắt: `docs/shared-understanding.md`.
+**Buổi chất vấn kết thúc: mọi nhánh đã có quyết định.** Bản tóm tắt: `docs/shared-understanding.md`. Đặc tả MVP: https://github.com/thanhhieu599/page-ve-tinh/issues/1
