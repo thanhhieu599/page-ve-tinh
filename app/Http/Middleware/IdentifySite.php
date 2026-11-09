@@ -19,10 +19,7 @@ class IdentifySite
 
     public function handle(Request $request, Closure $next): Response
     {
-        $site = Site::query()
-            ->where('domain', strtolower($request->getHost()))
-            ->where('is_active', true)
-            ->first();
+        $site = Site::findActiveByHost($request->getHost());
 
         abort_if($site === null, 404);
 

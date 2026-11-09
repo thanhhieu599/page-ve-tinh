@@ -26,6 +26,14 @@ class Site extends Model
         ];
     }
 
+    public static function findActiveByHost(string $host): ?self
+    {
+        return static::query()
+            ->where('domain', strtolower($host))
+            ->where('is_active', true)
+            ->first();
+    }
+
     /** @return HasMany<Post, $this> */
     public function posts(): HasMany
     {

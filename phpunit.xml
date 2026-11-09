@@ -22,6 +22,8 @@
         <!-- Khoá chỉ dùng cho test, để CI chạy được khi không có file .env. -->
         <env name="APP_KEY" value="base64:GQqZX+EUY0JGY2DcZYK4Rk5Gr4IP7tuOVdLdVAeNAhU="/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
+        <env name="FORCE_HTTPS" value="true" force="true"/>
+        <env name="TRUSTED_PROXIES" value="" force="true"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>

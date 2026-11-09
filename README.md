@@ -20,7 +20,7 @@ Yêu cầu: PHP 8.4+, Composer, MySQL 8 hoặc MariaDB 10.11+, Node 22.
 
 ```bash
 composer install
-cp .env.example .env && php artisan key:generate
+cp .env.example .env && php artisan key:generate   # local http thuần: đặt FORCE_HTTPS=false trong .env
 php artisan migrate --seed --seeder='Database\Seeders\DemoSiteSeeder'
 php artisan serve
 ```
