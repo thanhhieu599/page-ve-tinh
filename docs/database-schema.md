@@ -35,7 +35,7 @@ Mô hình: một database phục vụ nhiều site (đa site). Mọi bảng nộ
 | `leads` (thêm cột) | status (mới / đủ chuẩn / báo giá / thắng / thua), deal_value, won_at, consent_text, ip | Đo doanh thu (Q2); bằng chứng đồng ý (Q21) |
 | `standards` | code, name, field, issued_year | Ví dụ EN 388:2016, TCVN, ISO 22000 (Q10) |
 | `post_standard` | post_id, standard_id | Nhiều-nhiều |
-| `products` | site_id, name, sku, specs (JSON), buy_url (trangthietbi.vn) | Gắn sản phẩm vào bài, sinh schema Product (Q10) |
+| `products` | site_id, name, sku, specs (JSON), buy_url (trangthietbi.vn), price, price_updated_at, is_active, source (csv/api/manual) | Gắn SP vào bài, schema Product (Q10); giá tham khảo, hết hạn sau 14 ngày (Q33–Q35) |
 | Cột `locale` | trên `posts`, `categories`, `faqs` | Mở tiếng Anh sau mà không đổi cấu trúc (Q12) |
 
 Database CMS tách riêng khỏi database Mautic (Q13).

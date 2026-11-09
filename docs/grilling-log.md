@@ -76,8 +76,10 @@ chỉ là file theo dõi page.
 
 ## Vòng 6 – Hiển thị giá (hệ quả của Q33)
 
-| # | Câu hỏi | Đề xuất | Trạng thái |
+| # | Câu hỏi | Quyết định | Trạng thái |
 |---|---|---|---|
-| Q34 | Giá nào, ghi chú ra sao | Giá bán lẻ từ Sapo, ghi "Giá tham khảo, chưa gồm VAT" + ngày cập nhật; nút "Yêu cầu báo giá theo số lượng" vẫn là nút chính | CHỜ |
-| Q35 | Giá cũ (khi chỉ có CSV) | Giá quá 14 ngày chưa cập nhật → tự ẩn, hiện "Liên hệ báo giá"; schema Product chỉ khai `price` khi giá còn hạn | CHỜ |
-| Q36 | Tồn kho | Không hiển thị tồn kho | CHỜ |
+| Q34 | Giá nào, ghi chú ra sao | Giá bán lẻ từ Sapo; ghi "Giá tham khảo, chưa gồm VAT. Cập nhật ngày dd/mm/yyyy."; nút chính "Yêu cầu báo giá theo số lượng" | CHỐT |
+| Q35 | Giá cũ | Quá 14 ngày chưa cập nhật → tự ẩn, hiện "Liên hệ báo giá"; schema Product chỉ khai giá khi còn hạn; trang quản trị cảnh báo SP sắp hết hạn giá | CHỐT |
+| Q36 | Tồn kho | Không hiển thị | CHỐT |
+
+**Buổi chất vấn kết thúc: mọi nhánh đã có quyết định.** Bản tóm tắt: `docs/shared-understanding.md`.
