@@ -12,7 +12,27 @@ các page đó.
 
 ## Trạng thái
 
-Đang ở giai đoạn làm rõ yêu cầu (buổi chất vấn `/grill-me`). Xem `docs/grilling-log.md`.
+Đặc tả MVP: issue #1. Đầu việc: issue #2–#17 (GitHub Issues).
+
+## Chạy local
+
+Yêu cầu: PHP 8.4+, Composer, MySQL 8 hoặc MariaDB 10.11+, Node 22.
+
+```bash
+composer install
+cp .env.example .env && php artisan key:generate
+php artisan migrate --seed --seeder='Database\Seeders\DemoSiteSeeder'
+php artisan serve
+```
+
+Site được nhận diện theo tên miền. Để mở site mẫu trên máy, trỏ `vpptrangthietbi.com.vn`
+về `127.0.0.1` trong file hosts rồi vào `http://vpptrangthietbi.com.vn:8000/kien-thuc/cach-chon-giay-in-a4`.
+
+Kiểm tra:
+
+- `php artisan test`: test tự động (cần database `pvt_test`, xem `phpunit.xml`).
+- `vendor/bin/pint --test`, `vendor/bin/phpstan analyse`.
+- `node tests/Browser/no-javascript.mjs`: tắt JavaScript, nội dung vẫn phải hiện đủ (cần app đang chạy).
 
 ## Cấu trúc
 
