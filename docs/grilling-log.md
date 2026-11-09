@@ -68,8 +68,16 @@ chỉ là file theo dõi page.
 
 ## Vòng 5 – Dữ liệu sản phẩm (hệ quả của Q24)
 
+| # | Câu hỏi | Quyết định | Trạng thái |
+|---|---|---|---|
+| Q31 | Sapo API vào MVP hay để sau | (b) MVP: CSV + nhập tay; Sapo API là đầu việc ngay sau MVP, dùng chung quy tắc ghi đè | CHỐT |
+| Q32 | Quy tắc ghi đè | Khớp theo SKU; Sapo quyết định tên/SKU/thông số/link mua; mô tả, ảnh, liên kết bài, FAQ do CMS quyết định, không bị ghi đè; SP ngừng bán → ẩn, giữ dữ liệu, URL 410 hoặc 301 sang SP thay thế | CHỐT |
+| Q33 | Hiển thị giá | **Hiển thị giá** (khác đề xuất) – chi tiết ở Q34–Q36 | ĐỔI |
+
+## Vòng 6 – Hiển thị giá (hệ quả của Q33)
+
 | # | Câu hỏi | Đề xuất | Trạng thái |
 |---|---|---|---|
-| Q31 | Sapo API vào MVP hay để sau | MVP: CSV + nhập tay; Sapo API ngay sau MVP | CHỜ |
-| Q32 | Quy tắc ghi đè khi đồng bộ | Khớp theo SKU; Sapo quyết định tên/SKU/thông số/link mua; mô tả & liên kết bài do người nhập, không bao giờ bị ghi đè; SP hết trên Sapo → ẩn, không xoá | CHỜ |
-| Q33 | Hiển thị giá & tồn kho | Không hiển thị; nút chính "Yêu cầu báo giá" | CHỜ |
+| Q34 | Giá nào, ghi chú ra sao | Giá bán lẻ từ Sapo, ghi "Giá tham khảo, chưa gồm VAT" + ngày cập nhật; nút "Yêu cầu báo giá theo số lượng" vẫn là nút chính | CHỜ |
+| Q35 | Giá cũ (khi chỉ có CSV) | Giá quá 14 ngày chưa cập nhật → tự ẩn, hiện "Liên hệ báo giá"; schema Product chỉ khai `price` khi giá còn hạn | CHỜ |
+| Q36 | Tồn kho | Không hiển thị tồn kho | CHỜ |
