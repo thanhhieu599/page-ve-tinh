@@ -16,6 +16,12 @@ enum Role: string
     /** Viết và gửi duyệt trên các site được gán, không tự đăng. */
     case Writer = 'writer';
 
+    /** @return list<string> */
+    public static function values(): array
+    {
+        return array_column(self::cases(), 'value');
+    }
+
     public function label(): string
     {
         return match ($this) {

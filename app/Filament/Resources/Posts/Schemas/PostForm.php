@@ -7,6 +7,7 @@ use App\Models\Site;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
@@ -38,13 +39,15 @@ class PostForm
 
                     TextInput::make('slug')
                         ->label('Slug (đường dẫn)')
-                        ->helperText('Chữ thường, không dấu, nối bằng gạch ngang. Để trống sẽ tự sinh từ tiêu đề.')
+                        ->helperText('Chữ thường, không dấu, nối bằng gạch ngang. Tự điền từ tiêu đề, có thể sửa.')
+                        ->required()
                         ->prefix(Post::PATH_PREFIX)
                         ->maxLength(255)
                         ->rules(['regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/'])
                         ->validationMessages([
                             'regex' => 'Slug chỉ gồm chữ thường không dấu, số và gạch ngang.',
                             'unique' => 'Slug này đã được dùng trên site này.',
+                            'required' => 'Cần slug. Tiêu đề không sinh được slug, hãy nhập tay.',
                         ])
                         ->unique(
                             ignoreRecord: true,
@@ -53,6 +56,13 @@ class PostForm
                         ->live(onBlur: true)
                         ->hint(fn (?string $state): ?string => self::pathLengthWarning($state))
                         ->hintColor('danger'),
+
+                    Select::make('locale')
+                        ->label('Ngôn ngữ')
+                        ->options(['vi' => 'Tiếng Việt'])
+                        ->default('vi')
+                        ->required()
+                        ->helperText('Bản tiếng Anh sẽ mở ở giai đoạn sau.'),
 
                     Textarea::make('excerpt')
                         ->label('Tóm tắt')

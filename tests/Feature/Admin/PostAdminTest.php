@@ -3,9 +3,13 @@
 namespace Tests\Feature\Admin;
 
 use App\Filament\Resources\Posts\Pages\CreatePost;
+use App\Filament\Resources\Posts\Pages\EditPost;
+use App\Filament\Resources\Posts\Pages\ListPosts;
 use App\Models\Post;
 use App\Models\Site;
 use App\Models\User;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -153,5 +157,60 @@ class PostAdminTest extends TestCase
         $this->actingAs($writer)
             ->get("https://admin.trangthietbi.test/admin/vpptrangthietbi.com.vn/posts/{$other->id}/edit")
             ->assertNotFound();
+    }
+
+    public function test_auto_slug_that_clashes_shows_a_form_error_instead_of_crashing(): void
+    {
+        Post::factory()->for($this->vpp)->create(['slug' => 'giay-in-a4']);
+        $this->workOn($this->vpp, User::factory()->writer()->hasAttached($this->vpp)->create());
+
+        Livewire::test(CreatePost::class)
+            ->fillForm(['title' => 'Giấy in A4', 'content' => '<p>Nội dung</p>'])
+            ->call('create')
+            ->assertHasFormErrors(['slug' => 'unique']);
+    }
+
+    public function test_title_without_letters_or_digits_needs_a_slug(): void
+    {
+        $this->workOn($this->vpp, User::factory()->writer()->hasAttached($this->vpp)->create());
+
+        Livewire::test(CreatePost::class)
+            ->fillForm(['title' => '!!! ???', 'content' => '<p>Nội dung</p>'])
+            ->call('create')
+            ->assertHasFormErrors(['slug' => 'required']);
+    }
+
+    public function test_html_saved_through_the_editor_is_cleaned(): void
+    {
+        $writer = User::factory()->writer()->hasAttached($this->vpp)->create();
+        $post = Post::factory()->for($this->vpp)->create();
+        $this->workOn($this->vpp, $writer);
+
+        Livewire::test(EditPost::class, ['record' => $post->getRouteKey()])
+            ->fillForm(['content' => '<p onmouseover="x()">An toàn</p><script>alert(1)</script>'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        Livewire::test(EditPost::class, ['record' => $post->getRouteKey()])
+            ->assertSchemaStateSet(['content' => '<p>An toàn</p>']);
+    }
+
+    public function test_writer_cannot_permanently_delete_posts(): void
+    {
+        $post = Post::factory()->for($this->vpp)->create();
+        $post->delete();
+        $this->workOn($this->vpp, User::factory()->writer()->hasAttached($this->vpp)->create());
+
+        Livewire::test(ListPosts::class)->assertTableBulkActionHidden(ForceDeleteBulkAction::class);
+        Livewire::test(EditPost::class, ['record' => $post->getRouteKey()])->assertActionHidden(ForceDeleteAction::class);
+    }
+
+    public function test_admin_can_permanently_delete_posts(): void
+    {
+        $post = Post::factory()->for($this->vpp)->create();
+        $post->delete();
+        $this->workOn($this->vpp, User::factory()->admin()->create());
+
+        Livewire::test(EditPost::class, ['record' => $post->getRouteKey()])->assertActionVisible(ForceDeleteAction::class);
     }
 }

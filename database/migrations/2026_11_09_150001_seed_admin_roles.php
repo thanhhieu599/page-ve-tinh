@@ -19,6 +19,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        RoleModel::query()->whereIn('name', array_column(Role::cases(), 'value'))->delete();
+        RoleModel::query()->whereIn('name', Role::values())->delete();
     }
 };

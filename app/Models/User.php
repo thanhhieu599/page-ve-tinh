@@ -49,9 +49,14 @@ class User extends Authenticatable implements FilamentUser, HasTenants
     }
 
     /** Chỉ người có một trong ba vai trò mới vào được trang quản trị. */
+    public function canAccessAdmin(): bool
+    {
+        return $this->hasAnyRole(Role::values());
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->hasAnyRole(array_column(Role::cases(), 'value'));
+        return $this->canAccessAdmin();
     }
 
     /**
