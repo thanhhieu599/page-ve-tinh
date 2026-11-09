@@ -54,14 +54,22 @@ chỉ là file theo dõi page.
 
 ## Vòng 4 – Phạm vi bản đầu (site VPP) & cách làm việc
 
+| # | Câu hỏi | Quyết định | Trạng thái |
+|---|---|---|---|
+| Q22 | Tiền tố URL bài viết | `/kien-thuc/{slug}`; 75 ký tự tính cả đường dẫn | CHỐT |
+| Q23 | www hay không www | Không www: `https://vpptrangthietbi.com.vn` (áp cho mọi site) | CHỐT |
+| Q24 | Nguồn dữ liệu sản phẩm | **Cả 3: CSV từ Sapo, Sapo API, nhập tay** – thời điểm & quy tắc ghi đè chốt ở Q31–Q33 | CHỐT một phần |
+| Q25 | Trang quản trị | Filament (bản tương thích Laravel 13) + plugin TipTap; nội dung qua mews/purifier | CHỐT |
+| Q26 | Giao diện & tốc độ | (a) Claude dựng theme Blade + Tailwind; LCP < 2.5s, CLS < 0.1, INP < 200ms; kiểm tra tự động trong CI | CHỐT |
+| Q27 | Điều kiện mở index | `noindex` đến khi có ≥ 20 bài đạt chuẩn + trang công ty, tác giả, chính sách quyền riêng tư, liên hệ; công tắc index theo site | CHỐT |
+| Q28 | Đo lường | GA4 + Search Console riêng mỗi site; sự kiện GA4 khi gửi RFQ; giữ UTM & trang vào đầu tiên đến khi tạo lead; kéo GSC hằng ngày | CHỐT |
+| Q29 | Nơi quản lý đầu việc | GitHub Issues của repo `page-ve-tinh` | CHỐT |
+| Q30 | Phạm vi MVP | Lõi đa site; trang quản trị; site VPP; SEO (sitemap, schema, 301, redirect tự động, công tắc index); Mautic + GSC; CI, staging, sao lưu. Để sau: trang tiêu chuẩn, báo cáo doanh thu theo bài, tiếng Anh | CHỐT |
+
+## Vòng 5 – Dữ liệu sản phẩm (hệ quả của Q24)
+
 | # | Câu hỏi | Đề xuất | Trạng thái |
 |---|---|---|---|
-| Q22 | Tiền tố URL bài viết | `/kien-thuc/{slug}` (đúng quy tắc gạch ngang) | CHỜ |
-| Q23 | www hay không www | Không www: `https://vpptrangthietbi.com.vn` | CHỜ |
-| Q24 | Nguồn dữ liệu sản phẩm | Nhập CSV xuất từ Sapo; `buy_url` trỏ về trang SP trên trangthietbi.vn; không đồng bộ giá/tồn kho ở bản đầu | CHỜ |
-| Q25 | Trang quản trị | Filament (Laravel, Livewire) + plugin TipTap | CHỜ |
-| Q26 | Giao diện & tốc độ | Theme Blade + Tailwind; mục tiêu Core Web Vitals: LCP < 2.5s, CLS < 0.1, INP < 200ms | CHỜ |
-| Q27 | Điều kiện mở index | `noindex` đến khi có ≥ 20 bài đạt chuẩn + trang công ty/tác giả/chính sách | CHỜ |
-| Q28 | Đo lường | GA4 + Search Console mỗi site; sự kiện GA4 khi gửi form; UTM giữ đến khi tạo lead | CHỜ |
-| Q29 | Nơi quản lý đầu việc | GitHub Issues của repo `page-ve-tinh` | CHỜ |
-| Q30 | Phạm vi bản đầu (MVP) | Lõi đa site + site VPP: trang chủ, danh mục, bài, SP, tác giả, form RFQ, sitemap, schema, redirect, nhập GSC, đồng bộ Mautic | CHỜ |
+| Q31 | Sapo API vào MVP hay để sau | MVP: CSV + nhập tay; Sapo API ngay sau MVP | CHỜ |
+| Q32 | Quy tắc ghi đè khi đồng bộ | Khớp theo SKU; Sapo quyết định tên/SKU/thông số/link mua; mô tả & liên kết bài do người nhập, không bao giờ bị ghi đè; SP hết trên Sapo → ẩn, không xoá | CHỜ |
+| Q33 | Hiển thị giá & tồn kho | Không hiển thị; nút chính "Yêu cầu báo giá" | CHỜ |
