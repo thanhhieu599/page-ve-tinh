@@ -78,4 +78,75 @@ class RedirectTableTest extends TestCase
             ->assertStatus(301)
             ->assertRedirect('https://vpptrangthietbi.com.vn/kien-thuc/bai-moi');
     }
+
+    public function test_gone_redirect_only_applies_to_its_own_site(): void
+    {
+        $vpp = Site::factory()->create(['domain' => 'vpptrangthietbi.com.vn']);
+        Site::factory()->create(['domain' => 'ppe.example.vn']);
+        Redirect::factory()->for($vpp)->gone()->create(['from_path' => '/da-go']);
+
+        $this->get('https://ppe.example.vn/da-go')->assertNotFound();
+    }
+
+    public function test_target_path_is_sent_in_canonical_form(): void
+    {
+        $site = Site::factory()->create(['domain' => 'vpptrangthietbi.com.vn']);
+        Redirect::factory()->for($site)->create(['from_path' => '/cu', 'to_path' => 'Kien-Thuc/Moi/']);
+
+        $this->get('https://vpptrangthietbi.com.vn/cu')
+            ->assertStatus(301)
+            ->assertRedirect('https://vpptrangthietbi.com.vn/kien-thuc/moi');
+    }
+
+    public function test_target_can_be_a_full_url_on_another_domain(): void
+    {
+        $site = Site::factory()->create(['domain' => 'vpptrangthietbi.com.vn']);
+        Redirect::factory()->for($site)->create([
+            'from_path' => '/san-pham/may-huy-tai-lieu',
+            'to_path' => 'https://trangthietbi.vn/may-huy-tai-lieu',
+        ]);
+
+        $this->get('https://vpptrangthietbi.com.vn/san-pham/may-huy-tai-lieu')
+            ->assertStatus(301)
+            ->assertRedirect('https://trangthietbi.vn/may-huy-tai-lieu');
+    }
+
+    public function test_chained_redirects_are_followed_to_the_final_target_in_one_hop(): void
+    {
+        $site = Site::factory()->create(['domain' => 'vpptrangthietbi.com.vn']);
+        Redirect::factory()->for($site)->create(['from_path' => '/a', 'to_path' => '/b']);
+        Redirect::factory()->for($site)->create(['from_path' => '/b', 'to_path' => '/c']);
+
+        $this->get('https://vpptrangthietbi.com.vn/a')
+            ->assertStatus(301)
+            ->assertRedirect('https://vpptrangthietbi.com.vn/c');
+    }
+
+    public function test_chain_ending_in_gone_returns_410(): void
+    {
+        $site = Site::factory()->create(['domain' => 'vpptrangthietbi.com.vn']);
+        Redirect::factory()->for($site)->create(['from_path' => '/a', 'to_path' => '/b']);
+        Redirect::factory()->for($site)->gone()->create(['from_path' => '/b']);
+
+        $this->get('https://vpptrangthietbi.com.vn/a')->assertStatus(410);
+    }
+
+    public function test_redirect_loop_is_not_served(): void
+    {
+        $site = Site::factory()->create(['domain' => 'vpptrangthietbi.com.vn']);
+        Redirect::factory()->for($site)->create(['from_path' => '/a', 'to_path' => '/b']);
+        Redirect::factory()->for($site)->create(['from_path' => '/b', 'to_path' => '/a']);
+
+        $this->get('https://vpptrangthietbi.com.vn/a')->assertNotFound();
+    }
+
+    public function test_query_string_is_merged_when_target_has_its_own(): void
+    {
+        $site = Site::factory()->create(['domain' => 'vpptrangthietbi.com.vn']);
+        Redirect::factory()->for($site)->create(['from_path' => '/cu', 'to_path' => '/danh-muc/giay?loai=a4']);
+
+        $this->get('https://vpptrangthietbi.com.vn/cu?utm_source=zalo')
+            ->assertStatus(301)
+            ->assertRedirect('https://vpptrangthietbi.com.vn/danh-muc/giay?loai=a4&utm_source=zalo');
+    }
 }

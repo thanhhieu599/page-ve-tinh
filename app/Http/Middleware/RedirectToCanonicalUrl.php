@@ -3,48 +3,77 @@
 namespace App\Http\Middleware;
 
 use App\Models\Redirect;
-use App\Models\Scopes\SiteScope;
 use App\Models\Site;
 use App\Support\CanonicalPath;
+use App\Support\CurrentSite;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Chuyển 301 mọi biến thể URL về một dạng chuẩn duy nhất (https, không www,
- * chữ thường, không "/" cuối, không .html), rồi áp bảng redirect của site.
- * Tất cả gộp trong một lần chuyển hướng.
+ * Với request vào domain của một site: chuyển 301 mọi biến thể URL về dạng chuẩn
+ * (https, không www, chữ thường, không "/" cuối, không .html) và áp bảng redirect
+ * của site, tất cả gộp trong một lần chuyển hướng.
+ *
+ * Host không phải site (IP, health check…) và request khác GET/HEAD đi thẳng qua.
  */
 class RedirectToCanonicalUrl
 {
+    public function __construct(private CurrentSite $currentSite) {}
+
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->isMethodSafe()) {
+        if (! in_array($request->getMethod(), ['GET', 'HEAD'], true)) {
             return $next($request);
         }
 
-        $origin = $this->canonicalScheme($request).'://'.$this->canonicalHost($request);
-        $path = CanonicalPath::from($request->getPathInfo());
-        $query = (string) $request->server('QUERY_STRING');
-        $suffix = $query !== '' ? '?'.$query : '';
+        $site = Site::findActiveByHost($this->bareHost($request));
 
-        $redirect = $this->findRedirect($request, $path);
-
-        if ($redirect !== null) {
-            $redirect->increment('hits');
-
-            abort_if($redirect->code === Redirect::GONE, 410);
-
-            return redirect()->away($origin.$redirect->to_path.$suffix, 301);
+        if ($site === null) {
+            return $next($request);
         }
 
-        $canonical = $origin.$path.$suffix;
+        $this->currentSite->set($site);
+
+        $origin = $this->canonicalScheme($request).'://'.$this->canonicalHost($request);
+        $path = CanonicalPath::from($request->getPathInfo());
+        $queryString = (string) $request->server('QUERY_STRING');
+
+        $redirect = Redirect::firstMatching($path);
+
+        if ($redirect !== null) {
+            $destination = $redirect->finalDestination();
+
+            if ($destination === null) {
+                Log::warning('Redirect tạo vòng lặp, bỏ qua.', ['site' => $site->domain, 'path' => $path]);
+            } else {
+                $redirect->increment('hits');
+
+                abort_if($destination->isGone(), Redirect::GONE);
+
+                $target = $destination->pointsOutside() ? (string) $destination->to_path : $origin.$destination->to_path;
+
+                return redirect()->away($this->appendQuery($target, $queryString), Redirect::MOVED_PERMANENTLY);
+            }
+        }
+
+        $canonical = $this->appendQuery($origin.$path, $queryString);
 
         if ($canonical !== $request->getSchemeAndHttpHost().$request->getRequestUri()) {
-            return redirect()->away($canonical, 301);
+            return redirect()->away($canonical, Redirect::MOVED_PERMANENTLY);
         }
 
         return $next($request);
+    }
+
+    private function appendQuery(string $url, string $queryString): string
+    {
+        if ($queryString === '') {
+            return $url;
+        }
+
+        return $url.(str_contains($url, '?') ? '&' : '?').$queryString;
     }
 
     private function canonicalScheme(Request $request): string
@@ -63,19 +92,5 @@ class RedirectToCanonicalUrl
     private function bareHost(Request $request): string
     {
         return (string) preg_replace('/^www\./', '', $request->getHost());
-    }
-
-    private function findRedirect(Request $request, string $path): ?Redirect
-    {
-        $site = Site::findActiveByHost($this->bareHost($request));
-
-        if ($site === null) {
-            return null;
-        }
-
-        return Redirect::withoutGlobalScope(SiteScope::class)
-            ->where('site_id', $site->id)
-            ->where('from_path', $path)
-            ->first();
     }
 }

@@ -66,4 +66,39 @@ class CanonicalUrlTest extends TestCase
             ->assertStatus(301)
             ->assertRedirect('https://vpptrangthietbi.com.vn/');
     }
+
+    public function test_homepage_query_string_is_kept(): void
+    {
+        $this->get('http://www.vpptrangthietbi.com.vn/?utm_source=google')
+            ->assertStatus(301)
+            ->assertRedirect('https://vpptrangthietbi.com.vn/?utm_source=google');
+    }
+
+    public function test_hosts_that_are_not_sites_are_left_alone(): void
+    {
+        // Ví dụ health check của server gọi thẳng bằng IP qua http.
+        $this->get('http://127.0.0.1/up')->assertOk();
+    }
+
+    public function test_only_get_and_head_are_redirected(): void
+    {
+        $this->call('OPTIONS', 'http://vpptrangthietbi.com.vn/Kien-Thuc/Giay-In-A4')
+            ->assertStatus(404);
+    }
+
+    public function test_https_reported_by_trusted_proxy_is_not_redirected_again(): void
+    {
+        config(['sites.trusted_proxies' => ['127.0.0.1']]);
+
+        // Nginx/Cloudflare kết thúc TLS rồi gọi app qua http, báo https qua header.
+        $this->get('http://vpptrangthietbi.com.vn/kien-thuc/giay-in-a4', ['X-Forwarded-Proto' => 'https'])
+            ->assertNotFound();
+    }
+
+    public function test_https_header_from_untrusted_client_is_ignored(): void
+    {
+        $this->get('http://vpptrangthietbi.com.vn/kien-thuc/giay-in-a4', ['X-Forwarded-Proto' => 'https'])
+            ->assertStatus(301)
+            ->assertRedirect('https://vpptrangthietbi.com.vn/kien-thuc/giay-in-a4');
+    }
 }

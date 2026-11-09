@@ -19,7 +19,8 @@ class IdentifySite
 
     public function handle(Request $request, Closure $next): Response
     {
-        $site = Site::findActiveByHost($request->getHost());
+        // RedirectToCanonicalUrl (chạy trước) thường đã xác định site.
+        $site = $this->currentSite->get() ?? Site::findActiveByHost($request->getHost());
 
         abort_if($site === null, 404);
 

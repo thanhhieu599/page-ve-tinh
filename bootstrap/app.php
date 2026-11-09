@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Middleware\RedirectToCanonicalUrl;
+use App\Http\Middleware\TrustConfiguredProxies;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -13,13 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Sau Nginx/Cloudflare: đọc đúng https và IP khách từ header của proxy tin cậy.
-        $trustedProxies = array_filter(array_map('trim', explode(',', (string) env('TRUSTED_PROXIES', ''))));
-        if ($trustedProxies !== []) {
-            $middleware->trustProxies(at: $trustedProxies);
-        }
-
-        $middleware->prepend(RedirectToCanonicalUrl::class);
+        $middleware->replace(TrustProxies::class, TrustConfiguredProxies::class);
+        // Chạy sau TrustProxies để biết đúng https khi đứng sau Nginx/Cloudflare.
+        $middleware->append(RedirectToCanonicalUrl::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
