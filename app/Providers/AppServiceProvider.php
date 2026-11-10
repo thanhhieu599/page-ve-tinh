@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\CompanyProfile;
 use App\Support\CurrentSite;
+use App\Support\PageCache\ClearPageCache;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -22,6 +23,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Nội dung đổi → xoá cache toàn trang để khách thấy bản mới ngay.
+        ClearPageCache::register();
     }
 }

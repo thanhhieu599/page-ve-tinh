@@ -13,10 +13,12 @@ use App\Http\Controllers\SitemapController;
 use App\Http\Middleware\CaptureAttribution;
 use App\Http\Middleware\IdentifySite;
 use Illuminate\Support\Facades\Route;
+use Spatie\ResponseCache\Middlewares\CacheResponse;
 
 Route::get('/sitemap.xml', SitemapController::class)->middleware(IdentifySite::class)->name('sitemap');
 
-Route::middleware([IdentifySite::class, CaptureAttribution::class])->group(function () {
+// CaptureAttribution chạy trước cache: lượt vào trang lấy từ cache vẫn ghi nguồn truy cập.
+Route::middleware([IdentifySite::class, CaptureAttribution::class, CacheResponse::class])->group(function () {
     Route::get('/', HomeController::class)->name('home');
     Route::get('/kien-thuc/{slug}', [PostController::class, 'show'])->name('posts.show');
     Route::get('/danh-muc/{slug}', [CategoryController::class, 'show'])->name('categories.show');
