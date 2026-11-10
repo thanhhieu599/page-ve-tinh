@@ -63,6 +63,10 @@ class SiteForm
                 TextInput::make('settings.gsc_verification')->label('Mã xác minh Search Console')
                     ->helperText('Phần content của thẻ meta google-site-verification.')
                     ->regex(Site::GSC_TOKEN_PATTERN),
+                TextInput::make('settings.gsc_property')->label('Property Search Console (kéo số liệu)')
+                    ->placeholder('sc-domain:vpptrangthietbi.com.vn')
+                    ->helperText('Dạng sc-domain:ten-mien hoặc https://ten-mien/. Thêm email service account làm người dùng (quyền Đọc) của property này.')
+                    ->regex(Site::GSC_PROPERTY_PATTERN),
                 TextInput::make('settings.mautic_campaign_id')->label('Mautic campaign ID')->integer()->minValue(1),
                 TextInput::make('settings.industry_tag')->label('Mã ngành (tag Mautic nganh-…)')->placeholder('van-phong-pham')
                     ->regex(Site::INDUSTRY_TAG_PATTERN),

@@ -42,4 +42,10 @@ return [
         ],
     ],
 
+    // Search Console: đường dẫn file khoá JSON của service account (không đưa vào Git).
+    'search_console' => [
+        'credentials' => env('GSC_CREDENTIALS_PATH'),
+        'row_limit' => (int) env('GSC_ROW_LIMIT', 25000),
+    ],
+
 ];

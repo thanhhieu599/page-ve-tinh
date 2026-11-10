@@ -24,6 +24,9 @@ class Site extends Model
 
     public const INDUSTRY_TAG_PATTERN = '/^[a-z0-9-]{1,50}$/';
 
+    /** Property Search Console: sc-domain:ten-mien hoặc https://.../ (có "/" cuối). */
+    public const GSC_PROPERTY_PATTERN = '#^(sc-domain:[a-z0-9.-]+|https://[a-z0-9.-]+/)$#';
+
     public const LOGO_DIRECTORY = 'site-logos';
 
     /** Chiều cao hiển thị logo ở header (px). */
@@ -87,6 +90,14 @@ class Site extends Model
         $token = $this->settings['gsc_verification'] ?? null;
 
         return is_string($token) && preg_match(self::GSC_TOKEN_PATTERN, $token) ? $token : null;
+    }
+
+    /** Property Search Console để kéo số liệu; chưa cấu hình thì không kéo. */
+    public function searchConsoleProperty(): ?string
+    {
+        $property = $this->settings['gsc_property'] ?? null;
+
+        return is_string($property) && preg_match(self::GSC_PROPERTY_PATTERN, $property) ? $property : null;
     }
 
     /** Campaign Mautic nhận lead của site (settings.mautic_campaign_id). */

@@ -41,6 +41,9 @@ Sau mỗi lần kéo code mới có migration: `php artisan migrate`. Bản có 
 một lần `php artisan sites:ensure-pages` để site tạo từ trước có trang giới thiệu, chính sách, liên hệ (nháp).
 Thông tin công ty D&T sửa trong trang quản trị, mục "Thông tin công ty" (chỉ Admin).
 
+Lịch chạy tự động (kéo Search Console hằng ngày) cần cron `php artisan schedule:run` mỗi phút trên máy chủ.
+Cài Search Console: `docs/search-console.md`.
+
 Hàng đợi (đẩy lead sang Mautic): production dùng `QUEUE_CONNECTION=redis` và chạy liên tục
 `php artisan queue:work --tries=5` (supervisor/systemd). Local không cấu hình Mautic thì không cần.
 

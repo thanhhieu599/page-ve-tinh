@@ -1,10 +1,12 @@
 <?php
 
 use App\Enums\Role;
+use App\Jobs\PullSearchConsoleData;
 use App\Models\RequiredPage;
 use App\Models\Site;
 use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\Facades\Validator;
 
 // Tạo (hoặc nâng quyền) tài khoản Admin, dùng khi dựng server lần đầu.
@@ -50,3 +52,17 @@ Artisan::command('sites:ensure-pages', function () {
         $this->line("Đã kiểm tra trang bắt buộc: {$site->domain}");
     }
 })->purpose('Tạo trang giới thiệu, chính sách quyền riêng tư, liên hệ còn thiếu cho các site (dạng nháp)');
+
+// Kéo số liệu Search Console cho mọi site đang hoạt động đã cấu hình property (mỗi site một job).
+Artisan::command('search-console:pull', function () {
+    $sites = Site::query()->where('is_active', true)->orderBy('id')->get()
+        ->filter(fn (Site $site) => $site->searchConsoleProperty() !== null);
+
+    foreach ($sites as $site) {
+        PullSearchConsoleData::dispatch($site->id);
+        $this->line("Đã xếp hàng kéo Search Console: {$site->domain}");
+    }
+})->purpose('Kéo số liệu Search Console theo trang cho các site đã cấu hình');
+
+// Hằng ngày 07:10 giờ Việt Nam (cần cron chạy `php artisan schedule:run` mỗi phút trên máy chủ).
+Schedule::command('search-console:pull')->dailyAt('07:10')->timezone('Asia/Ho_Chi_Minh');

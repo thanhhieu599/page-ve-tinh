@@ -70,6 +70,7 @@ class SiteAdminTest extends TestCase
                 'settings.primary_color' => '#0b5394',
                 'settings.ga4_id' => 'G-TOOLS12345',
                 'settings.gsc_verification' => 'abcDEF123_-xyz789',
+                'settings.gsc_property' => 'sc-domain:dungcutrangthietbi.vn',
                 'settings.mautic_campaign_id' => 12,
                 'settings.industry_tag' => 'dung-cu',
             ])
@@ -79,6 +80,7 @@ class SiteAdminTest extends TestCase
         $site = Site::query()->where('domain', 'dungcutrangthietbi.vn')->firstOrFail();
         $this->assertSame(12, $site->mauticCampaignId());
         $this->assertSame('dung-cu', $site->industryTag());
+        $this->assertSame('sc-domain:dungcutrangthietbi.vn', $site->searchConsoleProperty());
         $this->assertSame(3, RequiredPage::withoutGlobalScopes()->where('site_id', $site->id)->where('is_published', false)->count());
 
         $html = (string) $this->get('https://dungcutrangthietbi.vn/yeu-cau-bao-gia')->assertOk()->getContent();
@@ -121,9 +123,10 @@ class SiteAdminTest extends TestCase
                 'settings.primary_color' => 'đỏ',
                 'settings.gsc_verification' => '<script>',
                 'settings.industry_tag' => 'Văn phòng phẩm',
+                'settings.gsc_property' => 'https://ppe.vn',
             ])
             ->call('create')
-            ->assertHasFormErrors(['domain', 'theme', 'settings.ga4_id', 'settings.primary_color', 'settings.gsc_verification', 'settings.industry_tag']);
+            ->assertHasFormErrors(['domain', 'theme', 'settings.ga4_id', 'settings.primary_color', 'settings.gsc_verification', 'settings.industry_tag', 'settings.gsc_property']);
 
         Livewire::test(CreateSite::class)
             ->fillForm(['domain' => 'vpptrangthietbi.com.vn', 'name' => 'Trùng', 'theme' => 'vpp'])

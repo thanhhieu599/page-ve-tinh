@@ -151,3 +151,10 @@ Database CMS tách riêng khỏi database Mautic (Q13).
 - Theme: thư mục trong `config('sites.themes_path')` (mặc định `resources/themes`) có `layout.blade.php`. Thêm site = thêm ở màn hình "Site vệ tinh" (chỉ Admin) + thư mục theme, không sửa code lõi.
 - Site tạo trước bản này: chạy `php artisan sites:ensure-pages` một lần sau khi migrate.
 - Sau review: model đặt tên `RequiredPage` (bảng vẫn là `pages`) để không trùng lớp Page của Filament. Nội dung mẫu không chép thông tin công ty; khối thông tin công ty (kể cả trên trang chính sách) và footer luôn đọc bản mới nhất. Còn đoạn `[CẦN …]` thì không bật hiển thị được. Site mới mặc định tắt (`is_active` = false); tên miền cố định sau khi tạo (là địa chỉ trang quản trị của site). Thư mục theme mất thì dùng `sites.default_theme` (ghi log lỗi). Logo lưu kèm `logo_width`/`logo_height` để `<img>` có kích thước; thay logo thì xoá file cũ.
+
+## Bổ sung khi triển khai (issue #16)
+
+- `gsc_page_daily` (site_id, page_url ≤ 512, date, impressions, clicks, ctr, position), unique (site_id, page_url, date), index (site_id, date). Ghi bằng upsert: chạy lại không nhân đôi.
+- `sites.settings.gsc_property`: `sc-domain:ten-mien` hoặc `https://ten-mien/`; trống thì site không được kéo số liệu.
+- Job `PullSearchConsoleData` (mỗi site một job, thử lại 3 lần), lệnh `search-console:pull`, lịch hằng ngày 07:10 giờ Việt Nam. Xác thực bằng service account (file JSON ở `GSC_CREDENTIALS_PATH`, JWT ký RS256, token giữ 50 phút). Hướng dẫn cài: `docs/search-console.md`.
+- Trang "Báo cáo": theo site và khoảng ngày (mặc định 28 ngày gần nhất có số liệu, tối đa 366 ngày): lượt hiển thị, lượt nhấp, CTR, vị trí trung bình (trọng số theo lượt hiển thị), lead, lead thắng, doanh thu đã chốt; top 10 trang theo lượt nhấp. Admin mọi site, Biên tập site được gán.
