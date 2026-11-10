@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Posts\Pages;
 
+use App\Enums\PostStatus;
 use App\Filament\Resources\Posts\PostResource;
 use App\Models\Post;
 use App\Models\Site;
@@ -21,7 +22,7 @@ class CreatePost extends CreateRecord
     protected function handleRecordCreation(array $data): Model
     {
         $post = new Post($data);
-        $post->status = Post::STATUS_DRAFT;
+        $post->status = PostStatus::Draft;
 
         $site = Filament::getTenant();
         if ($site instanceof Site) {

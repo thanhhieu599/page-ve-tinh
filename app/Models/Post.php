@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PostStatus;
 use App\Models\Concerns\BelongsToSite;
 use Database\Factories\PostFactory;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -21,10 +22,6 @@ class Post extends Model
     use HasFactory;
 
     use SoftDeletes;
-
-    public const STATUS_DRAFT = 'draft';
-
-    public const STATUS_PUBLISHED = 'published';
 
     /** Giới hạn độ dài cả đường dẫn bài viết, ví dụ "/kien-thuc/{slug}". */
     public const MAX_PATH_LENGTH = 75;
@@ -66,6 +63,7 @@ class Post extends Model
     {
         return [
             'published_at' => 'datetime',
+            'status' => PostStatus::class,
         ];
     }
 
@@ -77,7 +75,7 @@ class Post extends Model
     #[Scope]
     protected function published(Builder $query): void
     {
-        $query->where('status', self::STATUS_PUBLISHED)
+        $query->where('status', PostStatus::Published)
             ->whereNotNull('published_at')
             ->where('published_at', '<=', now());
     }

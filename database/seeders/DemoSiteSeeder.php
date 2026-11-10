@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\PostStatus;
 use App\Models\Post;
 use App\Models\Site;
 use Illuminate\Database\Seeder;
@@ -33,7 +34,7 @@ class DemoSiteSeeder extends Seeder
                 'title' => self::POST_TITLE,
                 'excerpt' => 'Hướng dẫn chọn giấy in A4 theo định lượng, độ trắng và khối lượng in.',
                 'content' => '<p>'.self::POST_MARKER.'</p>',
-                'status' => Post::STATUS_PUBLISHED,
+                'status' => PostStatus::Published,
                 'published_at' => now()->subDay(),
             ],
         );

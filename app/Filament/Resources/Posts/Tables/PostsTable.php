@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Posts\Tables;
 
-use App\Models\Post;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -20,8 +19,7 @@ class PostsTable
             ->columns([
                 TextColumn::make('title')->label('Tiêu đề')->searchable()->limit(70),
                 TextColumn::make('slug')->label('Slug')->searchable()->toggleable(),
-                TextColumn::make('status')->label('Trạng thái')->badge()
-                    ->formatStateUsing(fn (string $state): string => $state === Post::STATUS_PUBLISHED ? 'Đã đăng' : 'Nháp'),
+                TextColumn::make('status')->label('Trạng thái')->badge(),
                 TextColumn::make('updated_at')->label('Sửa lần cuối')->since()->sortable(),
             ])
             ->defaultSort('updated_at', 'desc')
