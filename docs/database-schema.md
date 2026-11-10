@@ -85,3 +85,12 @@ Database CMS tách riêng khỏi database Mautic (Q13).
 - Giá cập nhật ngày D (giờ Việt Nam) hiện trên site đến hết ngày D + 14; sau đó hiện "Liên hệ báo giá".
 - `buy_url` chỉ nhận `https://trangthietbi.vn/...`. Đổi slug sản phẩm tự tạo redirect 301.
 
+## Bổ sung khi triển khai (issue #9)
+
+| Bảng / thay đổi | Cột quan trọng | Ghi chú |
+|---|---|---|
+| `products` (thêm cột) | discontinued_at, replacement_product_id | `discontinued_at`: bị ẩn vì ngừng bán trên Sapo (khác ẩn tay). `replacement_product_id`: URL sản phẩm bị ẩn chuyển 301 sang đây; không có thì 410 |
+
+- Nhập sản phẩm qua `App\Support\ProductSync\ProductSync` (dùng chung cho CSV và Sapo API sau này): khớp SKU trong site; nguồn chỉ ghi tên, thông số, link mua, giá (giá đi qua `setPrice`, làm mới ngày giá); không ghi slug, mô tả, ảnh, liên kết bài.
+- Ngừng bán → ẩn; bán lại → hiện lại (chỉ sản phẩm bị ẩn vì ngừng bán). Chế độ "file đầy đủ" ẩn SKU vắng mặt, trừ sản phẩm tạo tay.
+

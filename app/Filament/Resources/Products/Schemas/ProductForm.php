@@ -68,7 +68,14 @@ class ProductForm
                             ->searchable()
                             ->exists('media', 'id', fn (Exists $rule) => $rule->where('site_id', TenantSite::id())),
                         Textarea::make('description')->label('Mô tả')->rows(5),
-                        Toggle::make('is_active')->label('Hiện trên site')->default(true),
+                        Toggle::make('is_active')->label('Hiện trên site')->default(true)->live(),
+                        Select::make('replacement_product_id')->label('Sản phẩm thay thế')
+                            ->helperText('Khi sản phẩm bị ẩn: khách vào link cũ được chuyển sang sản phẩm này. Để trống thì link cũ báo "đã gỡ" (410).')
+                            ->relationship('replacement', 'name', modifyQueryUsing: fn ($query, ?Product $record) => TenantSite::scope($query)
+                                ->where('is_active', true)
+                                ->when($record, fn ($q) => $q->whereKeyNot($record->getKey())))
+                            ->searchable()->preload()
+                            ->visible(fn (Get $get): bool => ! $get('is_active')),
                         TextEntry::make('price_updated_at')->label('Ngày cập nhật giá')
                             ->state(fn (?Product $record): string => $record?->price_updated_at
                                 ? $record->price_updated_at->timezone(config('app.display_timezone'))->format('d/m/Y H:i')

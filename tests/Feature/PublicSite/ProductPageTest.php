@@ -92,7 +92,8 @@ class ProductPageTest extends TestCase
         $ppe = Site::factory()->create(['domain' => 'ppe.example.vn']);
         Product::factory()->for($ppe)->create(['slug' => 'gang-tay-towa']);
 
-        $this->get('https://vpptrangthietbi.com.vn/san-pham/giay-double-a-a4-80gsm')->assertNotFound();
+        // Sản phẩm bị ẩn: trang đã gỡ (410), để Google bỏ khỏi kết quả.
+        $this->get('https://vpptrangthietbi.com.vn/san-pham/giay-double-a-a4-80gsm')->assertStatus(410);
         $this->get('https://vpptrangthietbi.com.vn/san-pham/gang-tay-towa')->assertNotFound();
     }
 
