@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Pages;
 
+use App\Enums\Permission;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\User;
 use Filament\Actions\DeleteAction;
@@ -19,6 +20,7 @@ class EditUser extends EditRecord
     {
         $user = $this->getRecord();
         $data['role'] = $user instanceof User ? $user->getRoleNames()->first() : null;
+        $data['expert_reviewer'] = $user instanceof User && $user->hasDirectPermission(Permission::ApproveExpertContent->value);
 
         return $data;
     }
@@ -28,7 +30,7 @@ class EditUser extends EditRecord
         $user = $this->getRecord();
 
         if ($user instanceof User) {
-            $user->syncRoles([$this->data['role']]);
+            $user->syncAdminAccess($this->data['role'], (bool) ($this->data['expert_reviewer'] ?? false));
         }
     }
 

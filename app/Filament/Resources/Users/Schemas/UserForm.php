@@ -6,6 +6,7 @@ use App\Enums\Role;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
@@ -36,6 +37,10 @@ class UserForm
                     Select::make('role')->label('Vai trò')->options($roleOptions)->required()
                         ->dehydrated(false)
                         ->helperText('Admin thấy mọi site. Biên tập và Người viết chỉ thấy các site được gán.'),
+                    Toggle::make('expert_reviewer')
+                        ->label('Được duyệt chuyên môn')
+                        ->helperText('Cần để đăng bài trên site yêu cầu duyệt chuyên môn (PPE: tiêu chuẩn, mức bảo vệ). Admin luôn có quyền này.')
+                        ->dehydrated(false),
                     CheckboxList::make('sites')->label('Site được gán')
                         ->relationship('sites', 'name')
                         ->columns(2),

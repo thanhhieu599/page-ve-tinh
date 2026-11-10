@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Permission;
 use App\Enums\Role;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
@@ -46,6 +47,18 @@ class User extends Authenticatable implements FilamentUser, HasTenants
     public function isAdmin(): bool
     {
         return $this->hasRole(Role::Admin->value);
+    }
+
+    public function isExpertReviewer(): bool
+    {
+        return $this->isAdmin() || $this->hasPermissionTo(Permission::ApproveExpertContent->value);
+    }
+
+    /** Gán vai trò và quyền duyệt chuyên môn theo lựa chọn trên màn hình Người dùng. */
+    public function syncAdminAccess(string $role, bool $expertReviewer): void
+    {
+        $this->syncRoles([$role]);
+        $this->syncPermissions($expertReviewer ? [Permission::ApproveExpertContent->value] : []);
     }
 
     /** Chỉ người có một trong ba vai trò mới vào được trang quản trị. */

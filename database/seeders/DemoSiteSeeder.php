@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\PostStatus;
 use App\Models\Post;
 use App\Models\Site;
 use Illuminate\Database\Seeder;
@@ -28,15 +27,12 @@ class DemoSiteSeeder extends Seeder
             ['name' => 'Văn phòng phẩm D&T', 'theme' => 'vpp', 'settings' => [], 'is_active' => true],
         );
 
-        Post::query()->updateOrCreate(
-            ['site_id' => $site->id, 'slug' => self::POST_SLUG],
-            [
-                'title' => self::POST_TITLE,
-                'excerpt' => 'Hướng dẫn chọn giấy in A4 theo định lượng, độ trắng và khối lượng in.',
-                'content' => '<p>'.self::POST_MARKER.'</p>',
-                'status' => PostStatus::Published,
-                'published_at' => now()->subDay(),
-            ],
-        );
+        $post = Post::query()->firstOrNew(['site_id' => $site->id, 'slug' => self::POST_SLUG]);
+        $post->fill([
+            'title' => self::POST_TITLE,
+            'excerpt' => 'Hướng dẫn chọn giấy in A4 theo định lượng, độ trắng và khối lượng in.',
+            'content' => '<p>'.self::POST_MARKER.'</p>',
+        ]);
+        $post->publish(now()->subDay());
     }
 }

@@ -31,9 +31,10 @@ class PostsTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
-                    RestoreBulkAction::make(),
+                    // Kiểm tra quyền trên từng bài được chọn, không chỉ quyền chung.
+                    DeleteBulkAction::make()->authorizeIndividualRecords('delete'),
+                    ForceDeleteBulkAction::make()->authorizeIndividualRecords('forceDelete'),
+                    RestoreBulkAction::make()->authorizeIndividualRecords('restore'),
                 ]),
             ]);
     }

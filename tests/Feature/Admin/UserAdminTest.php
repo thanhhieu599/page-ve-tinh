@@ -3,7 +3,9 @@
 namespace Tests\Feature\Admin;
 
 use App\Enums\Role;
+use App\Filament\Resources\Posts\Pages\EditPost;
 use App\Filament\Resources\Users\Pages\CreateUser;
+use App\Models\Post;
 use App\Models\Site;
 use App\Models\User;
 use Filament\Facades\Filament;
@@ -50,5 +52,31 @@ class UserAdminTest extends TestCase
         $this->actingAs($editor)
             ->get('https://admin.trangthietbi.test/admin/vpptrangthietbi.com.vn/users')
             ->assertForbidden();
+    }
+
+    public function test_admin_grants_expert_review_right_to_an_editor(): void
+    {
+        $ppe = Site::factory()->requiresExpertReview()->create(['domain' => 'ppe.example.vn']);
+        $post = Post::factory()->for($ppe)->create();
+        $post->submitForReview();
+
+        $this->actingAs(User::factory()->admin()->create());
+        Filament::setTenant($ppe);
+        Filament::bootCurrentPanel();
+
+        Livewire::test(CreateUser::class)
+            ->fillForm([
+                'name' => 'Kỹ sư EHS',
+                'email' => 'ehs@trangthietbi.vn',
+                'password' => 'mat-khau-du-dai-123',
+                'role' => Role::Editor->value,
+                'sites' => [$ppe->id],
+                'expert_reviewer' => true,
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $this->actingAs(User::query()->where('email', 'ehs@trangthietbi.vn')->firstOrFail());
+        Livewire::test(EditPost::class, ['record' => $post->getRouteKey()])->assertActionVisible('publish');
     }
 }

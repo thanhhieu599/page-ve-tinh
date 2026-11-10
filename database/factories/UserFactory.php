@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\Permission;
 use App\Enums\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -57,6 +58,11 @@ class UserFactory extends Factory
     public function writer(): static
     {
         return $this->withRole(Role::Writer);
+    }
+
+    public function expertReviewer(): static
+    {
+        return $this->afterCreating(fn (User $user) => $user->givePermissionTo(Permission::ApproveExpertContent->value));
     }
 
     private function withRole(Role $role): static

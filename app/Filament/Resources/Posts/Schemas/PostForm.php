@@ -10,10 +10,12 @@ use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Unique;
 
@@ -24,6 +26,14 @@ class PostForm
         return $schema
             ->columns(1)
             ->components([
+                Section::make('Ghi chú của biên tập')
+                    ->icon(Heroicon::OutlinedChatBubbleLeftEllipsis)
+                    ->iconColor('warning')
+                    ->visible(fn (?Post $record): bool => filled($record?->review_note))
+                    ->schema([
+                        TextEntry::make('review_note')->hiddenLabel(),
+                    ]),
+
                 Section::make('Nội dung')->schema([
                     TextInput::make('title')
                         ->label('Tiêu đề')

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToSite;
+use App\Models\Scopes\SiteScope;
 use App\Support\CanonicalPath;
 use Database\Factories\RedirectFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -74,6 +75,33 @@ class Redirect extends Model
         }
 
         return null;
+    }
+
+    /**
+     * Ghi nhận một trang của site đã chuyển từ $oldPath sang $newPath:
+     * - URL cũ chuyển 301 sang URL mới;
+     * - các redirect đang trỏ về URL cũ được trỏ thẳng sang URL mới (không tạo chuỗi);
+     * - redirect nào xuất phát từ URL mới bị xoá, vì URL mới đang có trang thật (không vòng lặp).
+     */
+    public static function recordMove(int $siteId, string $oldPath, string $newPath): void
+    {
+        $oldPath = CanonicalPath::from($oldPath);
+        $newPath = CanonicalPath::from($newPath);
+
+        if ($oldPath === $newPath) {
+            return;
+        }
+
+        $forSite = fn () => static::withoutGlobalScope(SiteScope::class)->where('site_id', $siteId);
+
+        $forSite()->where('from_path', $newPath)->delete();
+        $forSite()->where('to_path', $oldPath)->update(['to_path' => $newPath]);
+
+        $redirect = $forSite()->firstOrNew(['from_path' => $oldPath]);
+        $redirect->site_id = $siteId;
+        $redirect->to_path = $newPath;
+        $redirect->code = self::MOVED_PERMANENTLY;
+        $redirect->save();
     }
 
     public function isGone(): bool

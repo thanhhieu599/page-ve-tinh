@@ -15,7 +15,7 @@ class Site extends Model
     /** @use HasFactory<SiteFactory> */
     use HasFactory;
 
-    protected $fillable = ['domain', 'name', 'theme', 'settings', 'is_active'];
+    protected $fillable = ['domain', 'name', 'theme', 'settings', 'is_active', 'requires_expert_review'];
 
     /** @return array<string, string> */
     protected function casts(): array
@@ -23,6 +23,7 @@ class Site extends Model
         return [
             'settings' => 'array',
             'is_active' => 'boolean',
+            'requires_expert_review' => 'boolean',
         ];
     }
 

@@ -15,7 +15,7 @@ class CreateUser extends CreateRecord
         $user = $this->getRecord();
 
         if ($user instanceof User) {
-            $user->syncRoles([$this->data['role']]);
+            $user->syncAdminAccess($this->data['role'], (bool) ($this->data['expert_reviewer'] ?? false));
         }
     }
 }

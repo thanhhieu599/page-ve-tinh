@@ -22,6 +22,11 @@ class SiteFactory extends Factory
         ];
     }
 
+    public function requiresExpertReview(): static
+    {
+        return $this->state(['requires_expert_review' => true]);
+    }
+
     public function inactive(): static
     {
         return $this->state(['is_active' => false]);
