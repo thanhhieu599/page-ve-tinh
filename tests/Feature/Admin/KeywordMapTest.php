@@ -4,6 +4,7 @@ namespace Tests\Feature\Admin;
 
 use App\Enums\KeywordIntent;
 use App\Filament\Resources\KeywordMaps\Pages\CreateKeywordMap;
+use App\Filament\Resources\KeywordMaps\Pages\EditKeywordMap;
 use App\Models\KeywordMap;
 use App\Models\Scopes\SiteScope;
 use App\Models\Site;
@@ -111,5 +112,35 @@ class KeywordMapTest extends TestCase
         $writer = User::factory()->writer()->hasAttached($this->vpp)->create();
 
         $this->actingAs($writer)->get('https://admin.trangthietbi.test/admin/vpptrangthietbi.com.vn/keyword-maps')->assertForbidden();
+    }
+
+    public function test_an_editor_cannot_move_or_free_a_keyword_by_editing_or_deleting_it(): void
+    {
+        $this->as('editor', $this->vpp);
+        $this->assign('giấy in a4', '/kien-thuc/cach-chon-giay-in-a4');
+        $row = KeywordMap::query()->firstOrFail();
+
+        Livewire::test(EditKeywordMap::class, ['record' => $row->getRouteKey()])
+            ->assertFormFieldDisabled('target_url')
+            ->assertActionHidden('delete');
+
+        $this->as('admin', $this->vpp);
+        Livewire::test(EditKeywordMap::class, ['record' => $row->getRouteKey()])
+            ->assertFormFieldEnabled('target_url')
+            ->fillForm(['target_url' => '/danh-muc/giay-van-phong'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame([['giấy in a4', 'vpptrangthietbi.com.vn', '/danh-muc/giay-van-phong']], $this->allAssignments());
+    }
+
+    public function test_the_same_keyword_typed_with_decomposed_vietnamese_accents_is_the_same_keyword(): void
+    {
+        $this->as('editor', $this->vpp);
+        $this->assign('găng tay', '/kien-thuc/gang-tay');
+
+        $decomposed = \Normalizer::normalize('găng tay', \Normalizer::FORM_D);
+        $this->assertNotSame('găng tay', $decomposed);
+        $this->assign($decomposed, '/kien-thuc/khac')->assertHasFormErrors(['keyword']);
     }
 }

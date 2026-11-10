@@ -3,6 +3,8 @@
 namespace Tests\Feature\Admin;
 
 use App\Filament\Resources\Posts\Pages\CreatePost;
+use App\Filament\Resources\Posts\Pages\EditPost;
+use App\Filament\Resources\Posts\RelationManagers\RevisionsRelationManager;
 use App\Models\Post;
 use App\Models\Product;
 use App\Models\Site;
@@ -104,5 +106,50 @@ class LinkPolicyTest extends TestCase
             ])
             ->call('create')
             ->assertHasFormErrors(['content']);
+    }
+
+    public function test_satellite_links_written_in_unusual_forms_are_still_refused(): void
+    {
+        foreach ([
+            '<a href=https://ppetrangthietbi.vn/x>không có nháp</a>',
+            '<a href="https://blog.ppetrangthietbi.vn/x">subdomain</a>',
+            '<a href="https:\\\\ppetrangthietbi.vn\\x">gạch ngược</a>',
+            '<a href="//PPETRANGTHIETBI.VN./x">viết hoa, dấu chấm cuối</a>',
+        ] as $link) {
+            $this->createPost("<p>{$link}</p>")->assertHasFormErrors(['content']);
+        }
+
+        $this->assertSame(0, Post::query()->count());
+    }
+
+    public function test_a_writer_can_keep_editing_a_post_an_editor_marked_as_purchase_context(): void
+    {
+        $post = Post::factory()->for($this->vpp)->create([
+            'content' => '<p><a href="https://trangthietbi.vn/khuyen-mai-vpp">Khuyến mãi</a></p>',
+            'has_purchase_context' => true,
+        ]);
+
+        Livewire::test(EditPost::class, ['record' => $post->getRouteKey()])
+            ->fillForm(['content' => '<p>Sửa chính tả. <a href="https://trangthietbi.vn/khuyen-mai-vpp">Khuyến mãi</a></p>'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertStringContainsString('Sửa chính tả', $post->fresh()->content);
+    }
+
+    public function test_an_old_revision_with_a_banned_link_cannot_be_restored(): void
+    {
+        $editor = User::factory()->editor()->hasAttached($this->vpp)->create();
+        $post = Post::factory()->for($this->vpp)->create([
+            'content' => '<p>Bản cũ <a href="https://ppetrangthietbi.vn/x">PPE</a></p>',
+        ]);
+        $post->update(['content' => '<p>Bản sạch.</p>']);
+        $this->workOn($this->vpp, $editor);
+
+        Livewire::test(RevisionsRelationManager::class, ['ownerRecord' => $post->fresh(), 'pageClass' => EditPost::class])
+            ->callTableAction('restore', $post->revisions()->oldest('id')->firstOrFail())
+            ->assertNotified('Không khôi phục được');
+
+        $this->assertSame('<p>Bản sạch.</p>', $post->fresh()->content);
     }
 }

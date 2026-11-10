@@ -3,24 +3,22 @@
 namespace App\Filament\Resources\KeywordMaps\Schemas;
 
 use App\Enums\KeywordIntent;
+use App\Filament\Support\TenantSite;
 use App\Models\KeywordMap;
-use App\Models\Site;
-use App\Models\User;
 use App\Support\CanonicalPath;
 use Closure;
-use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Gate;
 
 class KeywordMapForm
 {
     public static function configure(Schema $schema): Schema
     {
-        $site = Filament::getTenant();
-        $domain = $site instanceof Site ? $site->domain : '';
+        $domain = TenantSite::site()->domain ?? '';
 
         return $schema->components([
             TextInput::make('keyword')
@@ -33,9 +31,9 @@ class KeywordMapForm
                     fn (Get $get, ?KeywordMap $record): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get, $record): void {
                         $owner = KeywordMap::ownerOf((string) $value, $record?->id);
 
-                        if ($owner !== null && ! (self::isAdmin() && $get('override'))) {
+                        if ($owner !== null && ! (self::canReassign() && $get('override'))) {
                             $fail("Từ khoá này đã thuộc trang {$owner->targetUrl()}. "
-                                .(self::isAdmin() ? 'Bật "Chuyển từ khoá sang trang này" để ghi đè.' : 'Chỉ Admin được chuyển từ khoá sang trang khác.'));
+                                .(self::canReassign() ? 'Bật "Chuyển từ khoá sang trang này" để ghi đè.' : 'Chỉ Admin được chuyển từ khoá sang trang khác.'));
                         }
                     },
                 ]),
@@ -45,6 +43,8 @@ class KeywordMapForm
                 ->prefix($domain)
                 ->placeholder('/kien-thuc/cach-chon-giay-in-a4')
                 ->required()
+                // Đổi trang đích = chuyển từ khoá sang trang khác: chỉ Admin.
+                ->disabled(fn (string $operation): bool => $operation === 'edit' && ! self::canReassign())
                 ->maxLength(255)
                 ->helperText('Đường dẫn trong site, dạng chuẩn: bắt đầu bằng "/", chữ thường, không "/" cuối.')
                 ->rules([
@@ -64,15 +64,13 @@ class KeywordMapForm
             Toggle::make('override')
                 ->label('Chuyển từ khoá sang trang này (ghi đè trang đang giữ)')
                 ->helperText('Trang cũ sẽ mất từ khoá này. Nhớ sửa nội dung trang cũ để không còn nhắm từ khoá.')
-                ->visible(fn (string $operation): bool => $operation === 'create' && self::isAdmin())
+                ->visible(fn (string $operation): bool => $operation === 'create' && self::canReassign())
                 ->dehydrated(false),
         ]);
     }
 
-    public static function isAdmin(): bool
+    public static function canReassign(): bool
     {
-        $user = auth()->user();
-
-        return $user instanceof User && $user->isAdmin();
+        return Gate::allows('reassign', KeywordMap::class);
     }
 }

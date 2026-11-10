@@ -7,6 +7,7 @@ use App\Models\Concerns\BelongsToSite;
 use App\Models\Scopes\SiteScope;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
+use Normalizer;
 
 /**
  * Bản đồ từ khoá: mỗi từ khoá chỉ có một trang đích trên toàn hệ thống, để các trang
@@ -26,9 +27,14 @@ class KeywordMap extends Model
         return ['intent' => KeywordIntent::class];
     }
 
-    /** Dạng chuẩn để so khớp: chữ thường, bỏ khoảng trắng thừa. */
+    /**
+     * Dạng chuẩn để so khớp: Unicode NFC (dấu tiếng Việt dựng sẵn, để "găng" gõ bằng bộ gõ
+     * khác nhau vẫn là một), chữ thường, bỏ khoảng trắng thừa.
+     */
     public static function normalize(string $keyword): string
     {
+        $keyword = Normalizer::normalize($keyword, Normalizer::FORM_C) ?: $keyword;
+
         return mb_strtolower(trim((string) preg_replace('/\s+/u', ' ', $keyword)));
     }
 

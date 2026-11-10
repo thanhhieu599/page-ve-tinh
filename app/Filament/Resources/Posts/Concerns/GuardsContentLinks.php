@@ -2,9 +2,8 @@
 
 namespace App\Filament\Resources\Posts\Concerns;
 
-use App\Models\Site;
-use App\Support\LinkPolicy;
-use Filament\Facades\Filament;
+use App\Filament\Support\TenantSite;
+use App\Support\ContentLinkRules;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -20,14 +19,14 @@ trait GuardsContentLinks
     protected function ensureLinksFollowPolicy(array $data, bool $savedPurchaseContext = false): void
     {
         $content = $data['content'] ?? null;
-        $site = Filament::getTenant();
+        $site = TenantSite::site();
 
-        if (! is_string($content) || ! $site instanceof Site) {
+        if (! is_string($content) || $site === null) {
             return;
         }
 
         $hasPurchaseContext = (bool) ($data['has_purchase_context'] ?? $savedPurchaseContext);
-        $violations = LinkPolicy::violations($content, $site, $hasPurchaseContext);
+        $violations = ContentLinkRules::violations($content, $site, $hasPurchaseContext);
 
         if ($violations !== []) {
             throw ValidationException::withMessages(['data.content' => $violations]);

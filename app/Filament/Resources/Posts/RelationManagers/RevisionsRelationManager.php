@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Posts\RelationManagers;
 use App\Filament\Resources\Posts\PostResource;
 use App\Models\Post;
 use App\Models\PostRevision;
+use App\Support\ContentLinkRules;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -51,6 +52,16 @@ class RevisionsRelationManager extends RelationManager
                         $post = $this->getOwnerRecord();
                         assert($post instanceof Post);
                         Gate::authorize('update', $post);
+
+                        // Bản cũ có thể chứa link nay đã bị cấm (vd. sản phẩm đã ngừng bán).
+                        $violations = ContentLinkRules::violations($record->content, $post->site, $post->has_purchase_context);
+                        if ($violations !== []) {
+                            Notification::make()->title('Không khôi phục được')
+                                ->body(implode(' ', $violations).' Hãy sửa trực tiếp trong bài.')
+                                ->danger()->persistent()->send();
+
+                            return;
+                        }
 
                         $post->restoreRevision($record);
                         Notification::make()->title('Đã khôi phục bản cũ')->success()->send();

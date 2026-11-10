@@ -5,15 +5,20 @@ namespace App\Support;
 use App\Models\Product;
 use App\Models\Scopes\SiteScope;
 use App\Models\Site;
+use DOMDocument;
+use DOMElement;
 
 /**
  * Chính sách liên kết trong nội dung bài, để các site không bị Google coi là mạng lưới
  * trang vệ tinh:
- * - không link sang domain của site vệ tinh khác trong hệ thống;
+ * - không link sang domain (kể cả subdomain) của site vệ tinh khác trong hệ thống;
  * - link sang trangthietbi.vn chỉ khi có ngữ cảnh mua hàng/báo giá: link mua của một
  *   sản phẩm đang bán trên site, hoặc bài được Biên tập/Admin đánh dấu ngữ cảnh mua hàng.
+ *
+ * Link được đọc bằng trình phân tích HTML (href không nháy vẫn bắt được) và chuẩn hoá
+ * host (chữ hoa, dấu chấm cuối, www, "\" thay "/", tên miền tiếng Việt dạng punycode).
  */
-final class LinkPolicy
+final class ContentLinkRules
 {
     /**
      * Các lỗi vi phạm, mỗi lỗi một câu có nêu đúng link vi phạm. Rỗng nghĩa là hợp lệ.
@@ -23,14 +28,27 @@ final class LinkPolicy
     public static function violations(string $html, Site $site, bool $hasPurchaseContext): array
     {
         $hrefs = self::hrefs($html);
+        if ($hrefs === []) {
+            return [];
+        }
+
         $satellites = Site::query()->whereKeyNot($site->id)->pluck('domain')
             ->map(fn (string $domain) => self::bareHost($domain))->all();
 
-        $toSatellites = array_filter($hrefs, fn (string $href): bool => in_array(self::hostOf($href), $satellites, true));
-        $toStore = $hasPurchaseContext ? [] : array_filter(
-            $hrefs,
-            fn (string $href): bool => self::isStore(self::hostOf($href)) && ! in_array(self::normalize($href), self::buyUrls($site), true),
-        );
+        $toSatellites = array_filter($hrefs, function (string $href) use ($satellites): bool {
+            $host = self::hostOf($href);
+
+            return $host !== '' && array_filter($satellites, fn (string $satellite) => self::isSameOrSubdomain($host, $satellite)) !== [];
+        });
+
+        $toStore = [];
+        if (! $hasPurchaseContext) {
+            $buyUrls = self::buyUrls($site);
+            $toStore = array_filter(
+                $hrefs,
+                fn (string $href): bool => self::isStore(self::hostOf($href)) && ! in_array(self::normalize($href), $buyUrls, true),
+            );
+        }
 
         return array_values(array_filter([
             $toSatellites === [] ? null : 'Không được link sang site vệ tinh khác (Google có thể coi là mạng lưới liên kết): '
@@ -52,12 +70,18 @@ final class LinkPolicy
     {
         $store = self::bareHost((string) parse_url((string) config('company.url'), PHP_URL_HOST));
 
-        return $store !== '' && ($host === $store || str_ends_with($host, '.'.$store));
+        return $store !== '' && self::isSameOrSubdomain($host, $store);
+    }
+
+    private static function isSameOrSubdomain(string $host, string $domain): bool
+    {
+        return $host === $domain || str_ends_with($host, '.'.$domain);
     }
 
     /** host không www + đường dẫn không "/" cuối + query; bỏ scheme và #fragment. */
     private static function normalize(string $url): string
     {
+        $url = self::clean($url);
         $path = rtrim((string) parse_url($url, PHP_URL_PATH), '/');
         $query = parse_url($url, PHP_URL_QUERY);
 
@@ -67,18 +91,39 @@ final class LinkPolicy
     /** @return list<string> */
     private static function hrefs(string $html): array
     {
-        return preg_match_all('/<a\b[^>]*\bhref\s*=\s*["\']([^"\']*)["\']/i', $html, $matches)
-            ? array_map(fn (string $href) => html_entity_decode($href), $matches[1])
-            : [];
+        if (stripos($html, '<a') === false) {
+            return [];
+        }
+
+        $document = new DOMDocument;
+        @$document->loadHTML('<?xml encoding="UTF-8"><div>'.$html.'</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+
+        $hrefs = [];
+        foreach ($document->getElementsByTagName('a') as $link) {
+            if ($link instanceof DOMElement && $link->hasAttribute('href')) {
+                $hrefs[] = trim($link->getAttribute('href'));
+            }
+        }
+
+        return $hrefs;
+    }
+
+    /** Trình duyệt coi "\" như "/" trong URL (https:\\host\path). */
+    private static function clean(string $url): string
+    {
+        return str_replace('\\', '/', trim($url));
     }
 
     private static function hostOf(string $url): string
     {
-        return self::bareHost((string) parse_url($url, PHP_URL_HOST));
+        return self::bareHost((string) parse_url(self::clean($url), PHP_URL_HOST));
     }
 
     private static function bareHost(string $host): string
     {
-        return (string) preg_replace('/^www\./', '', strtolower(trim($host, '.')));
+        $host = strtolower(trim($host, '.'));
+        $ascii = $host !== '' && function_exists('idn_to_ascii') ? idn_to_ascii($host) : false;
+
+        return (string) preg_replace('/^www\./', '', $ascii !== false ? $ascii : $host);
     }
 }

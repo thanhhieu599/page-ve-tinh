@@ -15,9 +15,14 @@ final class TenantSite
 {
     public static function id(): ?int
     {
+        return self::site()?->id;
+    }
+
+    public static function site(): ?Site
+    {
         $tenant = Filament::getTenant();
 
-        return $tenant instanceof Site ? $tenant->id : null;
+        return $tenant instanceof Site ? $tenant : null;
     }
 
     /**
