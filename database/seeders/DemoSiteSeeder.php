@@ -6,6 +6,7 @@ use App\Models\Author;
 use App\Models\Category;
 use App\Models\Media;
 use App\Models\Post;
+use App\Models\Product;
 use App\Models\Site;
 use App\Support\MediaLibrary;
 use Illuminate\Database\Seeder;
@@ -38,6 +39,10 @@ class DemoSiteSeeder extends Seeder
 
     public const IMAGE_ALT = 'Ram giấy A4 xếp trên kệ văn phòng';
 
+    public const PRODUCT_SLUG = 'giay-double-a-a4-80gsm';
+
+    public const PRODUCT_NAME = 'Giấy Double A A4 80gsm';
+
     public function run(): void
     {
         $site = Site::query()->updateOrCreate(
@@ -64,6 +69,20 @@ class DemoSiteSeeder extends Seeder
         ]);
         $post->publish(now()->subDay());
         $post->categories()->sync([$category->id]);
+
+        $product = Product::query()->firstOrNew(['site_id' => $site->id, 'sku' => 'DA-A4-80']);
+        $product->fill([
+            'name' => self::PRODUCT_NAME,
+            'slug' => self::PRODUCT_SLUG,
+            'specs' => ['Định lượng' => '80gsm', 'Quy cách' => '500 tờ/ram, 5 ram/thùng'],
+            'buy_url' => 'https://trangthietbi.vn/giay-double-a-a4-80gsm',
+            'media_id' => $image->id,
+            'description' => 'Giấy in A4 định lượng 80gsm cho hồ sơ gửi khách hàng.',
+        ]);
+        $product->site_id = $site->id;
+        $product->save();
+        $product->setPrice(89000);
+        $post->products()->sync([$product->id]);
         $post->faqs()->delete();
         $post->faqs()->create(['question' => self::FAQ_QUESTION, 'answer' => 'In nội bộ dùng 70gsm; hồ sơ gửi khách dùng 80gsm.']);
     }

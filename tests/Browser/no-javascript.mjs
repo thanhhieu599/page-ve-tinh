@@ -18,6 +18,10 @@ const pages = [
         ],
     },
     {
+        path: '/san-pham/giay-double-a-a4-80gsm',
+        mustContain: ['Giấy Double A A4 80gsm', '89.000 đ', 'Giá tham khảo, chưa gồm VAT', 'Yêu cầu báo giá theo số lượng'],
+    },
+    {
         path: '/danh-muc/giay-van-phong',
         mustContain: ['Giấy văn phòng', 'Cách chọn giấy in A4 cho văn phòng nhà máy'],
     },

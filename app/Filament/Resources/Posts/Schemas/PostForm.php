@@ -135,6 +135,13 @@ class PostForm
                             return $tag->id;
                         }),
 
+                    Select::make('products')
+                        ->label('Sản phẩm liên quan')
+                        ->relationship('products', 'name', modifyQueryUsing: fn (Builder $query) => TenantSite::scope($query))
+                        ->multiple()
+                        ->preload()
+                        ->searchable(),
+
                     Select::make('author_id')
                         ->label('Tác giả')
                         ->relationship('author', 'name')

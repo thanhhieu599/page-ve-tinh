@@ -106,6 +106,12 @@ class Post extends Model
         return $this->hasMany(Faq::class)->orderBy('sort')->orderBy('id');
     }
 
+    /** @return BelongsToMany<Product, $this> */
+    public function products(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class);
+    }
+
     /** @return BelongsToMany<Tag, $this> */
     public function tags(): BelongsToMany
     {

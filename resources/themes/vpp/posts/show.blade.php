@@ -21,6 +21,21 @@
         {{-- Ảnh trong bài được gắn alt/kích thước/srcset/tải lười khi hiển thị (ContentImages). --}}
         <div class="post-content">{!! $content !!}</div>
 
+        @if ($post->products->isNotEmpty())
+            <section class="related-products">
+                <h2>Sản phẩm liên quan</h2>
+                <ul>
+                    @foreach ($post->products as $product)
+                        <li>
+                            <h3><a href="{{ $product->path() }}">{{ $product->name }}</a></h3>
+                            @include('theme::partials.product-price', ['product' => $product])
+                            <a href="{{ $product->quoteRequestPath() }}">Yêu cầu báo giá theo số lượng</a>
+                        </li>
+                    @endforeach
+                </ul>
+            </section>
+        @endif
+
         @if ($post->faqs->isNotEmpty())
             <section class="faq">
                 <h2>Câu hỏi thường gặp</h2>

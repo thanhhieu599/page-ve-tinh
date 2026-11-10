@@ -11,7 +11,7 @@ class PostController extends Controller
     public function show(string $slug): View
     {
         $post = Post::query()->published()->where('slug', $slug)
-            ->with(['author', 'faqs', 'categories.parent'])
+            ->with(['author', 'faqs', 'categories.parent', 'products' => fn ($query) => $query->active()])
             ->firstOrFail();
 
         return view('theme::posts.show', [
