@@ -97,6 +97,30 @@ final class ContentImages
             ->all();
     }
 
+    /** Ảnh thư viện đầu tiên (của chính site) trong nội dung bài, dùng làm ảnh đại diện khi cần. */
+    public static function firstLibraryImage(string $html, int $siteId): ?Media
+    {
+        if (! preg_match_all('/<img\b[^>]*\bsrc\s*=\s*["\']([^"\']*)["\']/i', $html, $matches)) {
+            return null;
+        }
+
+        $directories = array_values(array_unique(array_filter(array_map(self::directoryOf(...), $matches[1]))));
+        if ($directories === []) {
+            return null;
+        }
+
+        $library = Media::withoutGlobalScope(SiteScope::class)->where('site_id', $siteId)
+            ->whereIn('path', $directories)->get()->keyBy('path');
+
+        foreach ($directories as $directory) {
+            if (isset($library[$directory])) {
+                return $library[$directory];
+            }
+        }
+
+        return null;
+    }
+
     /**
      * Những src trong nội dung không thuộc thư viện của site (dùng để kiểm tra khi lưu bài).
      *

@@ -4,6 +4,10 @@
 
 @section('meta_description', \Illuminate\Support\Str::limit((string) $product->description, 160))
 
+@push('structured-data')
+    {!! \App\Support\StructuredData::product($product, $site)->toScript() !!}
+@endpush
+
 @section('content')
     @include('theme::partials.breadcrumb', ['trail' => [[$product->name, null]]])
 

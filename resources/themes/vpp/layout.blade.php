@@ -25,6 +25,8 @@
             gtag('config', @json($ga4Id));
         </script>
     @endif
+    {!! \App\Support\StructuredData::organization()->toScript() !!}
+    @stack('structured-data')
     @stack('head-scripts')
 </head>
 <body>

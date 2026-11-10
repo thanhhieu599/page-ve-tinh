@@ -4,6 +4,11 @@
 
 @section('meta_description', (string) ($post->meta_description ?: $post->excerpt))
 
+@push('structured-data')
+    {!! \App\Support\StructuredData::article($post, $site)->toScript() !!}
+    {!! \App\Support\StructuredData::faqPage($post)?->toScript() !!}
+@endpush
+
 @section('content')
     @include('theme::partials.breadcrumb', ['trail' => [
         ...collect($post->primaryCategory()?->ancestry() ?? [])->map(fn ($category) => [$category->name, $category->path()])->all(),

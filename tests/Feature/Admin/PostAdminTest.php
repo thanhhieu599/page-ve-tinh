@@ -139,14 +139,17 @@ class PostAdminTest extends TestCase
                 .'<a href="javascript:alert(1)">bấm</a><a href="https://trangthietbi.vn">D&amp;T</a>',
         ]);
 
-        $this->get('https://vpptrangthietbi.com.vn/kien-thuc/bai-co-ma-doc')
-            ->assertOk()
-            ->assertSee('<h2>Tiêu chuẩn</h2>', escape: false)
-            ->assertSee('<a href="https://trangthietbi.vn">', escape: false)
-            ->assertDontSee('<script', escape: false)
-            ->assertDontSee('<iframe', escape: false)
-            ->assertDontSee('onclick', escape: false)
-            ->assertDontSee('javascript:', escape: false);
+        $html = (string) $this->get('https://vpptrangthietbi.com.vn/kien-thuc/bai-co-ma-doc')->assertOk()->getContent();
+
+        // Chỉ xét vùng nội dung bài: trang còn có thẻ script JSON-LD hợp lệ (schema) ở <head>.
+        $this->assertSame(1, preg_match('#<div class="post-content">(.*?)</div>\s*(?:<section|</article>)#s', $html, $content));
+        $content = $content[1];
+        $this->assertStringContainsString('<h2>Tiêu chuẩn</h2>', $content);
+        $this->assertStringContainsString('<a href="https://trangthietbi.vn">', $content);
+        foreach (['<script', '<iframe', 'onclick', 'javascript:'] as $dangerous) {
+            $this->assertStringNotContainsString($dangerous, $content);
+        }
+        $this->assertStringNotContainsString('alert(1)', $html);
     }
 
     public function test_writer_cannot_open_a_post_of_another_site(): void

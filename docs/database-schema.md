@@ -120,3 +120,11 @@ Database CMS tách riêng khỏi database Mautic (Q13).
 - `sitemap.xml` theo site (spatie/laravel-sitemap): bài đã đăng (không nháp, chờ duyệt, hẹn giờ, đã xoá), sản phẩm đang bán, danh mục và tác giả có ít nhất một bài đã đăng; `lastmod` = `updated_at`.
 - Thẻ canonical: URL chuẩn của trang (https, không www, chữ thường, không "/" cuối), bỏ mọi tham số; riêng trang danh sách (danh mục, tác giả) giữ `page` > 1, và trang vượt trang cuối trả 404. URL tuyệt đối ghép từ domain của site (`Site::url()`).
 - `public/robots.txt` đã bỏ: robots.txt do ứng dụng sinh theo domain. Nginx không được phục vụ file robots.txt tĩnh.
+
+## Bổ sung khi triển khai (issue #13)
+
+- Không thêm bảng. Schema JSON-LD sinh khi hiển thị bằng spatie/schema-org (`App\Support\StructuredData`).
+- Thông tin D&T ở một nơi: `config/company.php` (biến môi trường `COMPANY_*`). Mục trống thì schema bỏ qua.
+- Mọi trang: `Organization` (D&T). Trang có breadcrumb: `BreadcrumbList` sinh từ chính danh sách breadcrumb hiển thị.
+- Bài viết: `Article` (headline, mô tả, tác giả + URL trang hồ sơ, ngày đăng/cập nhật theo giờ Việt Nam, ảnh = OG image hoặc ảnh thư viện đầu tiên trong bài, publisher = D&T); `FAQPage` khi bài có câu hỏi, đúng thứ tự hiển thị.
+- Sản phẩm: `Product` (tên, SKU, mô tả, ảnh, URL); `offers` (giá VND, `priceValidUntil`) **chỉ khi** giá còn hạn 14 ngày. Không khai tồn kho.
