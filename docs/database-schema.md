@@ -111,3 +111,12 @@ Database CMS tách riêng khỏi database Mautic (Q13).
 - Lead chưa xác minh (chưa qua Turnstile) vẫn vào Mautic với tag `chua-xac-minh` nhưng **không** vào campaign tự động.
 - `MAUTIC_URL` bắt buộc https (Basic Auth). Cấu hình site: `settings.mautic_campaign_id` (số), `settings.industry_tag` (chữ thường, số, gạch nối).
 
+
+### Bổ sung khi triển khai (issue #12)
+
+- `sites.is_indexable` (mặc định `false`): công tắc index. Khi tắt, mọi phản hồi của site có header `X-Robots-Tag: noindex, nofollow` (kể cả 404), mọi trang có `<meta name="robots" content="noindex, nofollow">`, `robots.txt` trả `Disallow: /`.
+- Khi bật: `robots.txt` cho thu thập và khai báo `Sitemap: https://<domain>/sitemap.xml`. Trang tự khai `@section('robots', 'noindex')` nếu không muốn được index (vd. trang cảm ơn sau khi gửi báo giá).
+- Chỉ Admin bật/tắt, tại trang quản trị "Mở index (SEO)", và chỉ bật được khi đạt checklist (`App\Support\Indexing\IndexReadiness`): ≥ 20 bài đã đăng; mọi bài đã đăng có tác giả kèm hồ sơ (bio); trang giới thiệu công ty, chính sách quyền riêng tư, liên hệ (luôn "chưa có" cho tới issue #15).
+- `sitemap.xml` theo site (spatie/laravel-sitemap): bài đã đăng (không nháp, chờ duyệt, hẹn giờ, đã xoá), sản phẩm đang bán, danh mục và tác giả có ít nhất một bài đã đăng; `lastmod` = `updated_at`.
+- Thẻ canonical: URL chuẩn của trang (https, không www, chữ thường, không "/" cuối), bỏ mọi tham số trừ `page` > 1.
+- `public/robots.txt` đã bỏ: robots.txt do ứng dụng sinh theo domain. Nginx không được phục vụ file robots.txt tĩnh.

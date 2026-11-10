@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\BlockIndexingUntilReady;
 use App\Http\Middleware\RedirectToCanonicalUrl;
 use App\Http\Middleware\TrustConfiguredProxies;
 use Illuminate\Foundation\Application;
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->replace(TrustProxies::class, TrustConfiguredProxies::class);
         // Chạy sau TrustProxies để biết đúng https khi đứng sau Nginx/Cloudflare.
         $middleware->append(RedirectToCanonicalUrl::class);
+        $middleware->append(BlockIndexingUntilReady::class);
 
         // Form yêu cầu báo giá công khai không dùng CSRF (xem partial quote-form).
         $middleware->preventRequestForgery(except: ['yeu-cau-bao-gia']);

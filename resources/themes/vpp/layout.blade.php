@@ -4,6 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title') | {{ $site->name }}</title>
+    <link rel="canonical" href="{{ \App\Support\CanonicalUrl::for(request()) }}">
+    {{-- Site chưa bật index: mọi trang noindex. Đã bật: trang tự khai @section('robots') nếu cần. --}}
+    @php($robots = $site->is_indexable ? trim($__env->yieldContent('robots')) : \App\Http\Middleware\BlockIndexingUntilReady::DIRECTIVE)
+    @if ($robots !== '')
+        <meta name="robots" content="{{ $robots }}">
+    @endif
     {{-- Nội dung section đã được escape khi khai báo bằng @section('meta_description', ...). --}}
     @php($metaDescription = trim($__env->yieldContent('meta_description')))
     @if ($metaDescription !== '')

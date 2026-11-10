@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Support\Indexing\IndexReadiness;
 use Database\Factories\SiteFactory;
+use DomainException;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -23,6 +25,7 @@ class Site extends Model
         return [
             'settings' => 'array',
             'is_active' => 'boolean',
+            'is_indexable' => 'boolean',
             'requires_expert_review' => 'boolean',
         ];
     }
@@ -49,6 +52,21 @@ class Site extends Model
         $tag = $this->settings['industry_tag'] ?? null;
 
         return is_string($tag) && preg_match('/^[a-z0-9-]{1,50}$/', $tag) ? $tag : null;
+    }
+
+    /** Cho Google index site. Chỉ được khi site đạt checklist (IndexReadiness). */
+    public function enableIndexing(): void
+    {
+        if (! IndexReadiness::for($this)->isReady()) {
+            throw new DomainException('Site chưa đạt đủ điều kiện mở index.');
+        }
+
+        $this->forceFill(['is_indexable' => true])->save();
+    }
+
+    public function disableIndexing(): void
+    {
+        $this->forceFill(['is_indexable' => false])->save();
     }
 
     public static function findActiveByHost(string $host): ?self

@@ -2,6 +2,8 @@
 
 @section('title', 'Đã nhận yêu cầu báo giá')
 
+@section('robots', 'noindex')
+
 @push('head-scripts')
     @if ($reportConversion && $site->ga4Id())
         <script>gtag('event', 'generate_lead', { form: 'yeu-cau-bao-gia', site: @json($site->domain) });</script>
