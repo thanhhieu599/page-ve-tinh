@@ -2,6 +2,8 @@
 
 @section('title', $category->seo_title ?: $category->name)
 
+@section('canonical', \App\Support\CanonicalUrl::for($site, request(), withPage: true))
+
 @section('meta_description', (string) $category->meta_description)
 
 @section('content')

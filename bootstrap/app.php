@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Middleware\BlockIndexingUntilReady;
+use App\Http\Middleware\NoindexUnlessIndexable;
 use App\Http\Middleware\RedirectToCanonicalUrl;
 use App\Http\Middleware\TrustConfiguredProxies;
 use Illuminate\Foundation\Application;
@@ -18,8 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->replace(TrustProxies::class, TrustConfiguredProxies::class);
         // Chạy sau TrustProxies để biết đúng https khi đứng sau Nginx/Cloudflare.
+        // NoindexUnlessIndexable bọc ngoài để gắn noindex cả cho 410 từ bảng redirect.
+        $middleware->append(NoindexUnlessIndexable::class);
         $middleware->append(RedirectToCanonicalUrl::class);
-        $middleware->append(BlockIndexingUntilReady::class);
 
         // Form yêu cầu báo giá công khai không dùng CSRF (xem partial quote-form).
         $middleware->preventRequestForgery(except: ['yeu-cau-bao-gia']);

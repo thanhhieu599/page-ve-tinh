@@ -18,6 +18,8 @@ class AuthorController extends Controller
             ->paginate(CategoryController::PER_PAGE)
             ->withPath($author->path());
 
+        abort_if($posts->isEmpty() && $posts->currentPage() > 1, 404);
+
         return view('theme::authors.show', ['author' => $author, 'posts' => $posts]);
     }
 }

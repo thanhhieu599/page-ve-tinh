@@ -14,6 +14,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Site extends Model
 {
+    /** Chỉ thị robots cho site chưa bật index. */
+    public const NOINDEX = 'noindex, nofollow';
+
     /** @use HasFactory<SiteFactory> */
     use HasFactory;
 
@@ -52,6 +55,15 @@ class Site extends Model
         $tag = $this->settings['industry_tag'] ?? null;
 
         return is_string($tag) && preg_match('/^[a-z0-9-]{1,50}$/', $tag) ? $tag : null;
+    }
+
+    /**
+     * URL tuyệt đối trên domain của site (https khi FORCE_HTTPS bật, như production).
+     * Dùng cho canonical, sitemap, robots.txt.
+     */
+    public function url(string $path): string
+    {
+        return (config('sites.force_https') ? 'https' : 'http').'://'.$this->domain.$path;
     }
 
     /** Cho Google index site. Chỉ được khi site đạt checklist (IndexReadiness). */

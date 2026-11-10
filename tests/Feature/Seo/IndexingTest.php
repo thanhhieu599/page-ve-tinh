@@ -4,6 +4,7 @@ namespace Tests\Feature\Seo;
 
 use App\Models\Category;
 use App\Models\Post;
+use App\Models\Redirect;
 use App\Models\Site;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -68,13 +69,40 @@ class IndexingTest extends TestCase
             ->assertSee('<link rel="canonical" href="https://vpptrangthietbi.com.vn/danh-muc/giay-van-phong">', escape: false);
     }
 
-    public function test_robots_txt_keeps_crawlers_out_until_the_site_is_indexed(): void
+    public function test_robots_txt_does_not_invite_crawlers_until_the_site_is_indexed(): void
     {
+        // Không chặn bằng Disallow: Google phải vào được trang mới đọc được noindex
+        // (quan trọng khi tắt index một site đã từng lên Google). Chỉ không khai báo sitemap.
         $this->get('https://vpptrangthietbi.com.vn/robots.txt')
             ->assertOk()
             ->assertHeader('Content-Type', 'text/plain; charset=utf-8')
-            ->assertSeeText("User-agent: *\nDisallow: /\n", escape: false)
+            ->assertDontSee('Disallow: /', escape: false)
             ->assertDontSee('Sitemap:');
+    }
+
+    public function test_removed_urls_are_also_marked_noindex(): void
+    {
+        Redirect::factory()->for($this->vpp)->gone()->create(['from_path' => '/san-pham/may-fax-cu']);
+
+        $this->get('https://vpptrangthietbi.com.vn/san-pham/may-fax-cu')
+            ->assertStatus(410)
+            ->assertHeader('X-Robots-Tag', 'noindex, nofollow');
+    }
+
+    public function test_only_listings_keep_the_page_number_in_the_canonical_url(): void
+    {
+        $this->get('https://vpptrangthietbi.com.vn/kien-thuc/cach-chon-giay-in-a4?page=2')
+            ->assertOk()
+            ->assertSee('<link rel="canonical" href="https://vpptrangthietbi.com.vn/kien-thuc/cach-chon-giay-in-a4">', escape: false);
+    }
+
+    public function test_a_listing_page_past_the_last_one_does_not_exist(): void
+    {
+        $category = Category::factory()->for($this->vpp)->create(['slug' => 'giay-van-phong']);
+        Post::query()->firstOrFail()->categories()->attach($category);
+
+        $this->get('https://vpptrangthietbi.com.vn/danh-muc/giay-van-phong?page=9')->assertNotFound();
+        $this->get('https://vpptrangthietbi.com.vn/danh-muc/giay-van-phong')->assertOk();
     }
 
     public function test_robots_txt_of_an_indexed_site_allows_crawling_and_points_to_its_own_sitemap(): void
@@ -88,7 +116,6 @@ class IndexingTest extends TestCase
             ->assertSee('Sitemap: https://vpptrangthietbi.com.vn/sitemap.xml', escape: false);
 
         $this->get('https://ppetrangthietbi.vn/robots.txt')
-            ->assertSeeText("Disallow: /\n", escape: false)
             ->assertDontSee('Sitemap:');
     }
 

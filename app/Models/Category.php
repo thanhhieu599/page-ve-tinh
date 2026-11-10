@@ -24,7 +24,7 @@ class Category extends Model
     public const PATH_PREFIX = '/danh-muc/';
 
     /** Giới hạn độ sâu khi đi ngược lên danh mục cha (phòng dữ liệu lỗi tạo vòng). */
-    private const MAX_DEPTH = 10;
+    public const MAX_DEPTH = 10;
 
     protected $fillable = [
         'parent_id', 'slug', 'locale', 'name', 'description',

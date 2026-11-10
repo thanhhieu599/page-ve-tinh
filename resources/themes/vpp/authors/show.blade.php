@@ -2,6 +2,8 @@
 
 @section('title', $author->name)
 
+@section('canonical', \App\Support\CanonicalUrl::for($site, request(), withPage: true))
+
 @section('meta_description', \Illuminate\Support\Str::limit((string) $author->bio, 160))
 
 @section('content')

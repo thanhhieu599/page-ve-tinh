@@ -23,6 +23,9 @@ class CategoryController extends Controller
             ->paginate(self::PER_PAGE)
             ->withPath($category->path());
 
+        // Trang vượt quá trang cuối không tồn tại (tránh trang rỗng bị index).
+        abort_if($posts->isEmpty() && $posts->currentPage() > 1, 404);
+
         return view('theme::categories.show', ['category' => $category, 'posts' => $posts]);
     }
 }

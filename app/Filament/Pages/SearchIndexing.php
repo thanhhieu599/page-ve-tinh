@@ -80,7 +80,7 @@ class SearchIndexing extends Page
                 ->color('danger')
                 ->visible(fn (): bool => self::isAdmin() && $this->site()->is_indexable)
                 ->requiresConfirmation()
-                ->modalDescription('Mọi trang sẽ gắn noindex và robots.txt chặn thu thập. Thứ hạng hiện có sẽ mất dần.')
+                ->modalDescription('Mọi trang sẽ gắn noindex; Google gỡ dần các trang khỏi kết quả tìm kiếm khi thu thập lại. Mất thứ hạng hiện có.')
                 ->action(function (): void {
                     $this->site()->disableIndexing();
                     Notification::make()->title('Đã tắt index')->warning()->send();

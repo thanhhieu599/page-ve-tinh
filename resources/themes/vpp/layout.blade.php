@@ -4,9 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title') | {{ $site->name }}</title>
-    <link rel="canonical" href="{{ \App\Support\CanonicalUrl::for(request()) }}">
+    <link rel="canonical" href="@hasSection('canonical')@yield('canonical')@else{{ \App\Support\CanonicalUrl::for($site, request()) }}@endif">
     {{-- Site chưa bật index: mọi trang noindex. Đã bật: trang tự khai @section('robots') nếu cần. --}}
-    @php($robots = $site->is_indexable ? trim($__env->yieldContent('robots')) : \App\Http\Middleware\BlockIndexingUntilReady::DIRECTIVE)
+    @php($robots = $site->is_indexable ? trim($__env->yieldContent('robots')) : \App\Models\Site::NOINDEX)
     @if ($robots !== '')
         <meta name="robots" content="{{ $robots }}">
     @endif

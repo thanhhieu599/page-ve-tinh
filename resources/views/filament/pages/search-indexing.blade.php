@@ -5,9 +5,9 @@
     <x-filament::section>
         <x-slot name="heading">Trạng thái</x-slot>
         @if ($site->is_indexable)
-            <p>Đang cho Google index. Sitemap: {{ $site->domain }}/sitemap.xml</p>
+            <p>Đang cho Google index. Sitemap: {{ $site->url(route('sitemap', absolute: false)) }}</p>
         @else
-            <p>Đang chặn Google (noindex). Mọi trang gắn noindex, robots.txt chặn thu thập.</p>
+            <p>Đang chặn Google (noindex). Mọi trang gắn noindex, robots.txt không khai báo sitemap.</p>
         @endif
     </x-filament::section>
 

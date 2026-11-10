@@ -74,7 +74,7 @@ class IndexSwitchTest extends TestCase
             ->assertActionDisabled('enableIndexing')
             ->callAction('enableIndexing');
 
-        $this->get('https://vpptrangthietbi.com.vn/robots.txt')->assertSeeText("Disallow: /\n", escape: false);
+        $this->get('https://vpptrangthietbi.com.vn/robots.txt')->assertDontSee('Sitemap:');
     }
 
     public function test_only_admins_can_flip_the_switch(): void
@@ -98,6 +98,6 @@ class IndexSwitchTest extends TestCase
             ->assertActionHidden('enableIndexing')
             ->callAction('disableIndexing');
 
-        $this->get('https://vpptrangthietbi.com.vn/robots.txt')->assertSeeText("Disallow: /\n", escape: false);
+        $this->get('https://vpptrangthietbi.com.vn/robots.txt')->assertDontSee('Sitemap:');
     }
 }
