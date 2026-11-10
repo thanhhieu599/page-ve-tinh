@@ -4,7 +4,7 @@ namespace Tests\Feature\PublicSite;
 
 use App\Enums\PageKind;
 use App\Models\CompanyProfile;
-use App\Models\Page;
+use App\Models\RequiredPage;
 use App\Models\Site;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -36,12 +36,12 @@ class RequiredPagesTest extends TestCase
         $this->ppe = Site::factory()->create(['domain' => 'ppetrangthietbi.vn', 'name' => 'PPE D&T']);
     }
 
-    private function page(Site $site, PageKind $kind): Page
+    private function page(Site $site, PageKind $kind): RequiredPage
     {
-        return Page::withoutGlobalScopes()->where('site_id', $site->id)->where('kind', $kind)->firstOrFail();
+        return RequiredPage::withoutGlobalScopes()->where('site_id', $site->id)->where('kind', $kind)->firstOrFail();
     }
 
-    private function publish(Site $site, PageKind $kind): Page
+    private function publish(Site $site, PageKind $kind): RequiredPage
     {
         $page = $this->page($site, $kind);
         $page->update(['is_published' => true]);
@@ -116,13 +116,48 @@ class RequiredPagesTest extends TestCase
 
     public function test_sites_created_before_this_feature_get_their_missing_pages_from_the_command(): void
     {
-        Page::withoutGlobalScopes()->where('site_id', $this->vpp->id)->where('kind', PageKind::Contact)->delete();
+        RequiredPage::withoutGlobalScopes()->where('site_id', $this->vpp->id)->where('kind', PageKind::Contact)->delete();
         $about = $this->publish($this->vpp, PageKind::About);
 
         $this->artisan('sites:ensure-pages')->assertSuccessful();
 
         $this->assertFalse($this->page($this->vpp, PageKind::Contact)->is_published);
         $this->assertTrue($about->fresh()->is_published, 'Trang đã có không bị ghi đè.');
-        $this->assertSame(6, Page::withoutGlobalScopes()->count());
+        $this->assertSame(6, RequiredPage::withoutGlobalScopes()->count());
+    }
+
+    public function test_the_footer_of_every_page_shows_the_full_company_details(): void
+    {
+        foreach (['vpptrangthietbi.com.vn', 'ppetrangthietbi.vn'] as $domain) {
+            $html = (string) $this->get("https://{$domain}/yeu-cau-bao-gia")->getContent();
+            $this->assertSame(1, preg_match('#<footer\b.*?</footer>#s', $html, $footer));
+            foreach (['Công ty TNHH TMDV Phát triển Kỹ thuật D &amp; T', '0312345678', '12 Đường Số 7, Quận Tân Phú, TP. Hồ Chí Minh', '028 1234 5678', 'sales@trangthietbi.vn'] as $detail) {
+                $this->assertStringContainsString($detail, $footer[0], "Footer {$domain} thiếu: {$detail}");
+            }
+        }
+    }
+
+    public function test_pages_always_show_the_current_company_details_even_after_they_change(): void
+    {
+        $this->publish($this->vpp, PageKind::About);
+        $this->publish($this->vpp, PageKind::Privacy);
+
+        CompanyProfile::stored()->fill(['legal_name' => 'Công ty TNHH D&T Tên Mới', 'tax_id' => '0399999999'])->save();
+
+        foreach ([PageKind::About, PageKind::Privacy] as $kind) {
+            $this->get('https://vpptrangthietbi.com.vn'.$kind->path())
+                ->assertSee('Công ty TNHH D&amp;T Tên Mới', escape: false)
+                ->assertSee('0399999999')
+                ->assertDontSee('Công ty TNHH TMDV Phát triển Kỹ thuật D &amp; T', escape: false)
+                ->assertDontSee('0312345678');
+        }
+    }
+
+    public function test_a_site_whose_theme_folder_is_missing_falls_back_to_the_default_theme(): void
+    {
+        $this->publish($this->vpp, PageKind::Contact);
+        $this->vpp->forceFill(['theme' => 'theme-da-bi-xoa'])->save();
+
+        $this->get('https://vpptrangthietbi.com.vn/lien-he')->assertOk()->assertSee('class="quote-form"', escape: false);
     }
 }

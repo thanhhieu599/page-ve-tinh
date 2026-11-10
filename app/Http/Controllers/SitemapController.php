@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Author;
 use App\Models\Category;
-use App\Models\Page;
 use App\Models\Post;
 use App\Models\Product;
+use App\Models\RequiredPage;
 use App\Support\CurrentSite;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -33,7 +33,7 @@ class SitemapController extends Controller
         abort_if($site === null, 404);
 
         $sitemap = Sitemap::create();
-        $add = function (Post|Category|Author|Product|Page $model) use ($sitemap, $site): void {
+        $add = function (Post|Category|Author|Product|RequiredPage $model) use ($sitemap, $site): void {
             $sitemap->add(Url::create($site->url($model->path()))->setLastModificationDate($model->updated_at));
         };
 
@@ -50,7 +50,7 @@ class SitemapController extends Controller
 
         Product::query()->active()->get(self::COLUMNS)->each($add);
 
-        Page::query()->published()->get(['id', 'kind', 'updated_at'])->each($add);
+        RequiredPage::query()->published()->get(['id', 'kind', 'updated_at'])->each($add);
 
         return $sitemap->toResponse($request);
     }

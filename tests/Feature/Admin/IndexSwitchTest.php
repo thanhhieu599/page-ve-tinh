@@ -5,8 +5,8 @@ namespace Tests\Feature\Admin;
 use App\Enums\PageKind;
 use App\Filament\Pages\SearchIndexing;
 use App\Models\Author;
-use App\Models\Page;
 use App\Models\Post;
+use App\Models\RequiredPage;
 use App\Models\Site;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -105,7 +105,7 @@ class IndexSwitchTest extends TestCase
 
     private function publishRequiredPages(): void
     {
-        Page::withoutGlobalScopes()->where('site_id', $this->vpp->id)->update(['is_published' => true]);
+        RequiredPage::withoutGlobalScopes()->where('site_id', $this->vpp->id)->update(['is_published' => true]);
     }
 
     public function test_an_admin_turns_indexing_on_once_every_condition_is_met(): void
@@ -126,7 +126,7 @@ class IndexSwitchTest extends TestCase
     {
         $this->publishPosts(20, Author::factory()->create(['bio' => 'Chuyên viên EHS 10 năm kinh nghiệm.']));
         $this->publishRequiredPages();
-        Page::withoutGlobalScopes()->where('site_id', $this->vpp->id)->where('kind', PageKind::Privacy)->update(['is_published' => false]);
+        RequiredPage::withoutGlobalScopes()->where('site_id', $this->vpp->id)->where('kind', PageKind::Privacy)->update(['is_published' => false]);
         $this->workOn($this->vpp, $this->user('admin'));
 
         Livewire::test(SearchIndexing::class)->assertActionDisabled('enableIndexing');

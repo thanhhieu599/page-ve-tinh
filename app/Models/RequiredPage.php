@@ -15,9 +15,12 @@ use Mews\Purifier\Facades\Purifier;
  * Trang bắt buộc của site (giới thiệu, chính sách quyền riêng tư, liên hệ). Mỗi loại một
  * trang mỗi site; tạo sẵn bản nháp mẫu khi tạo site, biên tập sửa rồi bật hiển thị.
  */
-class Page extends Model
+class RequiredPage extends Model
 {
     use BelongsToSite;
+
+    // Giữ tên bảng ban đầu (đã có trong migration).
+    protected $table = 'pages';
 
     protected $fillable = ['title', 'content', 'meta_description', 'is_published'];
 
@@ -30,10 +33,18 @@ class Page extends Model
         ];
     }
 
+    /** Dấu chỗ trống trong nội dung mẫu ([CẦN BỔ SUNG], [CẦN XÁC NHẬN]): còn thì chưa được bật hiển thị. */
+    public const PLACEHOLDER_MARK = '[CẦN ';
+
+    public static function hasPlaceholders(string $content): bool
+    {
+        return str_contains($content, self::PLACEHOLDER_MARK);
+    }
+
     /** Tạo các trang bắt buộc còn thiếu của site, ở dạng nháp với nội dung mẫu. */
     public static function ensureRequiredFor(Site $site): void
     {
-        $existing = static::withoutGlobalScope(SiteScope::class)->where('site_id', $site->id)
+        $existing = $site->requiredPages()->withoutGlobalScope(SiteScope::class)
             ->pluck('kind')->map(fn (PageKind $kind) => $kind->value)->all();
 
         foreach (PageKind::cases() as $kind) {
@@ -43,7 +54,7 @@ class Page extends Model
 
             $page = new self([
                 'title' => $kind->defaultTitle(),
-                'content' => view('page-templates.'.$kind->value, ['site' => $site, 'company' => CompanyProfile::current()])->render(),
+                'content' => view('page-templates.'.$kind->value, ['site' => $site])->render(),
                 'is_published' => false,
             ]);
             $page->kind = $kind;

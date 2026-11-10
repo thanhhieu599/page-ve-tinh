@@ -1,7 +1,7 @@
 <?php
 
 use App\Enums\Role;
-use App\Models\Page;
+use App\Models\RequiredPage;
 use App\Models\Site;
 use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
@@ -46,7 +46,7 @@ Artisan::command('admin:create {email} {--name=Admin}', function (string $email)
 // Chạy một lần khi deploy bản có trang bắt buộc, cho các site tạo từ trước.
 Artisan::command('sites:ensure-pages', function () {
     foreach (Site::query()->orderBy('id')->get() as $site) {
-        Page::ensureRequiredFor($site);
+        RequiredPage::ensureRequiredFor($site);
         $this->line("Đã kiểm tra trang bắt buộc: {$site->domain}");
     }
 })->purpose('Tạo trang giới thiệu, chính sách quyền riêng tư, liên hệ còn thiếu cho các site (dạng nháp)');

@@ -14,6 +14,9 @@ return [
     // Thêm site mới chỉ cần thêm thư mục theme, không sửa code lõi.
     'themes_path' => env('SITES_THEMES_PATH', resource_path('themes')),
 
+    // Theme dùng khi thư mục theme của site không còn (tránh lỗi 500 toàn site).
+    'default_theme' => env('SITES_DEFAULT_THEME', 'vpp'),
+
     'admin_domain' => env('ADMIN_DOMAIN', 'admin.localhost'),
 
     /*

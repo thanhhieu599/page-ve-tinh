@@ -30,6 +30,22 @@ enum PageKind: string implements HasLabel
         };
     }
 
+    /** Nhãn trong checklist mở index. */
+    public function readinessLabel(): string
+    {
+        return match ($this) {
+            self::About => 'Trang giới thiệu công ty',
+            self::Privacy => 'Chính sách quyền riêng tư',
+            self::Contact => 'Trang liên hệ',
+        };
+    }
+
+    /** Trang có form yêu cầu báo giá ngay trên trang. */
+    public function hasQuoteForm(): bool
+    {
+        return $this === self::Contact;
+    }
+
     public function path(): string
     {
         return '/'.$this->value;

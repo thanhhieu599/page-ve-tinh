@@ -2,21 +2,21 @@
 
 namespace App\Policies;
 
-use App\Models\Page;
+use App\Models\RequiredPage;
 use App\Models\User;
 
 /**
  * Trang bắt buộc là nội dung pháp lý/thương hiệu: Biên tập và Admin sửa, người viết không.
  * Không thêm/xoá: mỗi site luôn có đúng ba trang, tạo sẵn khi tạo site.
  */
-class PagePolicy
+class RequiredPagePolicy
 {
     public function viewAny(User $user): bool
     {
         return $user->isReviewer();
     }
 
-    public function view(User $user, Page $page): bool
+    public function view(User $user, RequiredPage $page): bool
     {
         return $user->isReviewer();
     }
@@ -26,12 +26,12 @@ class PagePolicy
         return false;
     }
 
-    public function update(User $user, Page $page): bool
+    public function update(User $user, RequiredPage $page): bool
     {
         return $user->isReviewer();
     }
 
-    public function delete(User $user, Page $page): bool
+    public function delete(User $user, RequiredPage $page): bool
     {
         return false;
     }

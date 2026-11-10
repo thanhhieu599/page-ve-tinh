@@ -3,7 +3,6 @@
 namespace App\Support\Indexing;
 
 use App\Enums\PageKind;
-use App\Models\Page;
 use App\Models\Post;
 use App\Models\Scopes\SiteScope;
 use App\Models\Site;
@@ -25,9 +24,7 @@ final class IndexReadiness
         return new self([
             self::publishedPosts($site),
             self::authorProfiles($site),
-            self::requiredPage($site, PageKind::About, 'Trang giới thiệu công ty'),
-            self::requiredPage($site, PageKind::Privacy, 'Chính sách quyền riêng tư'),
-            self::requiredPage($site, PageKind::Contact, 'Trang liên hệ'),
+            ...array_map(fn (PageKind $kind) => self::requiredPage($site, $kind), PageKind::cases()),
         ]);
     }
 
@@ -60,11 +57,11 @@ final class IndexReadiness
         );
     }
 
-    private static function requiredPage(Site $site, PageKind $kind, string $label): ReadinessItem
+    private static function requiredPage(Site $site, PageKind $kind): ReadinessItem
     {
-        $page = Page::withoutGlobalScope(SiteScope::class)->where('site_id', $site->id)->where('kind', $kind)->first();
+        $page = $site->requiredPages()->withoutGlobalScope(SiteScope::class)->where('kind', $kind)->first();
 
-        return new ReadinessItem($label, (bool) $page?->is_published, match (true) {
+        return new ReadinessItem($kind->readinessLabel(), (bool) $page?->is_published, match (true) {
             $page === null => 'Chưa có trang (chạy lệnh php artisan sites:ensure-pages)',
             ! $page->is_published => 'Còn ở dạng nháp: biên tập và bật hiển thị trong mục Trang bắt buộc',
             default => 'Đã hiển thị tại '.$kind->path(),

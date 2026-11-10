@@ -15,6 +15,20 @@ use Illuminate\Support\Facades\Storage;
  */
 class Site extends Model
 {
+    // Định dạng hợp lệ của các khoá cấu hình (dùng chung cho form quản trị và khi đọc).
+    public const GA4_PATTERN = '/^G-[A-Z0-9]{4,20}$/';
+
+    public const GSC_TOKEN_PATTERN = '/^[A-Za-z0-9_-]{10,100}$/';
+
+    public const COLOR_PATTERN = '/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/';
+
+    public const INDUSTRY_TAG_PATTERN = '/^[a-z0-9-]{1,50}$/';
+
+    public const LOGO_DIRECTORY = 'site-logos';
+
+    /** Chiều cao hiển thị logo ở header (px). */
+    public const LOGO_HEIGHT = 48;
+
     /** Chỉ thị robots cho site chưa bật index. */
     public const NOINDEX = 'noindex, nofollow';
 
@@ -39,7 +53,7 @@ class Site extends Model
     {
         $id = $this->settings['ga4_id'] ?? null;
 
-        return is_string($id) && preg_match('/^G-[A-Z0-9]{4,20}$/', $id) ? $id : null;
+        return is_string($id) && preg_match(self::GA4_PATTERN, $id) ? $id : null;
     }
 
     /** Logo của site (đường dẫn công khai trên disk public), nếu đã tải lên. */
@@ -47,7 +61,16 @@ class Site extends Model
     {
         $path = $this->settings['logo'] ?? null;
 
-        return is_string($path) && $path !== '' ? Storage::disk('public')->url($path) : null;
+        return is_string($path) && str_starts_with($path, self::LOGO_DIRECTORY.'/') ? Storage::disk('public')->url($path) : null;
+    }
+
+    /** Chiều rộng logo khi hiển thị cao LOGO_HEIGHT, giữ tỉ lệ ảnh (tránh xô lệch trang). */
+    public function logoWidth(): ?int
+    {
+        $width = $this->settings['logo_width'] ?? null;
+        $height = $this->settings['logo_height'] ?? null;
+
+        return is_int($width) && is_int($height) && $height > 0 ? (int) round($width * self::LOGO_HEIGHT / $height) : null;
     }
 
     /** Màu thương hiệu dạng #rgb hoặc #rrggbb; chỉ nhận đúng dạng để không chèn được CSS lạ. */
@@ -55,7 +78,7 @@ class Site extends Model
     {
         $color = $this->settings['primary_color'] ?? null;
 
-        return is_string($color) && preg_match('/^#([0-9a-f]{3}|[0-9a-f]{6})$/i', $color) ? strtolower($color) : null;
+        return is_string($color) && preg_match(self::COLOR_PATTERN, $color) ? strtolower($color) : null;
     }
 
     /** Mã xác minh Google Search Console (thẻ meta google-site-verification). */
@@ -63,7 +86,7 @@ class Site extends Model
     {
         $token = $this->settings['gsc_verification'] ?? null;
 
-        return is_string($token) && preg_match('/^[A-Za-z0-9_-]{10,100}$/', $token) ? $token : null;
+        return is_string($token) && preg_match(self::GSC_TOKEN_PATTERN, $token) ? $token : null;
     }
 
     /** Campaign Mautic nhận lead của site (settings.mautic_campaign_id). */
@@ -79,7 +102,7 @@ class Site extends Model
     {
         $tag = $this->settings['industry_tag'] ?? null;
 
-        return is_string($tag) && preg_match('/^[a-z0-9-]{1,50}$/', $tag) ? $tag : null;
+        return is_string($tag) && preg_match(self::INDUSTRY_TAG_PATTERN, $tag) ? $tag : null;
     }
 
     /**
@@ -125,8 +148,38 @@ class Site extends Model
 
     protected static function booted(): void
     {
+        // Logo mới: ghi kích thước thật để <img> có width/height; xoá file logo cũ.
+        static::saving(function (Site $site): void {
+            $settings = $site->settings ?? [];
+            $logo = $settings['logo'] ?? null;
+            $previous = $site->getOriginal('settings')['logo'] ?? null;
+
+            // Tính lại khi đổi logo, hoặc khi form quản trị lưu lại settings không kèm kích thước.
+            if ($logo !== $previous || ! isset($settings['logo_width'], $settings['logo_height'])) {
+                unset($settings['logo_width'], $settings['logo_height']);
+                $disk = Storage::disk('public');
+                if (is_string($logo) && $disk->exists($logo) && ($size = @getimagesize($disk->path($logo))) !== false) {
+                    [$settings['logo_width'], $settings['logo_height']] = [$size[0], $size[1]];
+                }
+                $site->settings = $settings;
+            }
+        });
+
+        static::saved(function (Site $site): void {
+            $previous = $site->getOriginal('settings')['logo'] ?? null;
+            if ($site->wasChanged('settings') && is_string($previous) && $previous !== ($site->settings['logo'] ?? null)) {
+                Storage::disk('public')->delete($previous);
+            }
+        });
+
         // Site mới luôn có đủ trang bắt buộc (nháp, nội dung mẫu) để biên tập hoàn thiện.
-        static::created(fn (Site $site) => Page::ensureRequiredFor($site));
+        static::created(fn (Site $site) => RequiredPage::ensureRequiredFor($site));
+    }
+
+    /** @return HasMany<RequiredPage, $this> */
+    public function requiredPages(): HasMany
+    {
+        return $this->hasMany(RequiredPage::class);
     }
 
     /** @return HasMany<Post, $this> */

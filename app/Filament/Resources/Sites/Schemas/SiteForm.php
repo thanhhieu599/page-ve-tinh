@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Sites\Schemas;
 
+use App\Models\Site;
 use App\Support\Theme;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
@@ -30,7 +31,9 @@ class SiteForm
                     ->maxLength(191)
                     ->regex('/^(?!www\.)([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/')
                     ->validationMessages(['regex' => 'Nhập đúng dạng tên miền, ví dụ vpptrangthietbi.com.vn (không https://, không www, chữ thường).'])
-                    ->unique(ignoreRecord: true),
+                    ->unique(ignoreRecord: true)
+                    // Tên miền là địa chỉ của site và của trang quản trị site: cố định sau khi tạo.
+                    ->disabledOn('edit'),
                 TextInput::make('name')->label('Tên site')->required()->maxLength(255),
                 Select::make('theme')
                     ->label('Theme')
@@ -38,7 +41,8 @@ class SiteForm
                     ->rules([fn () => Rule::in(Theme::available())])
                     ->helperText('Mỗi theme là một thư mục trong resources/themes.')
                     ->required(),
-                Toggle::make('is_active')->label('Đang hoạt động')->default(true)->inline(false),
+                Toggle::make('is_active')->label('Đang hoạt động')->default(false)->inline(false)
+                    ->helperText('Bật khi đã hoàn thiện và bật hiển thị 3 trang bắt buộc (form báo giá trỏ tới trang chính sách).'),
                 Toggle::make('requires_expert_review')->label('Mọi bài cần duyệt chuyên môn (PPE)')->inline(false),
             ]),
             Section::make('Giao diện')->columns(2)->schema([
@@ -48,20 +52,20 @@ class SiteForm
                     ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp'])
                     ->maxSize(1024)
                     ->disk('public')
-                    ->directory('site-logos'),
+                    ->directory(Site::LOGO_DIRECTORY),
                 ColorPicker::make('settings.primary_color')
                     ->label('Màu thương hiệu')
-                    ->regex('/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/'),
+                    ->regex(Site::COLOR_PATTERN),
             ]),
             Section::make('Đo lường và Mautic')->columns(2)->schema([
                 TextInput::make('settings.ga4_id')->label('GA4 Measurement ID')->placeholder('G-XXXXXXXXXX')
-                    ->regex('/^G-[A-Z0-9]{4,20}$/'),
+                    ->regex(Site::GA4_PATTERN),
                 TextInput::make('settings.gsc_verification')->label('Mã xác minh Search Console')
                     ->helperText('Phần content của thẻ meta google-site-verification.')
-                    ->regex('/^[A-Za-z0-9_-]{10,100}$/'),
+                    ->regex(Site::GSC_TOKEN_PATTERN),
                 TextInput::make('settings.mautic_campaign_id')->label('Mautic campaign ID')->integer()->minValue(1),
                 TextInput::make('settings.industry_tag')->label('Mã ngành (tag Mautic nganh-…)')->placeholder('van-phong-pham')
-                    ->regex('/^[a-z0-9-]{1,50}$/'),
+                    ->regex(Site::INDUSTRY_TAG_PATTERN),
             ]),
         ]);
     }

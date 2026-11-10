@@ -5,7 +5,7 @@ namespace Tests\Feature\Admin;
 use App\Filament\Resources\Sites\Pages\CreateSite;
 use App\Filament\Resources\Sites\Pages\EditSite;
 use App\Models\CompanyProfile;
-use App\Models\Page;
+use App\Models\RequiredPage;
 use App\Models\Site;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -79,7 +79,7 @@ class SiteAdminTest extends TestCase
         $site = Site::query()->where('domain', 'dungcutrangthietbi.vn')->firstOrFail();
         $this->assertSame(12, $site->mauticCampaignId());
         $this->assertSame('dung-cu', $site->industryTag());
-        $this->assertSame(3, Page::withoutGlobalScopes()->where('site_id', $site->id)->where('is_published', false)->count());
+        $this->assertSame(3, RequiredPage::withoutGlobalScopes()->where('site_id', $site->id)->where('is_published', false)->count());
 
         $html = (string) $this->get('https://dungcutrangthietbi.vn/yeu-cau-bao-gia')->assertOk()->getContent();
         $this->assertStringContainsString('data-theme="congcu"', $html);
@@ -149,5 +149,45 @@ class SiteAdminTest extends TestCase
         $editor = User::factory()->editor()->hasAttached($this->vpp)->create();
 
         $this->actingAs($editor)->get('https://admin.trangthietbi.test/admin/vpptrangthietbi.com.vn/sites')->assertForbidden();
+    }
+
+    public function test_a_new_site_starts_switched_off_and_its_domain_is_fixed_once_created(): void
+    {
+        $this->asAdmin();
+
+        Livewire::test(CreateSite::class)->assertFormSet(['is_active' => false]);
+        Livewire::test(EditSite::class, ['record' => $this->vpp->getRouteKey()])->assertFormFieldDisabled('domain');
+    }
+
+    public function test_the_logo_keeps_its_size_and_a_replaced_logo_file_is_removed(): void
+    {
+        $this->asAdmin();
+
+        Livewire::test(EditSite::class, ['record' => $this->vpp->getRouteKey()])
+            ->fillForm(['settings.logo' => UploadedFile::fake()->image('logo.png', 400, 120)])
+            ->call('save')
+            ->assertHasNoFormErrors();
+        $first = $this->vpp->fresh()->settings['logo'];
+
+        $this->get('https://vpptrangthietbi.com.vn/yeu-cau-bao-gia')
+            ->assertSee('width="160" height="48"', escape: false);
+
+        Livewire::test(EditSite::class, ['record' => $this->vpp->getRouteKey()])
+            // Như người dùng: bỏ logo cũ, tải logo mới.
+            ->set('data.settings.logo', [])
+            ->fillForm(['settings.logo' => UploadedFile::fake()->image('logo-moi.png', 300, 150)])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        Storage::disk('public')->assertMissing($first);
+        Storage::disk('public')->assertExists($this->vpp->fresh()->settings['logo']);
+        $this->get('https://vpptrangthietbi.com.vn/yeu-cau-bao-gia')->assertSee('width="96" height="48"', escape: false);
+
+        // Sửa thông tin khác của site không làm mất kích thước logo.
+        Livewire::test(EditSite::class, ['record' => $this->vpp->getRouteKey()])
+            ->fillForm(['name' => 'VPP D&T'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+        $this->get('https://vpptrangthietbi.com.vn/yeu-cau-bao-gia')->assertSee('width="96" height="48"', escape: false);
     }
 }

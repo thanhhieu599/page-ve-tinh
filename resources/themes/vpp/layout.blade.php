@@ -19,7 +19,7 @@
         <meta name="google-site-verification" content="{{ $gscToken }}">
     @endif
     @if ($brandColor = $site->brandColor())
-        <style>:root { --brand-color: {{ $brandColor }}; }</style>
+        <style>:root { --brand-color: {{ $brandColor }}; } a, h1, h2 { color: var(--brand-color); } header { border-bottom: 3px solid var(--brand-color); }</style>
     @endif
     @php($ga4Id = $site->ga4Id())
     @if ($ga4Id)
@@ -39,7 +39,7 @@
     <header>
         <a href="/">
             @if ($logo = $site->logoUrl())
-                <img src="{{ $logo }}" alt="{{ $site->name }}" height="48">
+                <img src="{{ $logo }}" alt="{{ $site->name }}"@if ($logoWidth = $site->logoWidth()) width="{{ $logoWidth }}"@endif height="{{ \App\Models\Site::LOGO_HEIGHT }}">
             @else
                 {{ $site->name }}
             @endif

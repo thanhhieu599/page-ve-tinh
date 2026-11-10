@@ -3,10 +3,10 @@
 use App\Enums\PageKind;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\PageController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\QuoteRequestController;
+use App\Http\Controllers\RequiredPageController;
 use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Middleware\CaptureAttribution;
@@ -22,7 +22,7 @@ Route::middleware([IdentifySite::class, CaptureAttribution::class])->group(funct
     Route::get('/san-pham/{slug}', [ProductController::class, 'show'])->name('products.show');
 
     foreach (PageKind::cases() as $kind) {
-        Route::get($kind->path(), [PageController::class, 'show'])->defaults('kind', $kind->value)->name('pages.'.$kind->value);
+        Route::get($kind->path(), [RequiredPageController::class, 'show'])->defaults('kind', $kind->value)->name('pages.'.$kind->value);
     }
 
     Route::get(QuoteRequestController::PATH, [QuoteRequestController::class, 'create'])->name('quote.create');

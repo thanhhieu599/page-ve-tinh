@@ -55,6 +55,14 @@ class CompanyProfile extends Model
         return array_combine(self::FIELDS, array_map($this->value(...), self::FIELDS));
     }
 
+    /** Địa chỉ một dòng: "số nhà, đường, phường/quận, tỉnh/thành". */
+    public function address(): ?string
+    {
+        $address = implode(', ', array_filter([$this->value('street_address'), $this->value('locality'), $this->value('region')]));
+
+        return $address !== '' ? $address : null;
+    }
+
     public function host(): string
     {
         return (string) parse_url((string) $this->value('url'), PHP_URL_HOST);

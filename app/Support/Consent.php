@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use App\Enums\PageKind;
+
 /**
  * Câu đồng ý xử lý dữ liệu cá nhân trên form RFQ. Nguyên văn được lưu vào từng lead
  * làm bằng chứng. Đổi câu này thì lead cũ vẫn giữ câu cũ đã đồng ý.
@@ -15,6 +17,5 @@ final class Consent
         .'(họ tên, công ty, email, số điện thoại, nhu cầu) để liên hệ tư vấn, báo giá và gửi thông tin sản phẩm liên quan, '
         .'theo Chính sách bảo vệ dữ liệu cá nhân.';
 
-    /** Trùng PageKind::Privacy->path(). */
-    public const POLICY_PATH = '/chinh-sach-quyen-rieng-tu';
+    public const POLICY_PATH = '/'.PageKind::Privacy->value;
 }

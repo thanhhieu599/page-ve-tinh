@@ -5,9 +5,9 @@ namespace Database\Seeders;
 use App\Models\Author;
 use App\Models\Category;
 use App\Models\Media;
-use App\Models\Page;
 use App\Models\Post;
 use App\Models\Product;
+use App\Models\RequiredPage;
 use App\Models\Site;
 use App\Support\MediaLibrary;
 use Illuminate\Database\Seeder;
@@ -52,8 +52,8 @@ class DemoSiteSeeder extends Seeder
         );
 
         // Trang bắt buộc: site tạo từ trước có thể chưa có; bật hiển thị để xem thử khi chạy local.
-        Page::ensureRequiredFor($site);
-        Page::withoutGlobalScopes()->where('site_id', $site->id)->update(['is_published' => true]);
+        RequiredPage::ensureRequiredFor($site);
+        $site->requiredPages()->withoutGlobalScopes()->update(['is_published' => true]);
 
         $category = Category::query()->firstOrNew(['site_id' => $site->id, 'slug' => self::CATEGORY_SLUG]);
         $category->fill(['name' => self::CATEGORY_NAME, 'description' => 'Giấy in, giấy photo cho văn phòng nhà máy.'])->save();

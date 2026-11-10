@@ -13,13 +13,11 @@
         {{-- Nội dung đã được lọc HTML khi lưu (mews/purifier). --}}
         <div class="page-content">{!! $page->content !!}</div>
 
-        {{-- Thông tin công ty lấy từ một nơi (Thông tin công ty), giống nhau trên mọi site. --}}
-        @if ($page->kind !== \App\Enums\PageKind::Privacy)
-            @include('theme::partials.company-info')
-        @endif
+        {{-- Thông tin công ty lấy từ một nơi (Thông tin công ty), luôn là bản mới nhất, giống nhau trên mọi site. --}}
+        @include('theme::partials.company-info')
     </article>
 
-    @if ($page->kind === \App\Enums\PageKind::Contact)
+    @if ($page->kind->hasQuoteForm())
         <section class="quote-request">
             <h2>Gửi yêu cầu báo giá</h2>
             @include('theme::partials.quote-form', ['product' => null])

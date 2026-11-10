@@ -27,7 +27,7 @@ class IdentifySite
 
         $this->currentSite->set($site);
 
-        View::replaceNamespace('theme', Theme::path($site->theme));
+        View::replaceNamespace('theme', Theme::path(Theme::resolve($site->theme)));
         View::share('site', $site);
 
         return $next($request);
