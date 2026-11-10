@@ -4,6 +4,7 @@ namespace Tests\Feature\Admin;
 
 use App\Filament\Resources\Posts\Pages\EditPost;
 use App\Filament\Resources\Posts\Pages\ListPosts;
+use App\Filament\Resources\Posts\PostResource;
 use App\Filament\Resources\Posts\RelationManagers\RevisionsRelationManager;
 use App\Models\Post;
 use App\Models\Site;
@@ -11,7 +12,9 @@ use App\Models\User;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 use Tests\Concerns\WorksInAdmin;
 use Tests\TestCase;
@@ -275,5 +278,89 @@ class ReviewWorkflowTest extends TestCase
         $this->actingAs($this->writer())
             ->get('https://admin.trangthietbi.test/admin/vpptrangthietbi.com.vn/posts')
             ->assertDontSee('Nháp bỏ đi');
+    }
+
+    public function test_publish_time_is_entered_in_vietnam_time(): void
+    {
+        $this->travelTo(Carbon::parse('2026-11-10 01:30:00', 'UTC')); // 08:30 giờ Việt Nam
+        $post = Post::factory()->for($this->vpp)->create(['slug' => 'dang-luc-9-gio']);
+        $post->submitForReview();
+        $this->workOn($this->vpp, $this->editor());
+
+        Livewire::test(EditPost::class, ['record' => $post->getRouteKey()])
+            ->callAction('publish', data: ['published_at' => '2026-11-10 09:00:00'])
+            ->assertHasNoActionErrors();
+
+        $this->travelTo(Carbon::parse('2026-11-10 01:59:00', 'UTC')); // 08:59 VN
+        $this->get('https://vpptrangthietbi.com.vn/kien-thuc/dang-luc-9-gio')->assertNotFound();
+
+        $this->travelTo(Carbon::parse('2026-11-10 02:01:00', 'UTC')); // 09:01 VN
+        $this->get('https://vpptrangthietbi.com.vn/kien-thuc/dang-luc-9-gio')->assertOk();
+    }
+
+    public function test_editor_without_expert_right_cannot_change_a_live_expert_post(): void
+    {
+        $ppe = Site::factory()->requiresExpertReview()->create(['domain' => 'ppe.example.vn']);
+        $live = Post::factory()->for($ppe)->published()->create();
+        $deleted = Post::factory()->for($ppe)->published()->create(['slug' => 'da-xoa-ppe']);
+        $deleted->delete();
+        $editor = User::factory()->editor()->hasAttached($ppe)->create();
+        $base = 'https://admin.trangthietbi.test/admin/ppe.example.vn/posts/';
+
+        $this->actingAs($editor)->get($base.$live->id.'/edit')->assertForbidden();
+
+        $this->workOn($ppe, $editor);
+        Livewire::test(ListPosts::class, ['tableFilters' => ['trashed' => ['value' => 0]]])
+            ->callTableBulkAction(RestoreBulkAction::class, [$deleted]);
+        $this->get('https://ppe.example.vn/kien-thuc/da-xoa-ppe')->assertNotFound();
+    }
+
+    public function test_expert_reviewer_can_still_edit_a_live_expert_post(): void
+    {
+        $ppe = Site::factory()->requiresExpertReview()->create(['domain' => 'ppe.example.vn']);
+        $live = Post::factory()->for($ppe)->published()->create();
+        $expert = User::factory()->editor()->expertReviewer()->hasAttached($ppe)->create();
+
+        $this->actingAs($expert)
+            ->get('https://admin.trangthietbi.test/admin/ppe.example.vn/posts/'.$live->id.'/edit')
+            ->assertOk();
+    }
+
+    public function test_renaming_a_scheduled_post_that_never_went_live_creates_no_redirect(): void
+    {
+        $post = Post::factory()->for($this->vpp)->create(['slug' => 'chua-len-song']);
+        $post->publish(now()->addDay());
+        $this->workOn($this->vpp, $this->editor());
+
+        Livewire::test(EditPost::class, ['record' => $post->getRouteKey()])
+            ->fillForm(['slug' => 'ten-moi-truoc-khi-len-song'])->call('save')->assertHasNoFormErrors();
+
+        $this->travel(2)->days();
+        $this->get('https://vpptrangthietbi.com.vn/kien-thuc/chua-len-song')->assertNotFound();
+    }
+
+    public function test_a_new_post_can_take_over_a_slug_that_used_to_redirect(): void
+    {
+        $old = Post::factory()->for($this->vpp)->published()->create(['slug' => 'ghim-bam']);
+        $this->workOn($this->vpp, $this->editor());
+        Livewire::test(EditPost::class, ['record' => $old->getRouteKey()])
+            ->fillForm(['slug' => 'ghim-bam-kim-loai'])->call('save')->assertHasNoFormErrors();
+
+        $newcomer = Post::factory()->for($this->vpp)->create(['slug' => 'ghim-bam', 'title' => 'Ghim bấm nhựa màu']);
+        $newcomer->publish(now()->subMinute());
+
+        $this->get('https://vpptrangthietbi.com.vn/kien-thuc/ghim-bam')->assertOk()->assertSee('Ghim bấm nhựa màu');
+    }
+
+    public function test_restoring_a_revision_reloads_the_editor_with_the_restored_text(): void
+    {
+        $post = Post::factory()->for($this->vpp)->create(['content' => '<p>Bản một.</p>']);
+        $this->workOn($this->vpp, $this->editor());
+        Livewire::test(EditPost::class, ['record' => $post->getRouteKey()])
+            ->fillForm(['content' => '<p>Bản hai.</p>'])->call('save');
+
+        Livewire::test(RevisionsRelationManager::class, ['ownerRecord' => $post->fresh(), 'pageClass' => EditPost::class])
+            ->callTableAction('restore', $post->revisions()->oldest('id')->firstOrFail())
+            ->assertRedirect(PostResource::getUrl('edit', ['record' => $post]));
     }
 }

@@ -46,9 +46,21 @@ class Post extends Model
         });
 
         // Đổi slug của bài đã đăng: URL cũ tự chuyển 301 sang URL mới để không mất traffic.
+        // Chỉ khi URL cũ đã từng lên site (bài hẹn giờ chưa tới giờ thì không).
         static::updated(function (Post $post): void {
-            if ($post->wasChanged('slug') && $post->getOriginal('status') === PostStatus::Published) {
+            $wasLive = $post->getOriginal('status') === PostStatus::Published
+                && $post->getOriginal('published_at')?->isPast() === true;
+
+            if ($post->wasChanged('slug') && $wasLive) {
                 Redirect::recordMove($post->site_id, self::PATH_PREFIX.$post->getOriginal('slug'), $post->path());
+            }
+        });
+
+        // Bài được đăng ở một đường dẫn thì redirect cũ xuất phát từ đường dẫn đó phải bỏ,
+        // nếu không khách sẽ bị chuyển đi thay vì thấy bài.
+        static::saved(function (Post $post): void {
+            if ($post->status === PostStatus::Published) {
+                Redirect::forgetFrom($post->site_id, $post->path());
             }
         });
 
@@ -113,6 +125,12 @@ class Post extends Model
         $this->status = PostStatus::Draft;
         $this->review_note = $note;
         $this->save();
+    }
+
+    /** Bài thuộc site yêu cầu duyệt chuyên môn (PPE). */
+    public function requiresExpertReview(): bool
+    {
+        return (bool) $this->site?->requires_expert_review;
     }
 
     public function isScheduled(): bool

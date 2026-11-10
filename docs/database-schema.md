@@ -39,3 +39,17 @@ Mô hình: một database phục vụ nhiều site (đa site). Mọi bảng nộ
 | Cột `locale` | trên `posts`, `categories`, `faqs` | Mở tiếng Anh sau mà không đổi cấu trúc (Q12) |
 
 Database CMS tách riêng khỏi database Mautic (Q13).
+
+## Bổ sung khi triển khai (issue #4, #5)
+
+| Bảng / thay đổi | Cột quan trọng | Ghi chú |
+|---|---|---|
+| `site_user` | site_id, user_id | Người dùng được gán vào site nào |
+| roles/permissions (spatie) | admin, editor, writer; quyền `approve-expert-content` | Tạo qua migration |
+| `posts` (thêm cột) | seo_title, meta_description, og_image, review_note | `review_note`: ghi chú của biên tập khi trả bài |
+| `posts.status` | draft / pending / published | Chỉ đổi qua các bước duyệt, không gán hàng loạt |
+| `post_revisions` | post_id, **title**, content, user_id, created_at | Thêm `title` để khôi phục cả tiêu đề |
+| `sites` (thêm cột) | requires_expert_review | Site PPE: chỉ người có quyền duyệt chuyên môn đăng/sửa bài đang hiện |
+
+Chưa có: `author_id` (làm cùng bảng `authors`, issue #6).
+

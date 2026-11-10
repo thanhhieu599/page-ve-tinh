@@ -6,6 +6,7 @@ use App\Models\Concerns\BelongsToSite;
 use App\Models\Scopes\SiteScope;
 use App\Support\CanonicalPath;
 use Database\Factories\RedirectFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -92,16 +93,31 @@ class Redirect extends Model
             return;
         }
 
-        $forSite = fn () => static::withoutGlobalScope(SiteScope::class)->where('site_id', $siteId);
+        static::forgetFrom($siteId, $newPath);
+        static::forSite($siteId)->where('to_path', $oldPath)->update(['to_path' => $newPath]);
 
-        $forSite()->where('from_path', $newPath)->delete();
-        $forSite()->where('to_path', $oldPath)->update(['to_path' => $newPath]);
-
-        $redirect = $forSite()->firstOrNew(['from_path' => $oldPath]);
+        $redirect = static::forSite($siteId)->firstOrNew(['from_path' => $oldPath]);
         $redirect->site_id = $siteId;
         $redirect->to_path = $newPath;
         $redirect->code = self::MOVED_PERMANENTLY;
         $redirect->save();
+    }
+
+    /** Bỏ redirect xuất phát từ một đường dẫn vì đường dẫn đó đang có trang thật. */
+    public static function forgetFrom(int $siteId, string $path): void
+    {
+        static::forSite($siteId)->where('from_path', CanonicalPath::from($path))->delete();
+    }
+
+    /**
+     * Truy vấn theo site chỉ định. Dùng khi ghi redirect từ sự kiện của bài viết,
+     * lúc đó không chắc có "site hiện tại" để global scope tự lọc.
+     *
+     * @return Builder<self>
+     */
+    private static function forSite(int $siteId): Builder
+    {
+        return static::withoutGlobalScope(SiteScope::class)->where('site_id', $siteId);
     }
 
     public function isGone(): bool

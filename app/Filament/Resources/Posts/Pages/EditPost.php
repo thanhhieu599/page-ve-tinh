@@ -44,6 +44,8 @@ class EditPost extends EditRecord
                         ->label('Thời điểm đăng')
                         ->helperText('Để thời điểm trong tương lai để hẹn giờ đăng.')
                         ->seconds(false)
+                        // Người dùng nhập giờ Việt Nam; dữ liệu lưu UTC.
+                        ->timezone(config('app.display_timezone'))
                         ->default(now())
                         ->required(),
                 ])

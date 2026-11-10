@@ -34,7 +34,11 @@ class PostPolicy
      */
     public function update(User $user, Post $post): bool
     {
-        return $this->isReviewer($user) || ($user->canAccessAdmin() && $post->status === PostStatus::Draft);
+        if ($this->isReviewer($user)) {
+            return $this->mayChangeLiveContent($user, $post);
+        }
+
+        return $user->canAccessAdmin() && $post->status === PostStatus::Draft;
     }
 
     public function submitForReview(User $user, Post $post): bool
@@ -52,7 +56,7 @@ class PostPolicy
             return false;
         }
 
-        return ! $post->site->requires_expert_review || $user->isExpertReviewer();
+        return ! $post->requiresExpertReview() || $user->isExpertReviewer();
     }
 
     /** Trả bài chờ duyệt về nháp, hoặc gỡ bài đã đăng. */
@@ -72,9 +76,10 @@ class PostPolicy
         return $user->canAccessAdmin();
     }
 
+    /** Khôi phục bài đã đăng là đưa nó lên site lại. */
     public function restore(User $user, Post $post): bool
     {
-        return $this->isReviewer($user);
+        return $this->isReviewer($user) && $this->mayChangeLiveContent($user, $post);
     }
 
     public function restoreAny(User $user): bool
@@ -91,6 +96,15 @@ class PostPolicy
     public function forceDeleteAny(User $user): bool
     {
         return $user->isAdmin();
+    }
+
+    /**
+     * Nội dung đang (hoặc sẽ) hiện trên site yêu cầu duyệt chuyên môn chỉ được thay đổi
+     * bởi người có quyền duyệt chuyên môn, giống như khi đăng.
+     */
+    private function mayChangeLiveContent(User $user, Post $post): bool
+    {
+        return $post->status !== PostStatus::Published || ! $post->requiresExpertReview() || $user->isExpertReviewer();
     }
 
     private function isReviewer(User $user): bool

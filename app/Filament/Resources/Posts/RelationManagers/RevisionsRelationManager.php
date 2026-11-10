@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Posts\RelationManagers;
 
+use App\Filament\Resources\Posts\PostResource;
 use App\Models\Post;
 use App\Models\PostRevision;
 use Filament\Actions\Action;
@@ -53,6 +54,9 @@ class RevisionsRelationManager extends RelationManager
 
                         $post->restoreRevision($record);
                         Notification::make()->title('Đã khôi phục bản cũ')->success()->send();
+
+                        // Tải lại trang để form hiện bản vừa khôi phục, tránh lưu đè bằng dữ liệu cũ.
+                        $this->redirect(PostResource::getUrl('edit', ['record' => $post]));
                     }),
             ]);
     }
