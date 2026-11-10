@@ -30,6 +30,20 @@ return [
 
     'disks' => [
 
+        // Kho sao lưu ngoài máy chủ, chuẩn S3 (Cloudflare R2: BACKUP_S3_ENDPOINT=https://<account>.r2.cloudflarestorage.com,
+        // BACKUP_S3_REGION=auto). Chỉ dùng cho sao lưu (config/backup.php).
+        'backup' => [
+            'driver' => 's3',
+            'key' => env('BACKUP_S3_KEY'),
+            'secret' => env('BACKUP_S3_SECRET'),
+            'region' => env('BACKUP_S3_REGION', 'auto'),
+            'bucket' => env('BACKUP_S3_BUCKET'),
+            'endpoint' => env('BACKUP_S3_ENDPOINT'),
+            'use_path_style_endpoint' => (bool) env('BACKUP_S3_PATH_STYLE', false),
+            'throw' => true,
+            'report' => true,
+        ],
+
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),

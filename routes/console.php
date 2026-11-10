@@ -75,3 +75,8 @@ Artisan::command('search-console:pull {--days='.PullSearchConsoleData::DAILY_DAY
 
 // Hằng ngày 07:10 giờ Việt Nam (cần cron chạy `php artisan schedule:run` mỗi phút và hàng đợi đang chạy).
 Schedule::command('search-console:pull')->dailyAt('07:10')->timezone(config('app.display_timezone'));
+
+// Sao lưu (giờ Việt Nam): dọn bản cũ 01:40, sao lưu 02:10, kiểm tra bản mới nhất 08:20.
+Schedule::command('backup:clean')->dailyAt('01:40')->timezone(config('app.display_timezone'));
+Schedule::command('backup:run')->dailyAt('02:10')->timezone(config('app.display_timezone'));
+Schedule::command('backup:monitor')->dailyAt('08:20')->timezone(config('app.display_timezone'));
