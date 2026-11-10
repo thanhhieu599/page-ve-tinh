@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use App\Support\ContentImages;
 use Illuminate\Contracts\View\View;
 
 class PostController extends Controller
@@ -13,6 +14,9 @@ class PostController extends Controller
             ->with(['author', 'faqs', 'categories.parent'])
             ->firstOrFail();
 
-        return view('theme::posts.show', ['post' => $post]);
+        return view('theme::posts.show', [
+            'post' => $post,
+            'content' => ContentImages::enhance($post->content, $post->site_id),
+        ]);
     }
 }

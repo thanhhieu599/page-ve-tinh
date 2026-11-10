@@ -53,6 +53,17 @@ for (const { path, mustContain } of pages) {
         }
     }
 
+    // Ảnh trong bài phải có đủ alt, width, height dù không có JavaScript.
+    for (const img of await page.locator('article img').all()) {
+        for (const attribute of ['alt', 'width', 'height']) {
+            const value = await img.getAttribute(attribute);
+            if (value === null || (attribute !== 'alt' && value === '')) {
+                console.error(`FAIL ${path}: ảnh thiếu thuộc tính ${attribute}`);
+                failed = true;
+            }
+        }
+    }
+
     if (!failed) {
         console.log(`OK   ${path}`);
     }

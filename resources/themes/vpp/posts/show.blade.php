@@ -18,7 +18,8 @@
         @endif
 
         {{-- Nội dung đã được lọc HTML khi lưu (mews/purifier). --}}
-        <div class="post-content">{!! $post->content !!}</div>
+        {{-- Ảnh trong bài được gắn alt/kích thước/srcset/tải lười khi hiển thị (ContentImages). --}}
+        <div class="post-content">{!! $content !!}</div>
 
         @if ($post->faqs->isNotEmpty())
             <section class="faq">
