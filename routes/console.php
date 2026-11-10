@@ -5,6 +5,7 @@ use App\Jobs\PullSearchConsoleData;
 use App\Models\RequiredPage;
 use App\Models\Site;
 use App\Models\User;
+use App\Support\PageCache\ClearPageCache;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\Facades\Validator;
@@ -80,3 +81,6 @@ Schedule::command('search-console:pull')->dailyAt('07:10')->timezone(config('app
 Schedule::command('backup:clean')->dailyAt('01:40')->timezone(config('app.display_timezone'));
 Schedule::command('backup:run')->dailyAt('02:10')->timezone(config('app.display_timezone'));
 Schedule::command('backup:monitor')->dailyAt('08:20')->timezone(config('app.display_timezone'));
+
+// Bài hẹn giờ vừa tới giờ đăng: xoá cache toàn trang để bài hiện đúng giờ.
+Schedule::call(fn () => ClearPageCache::clearIfPostsWentLive())->everyMinute()->name('page-cache:scheduled-posts');

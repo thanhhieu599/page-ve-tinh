@@ -61,7 +61,7 @@ Tiêu chuẩn kỹ thuật: `tech-stack.md`. Thiết kế dữ liệu: `database
 ## 7. Vận hành
 
 - Staging + production. CI (GitHub Actions): test, Pint, PHPStan, test "tắt JS", kiểm tra Core Web Vitals
-  (LCP < 2.5s, CLS < 0.1, INP < 200ms). Dev bấm deploy production.
+  (LCP < 2.5s, CLS < 0.1, INP < 200ms; trong CI đo TBT < 200ms thay INP, vì INP cần người dùng thật tương tác). Dev bấm deploy production.
 - Sao lưu hằng ngày ra kho ngoài server; giữ 30 ngày + 12 tháng; thử khôi phục mỗi quý.
 
 ## 8. Phạm vi bản đầu (MVP) – site vpptrangthietbi.com.vn

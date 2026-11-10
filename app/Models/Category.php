@@ -79,6 +79,17 @@ class Category extends Model
         return collect(array_values($included));
     }
 
+    /**
+     * Danh mục gốc đang có bài (cho menu và trang chủ), xếp theo tên.
+     *
+     * @param  list<string>  $columns
+     * @return Collection<int, Category>
+     */
+    public static function liveRoots(array $columns = ['*']): Collection
+    {
+        return static::live($columns)->whereNull('parent_id')->sortBy('name')->values();
+    }
+
     /** @return BelongsTo<Category, $this> */
     public function parent(): BelongsTo
     {

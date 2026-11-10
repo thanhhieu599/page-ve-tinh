@@ -63,6 +63,14 @@ class CompanyProfile extends Model
         return $address !== '' ? $address : null;
     }
 
+    /** Link gọi điện (tel:) từ số điện thoại công ty, chỉ giữ chữ số và dấu +. */
+    public function telHref(): ?string
+    {
+        $phone = $this->value('phone');
+
+        return $phone !== null ? 'tel:'.preg_replace('/[^0-9+]/', '', $phone) : null;
+    }
+
     public function host(): string
     {
         return (string) parse_url((string) $this->value('url'), PHP_URL_HOST);

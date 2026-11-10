@@ -84,6 +84,14 @@ class Site extends Model
         return is_string($color) && preg_match(self::COLOR_PATTERN, $color) ? strtolower($color) : null;
     }
 
+    /** Câu giới thiệu trang chủ (cũng là meta description trang chủ); trống thì theme dùng câu mặc định. */
+    public function tagline(): ?string
+    {
+        $tagline = $this->settings['tagline'] ?? null;
+
+        return is_string($tagline) && trim($tagline) !== '' ? trim($tagline) : null;
+    }
+
     /** Mã xác minh Google Search Console (thẻ meta google-site-verification). */
     public function searchConsoleToken(): ?string
     {

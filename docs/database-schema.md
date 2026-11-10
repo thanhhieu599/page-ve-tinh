@@ -163,6 +163,6 @@ Database CMS tách riêng khỏi database Mautic (Q13).
 ## Bổ sung khi triển khai (issue #17)
 
 - Không thêm bảng. `sites.settings.tagline`: câu giới thiệu trang chủ (cũng là meta description trang chủ).
-- Cache toàn trang (spatie/laravel-responsecache) cho route công khai: khoá theo tên miền + đường dẫn (bỏ qua UTM/gclid); không cache khi phiên có lỗi form/dữ liệu vừa nhập, không cache trang cảm ơn; hết hạn lúc 0 giờ VN và tối đa 1 giờ; lưu nội dung trong trang quản trị thì xoá cache (`App\Support\PageCache`).
+- Cache toàn trang (spatie/laravel-responsecache) cho route công khai: khoá theo tên miền + đường dẫn (bỏ qua UTM/gclid); không cache khi phiên có lỗi form/dữ liệu vừa nhập, không cache trang cảm ơn; hết hạn lúc 0 giờ VN và tối đa 1 giờ; lưu nội dung trong trang quản trị thì xoá cache; bài hẹn giờ tới giờ đăng thì lịch mỗi phút xoá cache; dùng kho riêng `pages` (`App\Support\PageCache`).
 - Sao lưu (spatie/laravel-backup): database + `storage/app/public`, mã hoá, ra disk `backup` (S3); giữ 30 ngày + 12 tháng. Vận hành: `docs/van-hanh.md`.
 

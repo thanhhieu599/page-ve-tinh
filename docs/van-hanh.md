@@ -47,7 +47,7 @@ Quyền thư mục: user chạy PHP-FPM (thường `www-data`) phải ghi đư�
 | `TRUSTED_PROXIES` | dải IP Cloudflare (https://www.cloudflare.com/ips/), phân cách bằng dấu phẩy |
 | `DB_*` | database riêng của môi trường |
 | `CACHE_STORE`, `QUEUE_CONNECTION`, `SESSION_DRIVER` | `redis` |
-| `RESPONSE_CACHE_ENABLED` / `RESPONSE_CACHE_DRIVER` | `true` / `redis` |
+| `RESPONSE_CACHE_ENABLED` / `RESPONSE_CACHE_DRIVER` | `true` / `pages` (kho file riêng; **không** dùng redis: xoá cache trang trên redis sẽ xoá cả database redis) |
 | `MAIL_*`, `MAIL_FROM_ADDRESS` | SMTP gửi email cảnh báo |
 | `DEV_ALERT_EMAIL` | email dev nhận cảnh báo (Mautic, sao lưu) |
 | `MAUTIC_URL` (https), `MAUTIC_USERNAME`, `MAUTIC_PASSWORD` | xem issue #11 |
@@ -129,7 +129,7 @@ Cron (`crontab -u www-data -e`):
 ```
 
 Lịch đã có trong code (giờ Việt Nam): kéo Search Console 07:10; dọn sao lưu 01:40;
-sao lưu 02:10; kiểm tra sao lưu 08:20. Xem bằng `php artisan schedule:list`.
+sao lưu 02:10; kiểm tra sao lưu 08:20; mỗi phút xoá cache trang nếu có bài hẹn giờ vừa tới giờ đăng. Xem bằng `php artisan schedule:list`.
 
 ## 6. Deploy
 

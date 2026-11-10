@@ -47,6 +47,15 @@ return [
             'lock_table' => env('DB_CACHE_LOCK_TABLE'),
         ],
 
+        // Kho riêng cho cache toàn trang (thư mục riêng): xoá cache trang không đụng tới cache khác
+        // (giới hạn gửi form, token Google…). Dùng cho cả production; không dùng redis cho cache trang
+        // vì xoá trên redis là xoá cả database redis.
+        'pages' => [
+            'driver' => 'file',
+            'path' => storage_path('framework/cache/pages'),
+            'lock_path' => storage_path('framework/cache/pages-locks'),
+        ],
+
         'file' => [
             'driver' => 'file',
             'path' => storage_path('framework/cache/data'),

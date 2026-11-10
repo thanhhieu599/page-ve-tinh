@@ -17,11 +17,12 @@ final class SiteMenu
     /** @return list<array{label: string, href: string}> */
     public static function items(Site $site): array
     {
-        $categories = Category::live(['name', 'slug'])->whereNull('parent_id')->sortBy('name')->take(self::MAX_CATEGORIES)
+        // Category::liveRoots() lọc theo site đang xem (global scope), cùng site với $site.
+        $categories = Category::liveRoots(['name', 'slug'])->take(self::MAX_CATEGORIES)
             ->map(fn (Category $category) => ['label' => $category->name, 'href' => $category->path()])->values()->all();
 
         $pages = $site->requiredPages()->published()->whereIn('kind', [PageKind::About, PageKind::Contact])->get()
-            ->sortBy(fn ($page) => $page->kind === PageKind::About ? 0 : 1)
+            ->sortBy(fn ($page) => $page->kind->menuOrder())
             ->map(fn ($page) => ['label' => $page->kind->getLabel(), 'href' => $page->path()])->values()->all();
 
         return [['label' => 'Trang chủ', 'href' => '/'], ...$categories, ...$pages];

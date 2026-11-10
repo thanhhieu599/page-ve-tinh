@@ -40,6 +40,16 @@ enum PageKind: string implements HasLabel
         };
     }
 
+    /** Thứ tự trong menu và footer: giới thiệu, chính sách, liên hệ. */
+    public function menuOrder(): int
+    {
+        return match ($this) {
+            self::About => 0,
+            self::Privacy => 1,
+            self::Contact => 2,
+        };
+    }
+
     /** Trang có form yêu cầu báo giá ngay trên trang. */
     public function hasQuoteForm(): bool
     {

@@ -17,8 +17,8 @@ return [
          * to store requests. This can be the name of any store
          * that is configured in your app's cache.php config
          */
-        // Production: redis (nhanh, xoá cache tức thì cho mọi worker).
-        'store' => env('RESPONSE_CACHE_DRIVER', 'file'),
+        // Kho riêng "pages" (config/cache.php): xoá cache trang không xoá cache khác.
+        'store' => env('RESPONSE_CACHE_DRIVER', 'pages'),
 
         /*
          * The default number of seconds responses will be cached

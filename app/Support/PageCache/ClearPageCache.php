@@ -37,6 +37,23 @@ final class ClearPageCache
         }
     }
 
+    /**
+     * Bài hẹn giờ không có sự kiện lưu khi tới giờ đăng: lịch chạy mỗi phút xoá cache nếu vừa có
+     * bài tới giờ hiện, để bài lên trang chủ, danh mục… đúng giờ.
+     */
+    public static function clearIfPostsWentLive(int $withinMinutes = 2): bool
+    {
+        $wentLive = Post::withoutGlobalScopes()->published()
+            ->where('published_at', '>=', now()->subMinutes($withinMinutes))
+            ->exists();
+
+        if ($wentLive) {
+            self::clear();
+        }
+
+        return $wentLive;
+    }
+
     public static function clear(): void
     {
         if (config('responsecache.enabled')) {

@@ -34,6 +34,14 @@ const pages = [
         mustContain: ['Liên hệ và yêu cầu báo giá', 'Thông tin công ty', 'Gửi yêu cầu báo giá'],
     },
     {
+        path: '/gioi-thieu',
+        mustContain: ['Giới thiệu công ty', 'Thông tin công ty'],
+    },
+    {
+        path: '/chinh-sach-quyen-rieng-tu',
+        mustContain: ['Chính sách quyền riêng tư', 'Quyền của bạn'],
+    },
+    {
         path: '/tac-gia/bien-tap-dt',
         mustContain: ['Ban biên tập D&T', 'Cách chọn giấy in A4 cho văn phòng nhà máy'],
     },

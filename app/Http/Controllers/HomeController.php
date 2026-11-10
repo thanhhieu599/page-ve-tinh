@@ -17,7 +17,7 @@ class HomeController extends Controller
     public function __invoke(): View
     {
         return view('theme::home', [
-            'categories' => Category::live()->whereNull('parent_id')->sortBy('name')->values(),
+            'categories' => Category::liveRoots(),
             'posts' => Post::query()->published()->with('categories')->latest('published_at')->limit(self::LATEST_POSTS)->get(),
             'products' => Product::query()->active()->with('image')->latest('id')->limit(self::FEATURED_PRODUCTS)->get(),
         ]);

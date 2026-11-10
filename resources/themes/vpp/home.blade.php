@@ -1,9 +1,7 @@
 @extends('theme::layout')
 
 @php($company = \App\Models\CompanyProfile::current())
-@php($tagline = is_string($site->settings['tagline'] ?? null) && $site->settings['tagline'] !== ''
-    ? $site->settings['tagline']
-    : 'Cung cấp cho nhà máy và doanh nghiệp: báo giá theo số lượng, xuất hoá đơn VAT, giao tận nơi.')
+@php($tagline = $site->tagline() ?? 'Cung cấp cho nhà máy và doanh nghiệp: báo giá theo số lượng, xuất hoá đơn VAT, giao tận nơi.')
 
 @section('meta_description', $tagline)
 
@@ -16,7 +14,7 @@
             <div class="mt-6 flex flex-wrap gap-3">
                 <a class="button button-primary text-lg" href="{{ \App\Http\Controllers\QuoteRequestController::PATH }}">Yêu cầu báo giá theo số lượng</a>
                 @if ($phone = $company->value('phone'))
-                    <a class="button text-lg" href="tel:{{ preg_replace('/[^0-9+]/', '', $phone) }}">Gọi {{ $phone }}</a>
+                    <a class="button text-lg" href="{{ $company->telHref() }}">Gọi {{ $phone }}</a>
                 @endif
             </div>
             <ul class="mt-6 grid gap-2 text-sm text-ink sm:grid-cols-3">

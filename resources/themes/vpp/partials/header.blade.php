@@ -3,12 +3,12 @@
     Menu trên điện thoại dùng <details>: mở/đóng được khi tắt JavaScript.
 --}}
 @php($company = \App\Models\CompanyProfile::current())
-@php($phone = $company->value('phone'))
+@php([$phone, $tel] = [$company->value('phone'), $company->telHref()])
 <div class="bg-navy text-xs text-white/90">
     <div class="container-site flex items-center justify-between gap-4 py-1.5">
         <p>Website chuyên đề thuộc {{ $company->value('name') }} · {{ $company->host() }}</p>
         @if ($phone)
-            <p class="hidden sm:block">Hỗ trợ báo giá: <a class="font-semibold text-white no-underline hover:text-white" href="tel:{{ preg_replace('/[^0-9+]/', '', $phone) }}">{{ $phone }}</a></p>
+            <p class="hidden sm:block">Hỗ trợ báo giá: <a class="font-semibold text-white no-underline hover:text-white" href="{{ $tel }}">{{ $phone }}</a></p>
         @endif
     </div>
 </div>
@@ -25,7 +25,7 @@
 
         <div class="flex items-center gap-4">
             @if ($phone)
-                <a href="tel:{{ preg_replace('/[^0-9+]/', '', $phone) }}" class="hidden text-right leading-tight no-underline md:block">
+                <a href="{{ $tel }}" class="hidden text-right leading-tight no-underline md:block">
                     <span class="block text-lg font-bold text-ink">{{ $phone }}</span>
                     <span class="block text-xs text-brand">Hỗ trợ báo giá theo số lượng</span>
                 </a>
