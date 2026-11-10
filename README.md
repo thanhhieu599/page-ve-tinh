@@ -52,6 +52,7 @@ Kiểm tra:
 - `php artisan test`: test tự động (cần database `pvt_test`, xem `phpunit.xml`).
 - `vendor/bin/pint --test`, `vendor/bin/phpstan analyse`.
 - `node tests/Browser/no-javascript.mjs`: tắt JavaScript, nội dung vẫn phải hiện đủ (cần app đang chạy).
+- `node tests/Browser/core-web-vitals.mjs`: đo LCP/CLS/TBT trên giả lập điện thoại cho mọi loại trang; vượt ngưỡng thì báo lỗi (cần app đang chạy, đã `npm run build`).
 
 ## Cấu trúc
 

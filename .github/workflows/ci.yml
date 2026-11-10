@@ -104,6 +104,11 @@ jobs:
         env:
           APP_ORIGIN: http://127.0.0.1:8000
 
+      - name: Đo Core Web Vitals (giả lập điện thoại)
+        run: node tests/Browser/core-web-vitals.mjs
+        env:
+          APP_ORIGIN: http://127.0.0.1:8000
+
       - name: Log khi lỗi
         if: failure()
         run: tail -n 100 storage/logs/*.log
