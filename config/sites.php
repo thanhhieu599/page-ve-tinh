@@ -12,6 +12,19 @@ return [
     */
     'admin_domain' => env('ADMIN_DOMAIN', 'admin.localhost'),
 
+    /*
+    | Cloudflare Turnstile cho form yêu cầu báo giá. Để trống = tắt (local).
+    */
+    'turnstile' => [
+        'site_key' => env('TURNSTILE_SITE_KEY'),
+        'secret_key' => env('TURNSTILE_SECRET_KEY'),
+    ],
+
+    /*
+    | Giới hạn số lần gửi form yêu cầu báo giá trên mỗi IP, mỗi site.
+    */
+    'quote_rate_limit' => ['attempts' => 5, 'decay_seconds' => 600],
+
     'force_https' => (bool) env('FORCE_HTTPS', true),
 
     /*

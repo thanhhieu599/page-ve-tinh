@@ -46,4 +46,10 @@
             </section>
         @endif
     </article>
+
+    <section class="quote-request">
+        <h2>Yêu cầu báo giá</h2>
+        <p>Cần báo giá theo số lượng cho nhà máy, văn phòng? Để lại thông tin, bộ phận kinh doanh sẽ liên hệ.</p>
+        @include('theme::partials.quote-form', ['product' => null])
+    </section>
 @endsection

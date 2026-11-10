@@ -94,3 +94,12 @@ Database CMS tách riêng khỏi database Mautic (Q13).
 - Nhập sản phẩm qua `App\Support\ProductSync\ProductSync` (dùng chung cho CSV và Sapo API sau này): khớp SKU trong site; nguồn chỉ ghi tên, thông số, link mua, giá (giá đi qua `setPrice`, làm mới ngày giá); không ghi slug, mô tả, ảnh, liên kết bài.
 - Ngừng bán → ẩn; bán lại → hiện lại (chỉ sản phẩm bị ẩn vì ngừng bán). Chế độ "file đầy đủ" ẩn SKU vắng mặt, trừ sản phẩm tạo tay.
 
+## Bổ sung khi triển khai (issue #10)
+
+| Bảng / thay đổi | Cột quan trọng | Ghi chú |
+|---|---|---|
+| `leads` | site_id, name, company, email, phone, need, **product_id**, page_url, **landing_url**, utm_source/medium/campaign, consent_text, consent_at, ip, **is_verified**, status, deal_value, won_at, synced_to_mautic_at | `is_verified`: đã qua Turnstile (gửi khi tắt JavaScript = chưa xác minh). `status`: new/qualified/quoted/won/lost; chuyển "won" tự ghi `won_at` |
+
+- Nguồn truy cập (trang vào đầu, UTM) ghi vào phiên ở lần vào đầu tiên (middleware CaptureAttribution).
+- Lead chỉ xem/sửa bởi Biên tập/Admin; thông tin khách và bằng chứng đồng ý chỉ đọc.
+

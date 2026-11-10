@@ -27,6 +27,14 @@ class Site extends Model
         ];
     }
 
+    /** Mã GA4 trong cấu hình site, chỉ nhận đúng dạng G-XXXX để không chèn được mã lạ vào trang. */
+    public function ga4Id(): ?string
+    {
+        $id = $this->settings['ga4_id'] ?? null;
+
+        return is_string($id) && preg_match('/^G-[A-Z0-9]{4,20}$/', $id) ? $id : null;
+    }
+
     public static function findActiveByHost(string $host): ?self
     {
         return static::query()

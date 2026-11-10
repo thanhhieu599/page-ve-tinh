@@ -73,5 +73,25 @@ for (const { path, mustContain } of pages) {
     }
 }
 
+// Gửi form yêu cầu báo giá khi tắt JavaScript: phải tới được trang cảm ơn.
+{
+    const url = `http://${domain}:${origin.port || 80}/yeu-cau-bao-gia`;
+    await page.goto(url);
+    await page.fill('#name', 'Kiểm tra CI');
+    await page.fill('#company', 'Công ty Kiểm tra');
+    await page.fill('#email', 'ci@example.com');
+    await page.fill('#phone', '0900000000');
+    await page.fill('#need', 'Kiểm tra gửi form không cần JavaScript.');
+    await page.check('input[name=consent]');
+    await page.click('form.quote-form button[type=submit]');
+    const text = await page.locator('body').innerText();
+    if (!text.includes('Đã nhận yêu cầu báo giá')) {
+        console.error('FAIL /yeu-cau-bao-gia: gửi form khi tắt JavaScript không tới trang cảm ơn');
+        failed = true;
+    } else {
+        console.log('OK   /yeu-cau-bao-gia (gửi form không JavaScript)');
+    }
+}
+
 await browser.close();
 process.exit(failed ? 1 : 0);

@@ -9,6 +9,17 @@
     @if ($metaDescription !== '')
         <meta name="description" content="{!! $metaDescription !!}">
     @endif
+    @php($ga4Id = $site->ga4Id())
+    @if ($ga4Id)
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $ga4Id }}"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', @json($ga4Id));
+        </script>
+    @endif
+    @stack('head-scripts')
 </head>
 <body>
     <header>

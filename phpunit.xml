@@ -24,6 +24,8 @@
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="FORCE_HTTPS" value="true" force="true"/>
         <env name="ADMIN_DOMAIN" value="admin.trangthietbi.test" force="true"/>
+        <env name="TURNSTILE_SITE_KEY" value="" force="true"/>
+        <env name="TURNSTILE_SECRET_KEY" value="" force="true"/>
         <env name="TRUSTED_PROXIES" value="" force="true"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
