@@ -1,6 +1,7 @@
 {{-- Form yêu cầu báo giá. Gửi được khi tắt JavaScript (HTML thuần). $product có thể null. --}}
 <form method="POST" action="{{ \App\Http\Controllers\QuoteRequestController::PATH }}" class="quote-form" id="yeu-cau-bao-gia">
-    @csrf
+    {{-- Không có token CSRF: form công khai, chống spam bằng honeypot, giới hạn tần suất, Turnstile.
+         Nhờ vậy trang có form vẫn được cache toàn trang mà không lỗi 419. --}}
     <input type="hidden" name="page_url" value="{{ request()->getRequestUri() }}">
     @if ($product ?? null)
         <input type="hidden" name="product_sku" value="{{ $product->sku }}">

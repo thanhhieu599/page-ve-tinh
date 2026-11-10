@@ -18,6 +18,9 @@ return [
     'turnstile' => [
         'site_key' => env('TURNSTILE_SITE_KEY'),
         'secret_key' => env('TURNSTILE_SECRET_KEY'),
+        // true: bắt buộc qua Turnstile (khách tắt JavaScript không gửi được form).
+        // false: không có token thì vẫn nhận, đánh dấu lead "chưa xác minh".
+        'required' => (bool) env('TURNSTILE_REQUIRED', false),
     ],
 
     /*

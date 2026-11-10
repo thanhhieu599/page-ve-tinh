@@ -18,6 +18,8 @@ class QuoteRequestController extends Controller
 {
     public const PATH = '/yeu-cau-bao-gia';
 
+    public const SUBMITTED_FLASH = 'quote_submitted';
+
     public function create(Request $request): View
     {
         $sku = $request->query('san-pham');
@@ -30,21 +32,21 @@ class QuoteRequestController extends Controller
     {
         $site = $currentSite->get() ?? abort(404);
 
-        // Bẫy bot: ô ẩn có dữ liệu thì giả vờ thành công, không lưu.
+        // Bẫy bot: ô ẩn có dữ liệu thì giả vờ thành công, không lưu, không tính chuyển đổi.
         if (filled($request->input('website'))) {
-            return redirect()->to(self::PATH.'/da-gui');
+            return to_route('quote.thanks');
         }
-
-        $limit = config('sites.quote_rate_limit');
-        $rateKey = 'quote:'.$site->id.':'.$request->ip();
-        abort_if(RateLimiter::tooManyAttempts($rateKey, $limit['attempts']), 429, 'Bạn đã gửi quá nhiều yêu cầu, vui lòng thử lại sau ít phút.');
-        RateLimiter::hit($rateKey, $limit['decay_seconds']);
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'company' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email:rfc', 'max:255'],
-            'phone' => ['required', 'string', 'max:50', 'regex:/^[0-9+().\s-]{8,20}$/'],
+            'phone' => ['required', 'string', 'max:50', 'regex:/^[0-9+().\s-]+$/', function (string $attribute, mixed $value, \Closure $fail): void {
+                $digits = strlen((string) preg_replace('/\D/', '', (string) $value));
+                if ($digits < 8 || $digits > 15) {
+                    $fail('Số điện thoại chưa đúng.');
+                }
+            }],
             'need' => ['required', 'string', 'max:5000'],
             'consent' => ['accepted'],
             'product_sku' => ['nullable', 'string', 'max:100'],
@@ -54,21 +56,17 @@ class QuoteRequestController extends Controller
             'phone.regex' => 'Số điện thoại chưa đúng.',
         ]);
 
-        // Có token Turnstile thì phải hợp lệ; không có (tắt JavaScript) thì nhận nhưng ghi "chưa xác minh".
-        $token = $request->input('cf-turnstile-response');
-        $isVerified = false;
-        if (Turnstile::enabled() && is_string($token) && $token !== '') {
-            if (! Turnstile::verify($token, $request->ip())) {
-                throw ValidationException::withMessages([
-                    'cf-turnstile-response' => 'Không xác minh được bạn không phải robot. Vui lòng thử lại.',
-                ]);
-            }
-            $isVerified = true;
-        }
+        $isVerified = $this->checkTurnstile($request);
+
+        // Chỉ đếm lần gửi hợp lệ: khách điền sai vài lần không bị khoá.
+        $limit = config('sites.quote_rate_limit');
+        $rateKey = 'quote:'.$site->id.':'.$request->ip();
+        abort_if(RateLimiter::tooManyAttempts($rateKey, $limit['attempts']), 429);
+        RateLimiter::hit($rateKey, $limit['decay_seconds']);
 
         $attribution = (array) $request->session()->get(CaptureAttribution::SESSION_KEY, []);
         $product = filled($data['product_sku'] ?? null)
-            ? Product::query()->where('sku', $data['product_sku'])->first()
+            ? Product::query()->active()->where('sku', $data['product_sku'])->first()
             : null;
 
         $lead = new Lead([
@@ -86,11 +84,46 @@ class QuoteRequestController extends Controller
         $lead->ip = $request->ip();
         $lead->save();
 
-        return redirect()->to(self::PATH.'/da-gui');
+        // Trang cảm ơn chỉ báo chuyển đổi GA4 một lần, ngay sau lần gửi thật này.
+        $request->session()->flash(self::SUBMITTED_FLASH, true);
+
+        return to_route('quote.thanks');
     }
 
-    public function thanks(): View
+    /**
+     * Có token Turnstile thì phải hợp lệ. Không có token (tắt JavaScript): nhận và ghi
+     * "chưa xác minh", trừ khi bật chế độ bắt buộc.
+     */
+    private function checkTurnstile(Request $request): bool
     {
-        return view('theme::quote-request.thanks');
+        if (! Turnstile::enabled()) {
+            return false;
+        }
+
+        $token = $request->input('cf-turnstile-response');
+        if (! is_string($token) || $token === '') {
+            if (config('sites.turnstile.required')) {
+                throw ValidationException::withMessages([
+                    'cf-turnstile-response' => 'Vui lòng bật JavaScript và xác nhận bạn không phải robot.',
+                ]);
+            }
+
+            return false;
+        }
+
+        if (! Turnstile::verify($token, $request->ip())) {
+            throw ValidationException::withMessages([
+                'cf-turnstile-response' => 'Không xác minh được bạn không phải robot. Vui lòng thử lại.',
+            ]);
+        }
+
+        return true;
+    }
+
+    public function thanks(Request $request): View
+    {
+        return view('theme::quote-request.thanks', [
+            'reportConversion' => (bool) $request->session()->get(self::SUBMITTED_FLASH, false),
+        ]);
     }
 }

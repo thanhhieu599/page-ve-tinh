@@ -18,6 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->replace(TrustProxies::class, TrustConfiguredProxies::class);
         // Chạy sau TrustProxies để biết đúng https khi đứng sau Nginx/Cloudflare.
         $middleware->append(RedirectToCanonicalUrl::class);
+
+        // Form yêu cầu báo giá công khai không dùng CSRF (xem partial quote-form).
+        $middleware->preventRequestForgery(except: ['yeu-cau-bao-gia']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

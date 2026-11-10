@@ -3,7 +3,7 @@
 @section('title', 'Đã nhận yêu cầu báo giá')
 
 @push('head-scripts')
-    @if ($site->ga4Id())
+    @if ($reportConversion && $site->ga4Id())
         <script>gtag('event', 'generate_lead', { form: 'yeu-cau-bao-gia', site: @json($site->domain) });</script>
     @endif
 @endpush

@@ -184,13 +184,89 @@ class QuoteRequestTest extends TestCase
             ->assertSee('name="page_url" value="/kien-thuc/chon-giay-in"', escape: false);
     }
 
-    public function test_thank_you_page_reports_a_ga4_conversion_when_ga4_is_configured(): void
+    public function test_a_real_submission_reports_one_ga4_conversion(): void
     {
         $this->vpp->update(['settings' => ['ga4_id' => 'G-TEST123']]);
+
+        $this->post(self::FORM, $this->validInput());
 
         $this->get('https://vpptrangthietbi.com.vn/yeu-cau-bao-gia/da-gui')
             ->assertSee('https://www.googletagmanager.com/gtag/js?id=G-TEST123', escape: false)
             ->assertSee("gtag('event', 'generate_lead'", escape: false);
+
+        // Tải lại trang cảm ơn không được đếm thêm chuyển đổi.
+        $this->get('https://vpptrangthietbi.com.vn/yeu-cau-bao-gia/da-gui')
+            ->assertDontSee("gtag('event', 'generate_lead'", escape: false);
+    }
+
+    public function test_visiting_the_thank_you_page_directly_or_as_a_trapped_bot_reports_no_conversion(): void
+    {
+        $this->vpp->update(['settings' => ['ga4_id' => 'G-TEST123']]);
+
+        $this->get('https://vpptrangthietbi.com.vn/yeu-cau-bao-gia/da-gui')
+            ->assertDontSee("gtag('event', 'generate_lead'", escape: false);
+
+        $this->post(self::FORM, $this->validInput(['website' => 'spam']));
+        $this->get('https://vpptrangthietbi.com.vn/yeu-cau-bao-gia/da-gui')
+            ->assertDontSee("gtag('event', 'generate_lead'", escape: false);
+    }
+
+    public function test_mistakes_in_the_form_do_not_use_up_the_sending_limit(): void
+    {
+        foreach (range(1, 6) as $i) {
+            $this->post(self::FORM, $this->validInput(['email' => 'sai-email']), ['REMOTE_ADDR' => '198.51.100.20'])
+                ->assertSessionHasErrors('email');
+        }
+
+        $this->post(self::FORM, $this->validInput(), ['REMOTE_ADDR' => '198.51.100.20'])
+            ->assertRedirect('https://vpptrangthietbi.com.vn/yeu-cau-bao-gia/da-gui');
+    }
+
+    public function test_limit_page_explains_in_vietnamese_and_links_back(): void
+    {
+        foreach (range(1, 5) as $i) {
+            $this->post(self::FORM, $this->validInput(['email' => "k{$i}@abc-vn.com"]), ['REMOTE_ADDR' => '198.51.100.30']);
+        }
+
+        $this->post(self::FORM, $this->validInput(), ['REMOTE_ADDR' => '198.51.100.30'])
+            ->assertStatus(429)
+            ->assertSee('Bạn đã gửi nhiều yêu cầu')
+            ->assertSee('href="/yeu-cau-bao-gia"', escape: false);
+    }
+
+    public function test_strict_mode_requires_turnstile(): void
+    {
+        config(['sites.turnstile.site_key' => 'site-key', 'sites.turnstile.secret_key' => 'secret', 'sites.turnstile.required' => true]);
+        Http::fake();
+
+        $this->post(self::FORM, $this->validInput())->assertSessionHasErrors('cf-turnstile-response');
+        $this->leadPageAsEditor()->assertDontSee('Nguyễn Thị Mai');
+    }
+
+    public function test_meaningless_phone_number_is_refused(): void
+    {
+        $this->post(self::FORM, $this->validInput(['phone' => '(((((((((']))->assertSessionHasErrors('phone');
+        $this->post(self::FORM, $this->validInput(['phone' => '+84 912.345.678']))->assertSessionHasNoErrors();
+    }
+
+    public function test_hidden_product_is_not_linked_to_the_lead(): void
+    {
+        Product::factory()->for($this->vpp)->create(['name' => 'Bìa còng ngừng bán', 'sku' => 'BC-OLD', 'is_active' => false]);
+
+        $this->post(self::FORM, $this->validInput(['product_sku' => 'BC-OLD']));
+
+        $lead = Lead::query()->firstOrFail();
+        $editor = User::factory()->editor()->hasAttached($this->vpp)->create();
+        $this->actingAs($editor)
+            ->get("https://admin.trangthietbi.test/admin/vpptrangthietbi.com.vn/leads/{$lead->id}/edit")
+            ->assertDontSee('Bìa còng ngừng bán');
+    }
+
+    public function test_quote_form_carries_no_csrf_token_so_cached_pages_keep_working(): void
+    {
+        Post::factory()->for($this->vpp)->published()->create(['slug' => 'chon-giay-in']);
+
+        $this->get('https://vpptrangthietbi.com.vn/kien-thuc/chon-giay-in')->assertDontSee('name="_token"', escape: false);
     }
 
     public function test_pages_carry_no_ga4_code_when_it_is_not_configured(): void
