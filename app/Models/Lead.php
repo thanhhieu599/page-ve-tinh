@@ -31,6 +31,7 @@ class Lead extends Model
             'won_at' => 'datetime',
             'synced_to_mautic_at' => 'datetime',
             'mautic_contact_id' => 'integer',
+            'mautic_synced_steps' => 'array',
             'deal_value' => 'integer',
             'is_verified' => 'boolean',
         ];

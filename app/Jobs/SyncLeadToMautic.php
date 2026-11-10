@@ -6,23 +6,40 @@ use App\Mail\LeadSyncFailed;
 use App\Models\Lead;
 use App\Models\Scopes\SiteScope;
 use App\Support\Mautic\MauticClient;
+use App\Support\VietnameseName;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
 
 /**
  * Đẩy một lead sang Mautic: contact (gộp theo email), tag site/ngành, UTM, ghi chú
- * nhu cầu, campaign của site. CMS là bản gốc; lỗi thì thử lại, quá 5 lần báo email dev.
+ * nhu cầu, campaign của site. CMS là bản gốc; lỗi thì thử lại, quá số lần thử báo email dev.
+ *
+ * Mỗi bước xong được ghi vào lead, nên lần thử lại chỉ làm tiếp bước còn thiếu
+ * (không tạo ghi chú, UTM trùng). Mỗi lead chỉ có một job trong hàng đợi.
  */
-class SyncLeadToMautic implements ShouldQueue
+class SyncLeadToMautic implements ShouldBeUnique, ShouldQueue
 {
     use Queueable;
 
     public int $tries = 5;
 
+    /** 4 lời gọi × 15 giây, cộng dư; phải nhỏ hơn retry_after (90 giây) của hàng đợi. */
+    public int $timeout = 75;
+
+    /** Khoá chống trùng giữ tối đa 2 giờ (đủ cho cả chuỗi thử lại 1 + 5 + 15 + 60 phút). */
+    public int $uniqueFor = 7200;
+
     public function __construct(public int $leadId) {}
+
+    public function uniqueId(): string
+    {
+        return (string) $this->leadId;
+    }
 
     /** @return list<int> giãn cách giữa các lần thử lại (giây) */
     public function backoff(): array
@@ -34,17 +51,17 @@ class SyncLeadToMautic implements ShouldQueue
     {
         $lead = Lead::withoutGlobalScope(SiteScope::class)->with(['site', 'product'])->find($this->leadId);
 
-        if ($lead === null || $lead->synced_to_mautic_at !== null) {
+        if ($lead === null || $lead->isSyncedToMautic()) {
             return;
         }
 
         if (! MauticClient::configured()) {
-            Log::info('Mautic chưa cấu hình, bỏ qua đồng bộ lead.', ['lead' => $lead->id]);
+            Log::warning('Mautic chưa cấu hình, lead chờ đồng bộ.', ['lead' => $lead->id]);
 
             return;
         }
 
-        [$firstName, $lastName] = self::splitVietnameseName($lead->name);
+        [$firstName, $lastName] = VietnameseName::split($lead->name);
         $contactId = $mautic->upsertContact([
             'email' => $lead->email,
             'firstname' => $firstName,
@@ -55,54 +72,77 @@ class SyncLeadToMautic implements ShouldQueue
         ]);
         $lead->forceFill(['mautic_contact_id' => $contactId])->save();
 
-        $utm = array_filter([
-            'utm_source' => $lead->utm_source,
-            'utm_medium' => $lead->utm_medium,
-            'utm_campaign' => $lead->utm_campaign,
-            'url' => $lead->landing_url,
-        ]);
-        if ($utm !== []) {
-            $mautic->addUtm($contactId, $utm);
-        }
+        $this->step($lead, 'utm', function () use ($mautic, $lead, $contactId): void {
+            $utm = array_filter([
+                'utm_source' => $lead->utm_source,
+                'utm_medium' => $lead->utm_medium,
+                'utm_campaign' => $lead->utm_campaign,
+                'url' => $lead->landing_url,
+            ]);
+            if ($utm !== []) {
+                $mautic->addUtm($contactId, $utm);
+            }
+        });
 
-        $mautic->addNote($contactId, self::noteFor($lead));
+        $this->step($lead, 'note', fn () => $mautic->addNote($contactId, self::noteFor($lead)));
 
-        $campaignId = $lead->site?->settings['mautic_campaign_id'] ?? null;
-        if (is_numeric($campaignId)) {
-            $mautic->addToCampaign((int) $campaignId, $contactId);
+        // Lead chưa qua Turnstile có thể là bot: vẫn vào Mautic (tag chua-xac-minh) để sales xem,
+        // nhưng không đưa vào campaign chăm sóc tự động.
+        $campaignId = $lead->site?->mauticCampaignId();
+        if ($campaignId !== null && $lead->is_verified) {
+            $this->step($lead, 'campaign', fn () => $mautic->addToCampaign($campaignId, $contactId));
         }
 
         $lead->forceFill(['synced_to_mautic_at' => now()])->save();
     }
 
-    /** Hết số lần thử: lead giữ trạng thái chưa đồng bộ, báo email cho dev. */
+    /** Chạy một bước nếu chưa xong, rồi ghi lại là đã xong. */
+    private function step(Lead $lead, string $name, callable $action): void
+    {
+        $done = $lead->mautic_synced_steps ?? [];
+
+        if (in_array($name, $done, true)) {
+            return;
+        }
+
+        $action();
+        $lead->forceFill(['mautic_synced_steps' => [...$done, $name]])->save();
+    }
+
+    /** Hết số lần thử: lead giữ trạng thái chưa đồng bộ, ghi log lỗi và báo email cho dev. */
     public function failed(?Throwable $exception): void
     {
+        Log::error('Lead không đồng bộ được sang Mautic sau mọi lần thử.', [
+            'lead' => $this->leadId,
+            'exception' => $exception,
+        ]);
+
         $alertEmail = config('sites.alert_email');
 
         if (filled($alertEmail)) {
-            Mail::to($alertEmail)->send(new LeadSyncFailed($this->leadId, $exception?->getMessage() ?? 'Không rõ lỗi'));
+            Mail::to($alertEmail)->send(new LeadSyncFailed($this->leadId, $this->tries, self::safeReason($exception)));
         }
     }
 
-    /** Họ tên Việt: tên là từ cuối, họ và tên đệm là phần còn lại. */
-    public static function splitVietnameseName(string $name): array
+    /** Tóm tắt lỗi cho email: không kèm nội dung phản hồi Mautic (có thể chứa dữ liệu khách). */
+    private static function safeReason(?Throwable $exception): string
     {
-        $parts = preg_split('/\s+/u', trim($name)) ?: [];
-        $first = (string) array_pop($parts);
-
-        return [$first, implode(' ', $parts)];
+        return match (true) {
+            $exception instanceof RequestException => 'Mautic trả về HTTP '.$exception->response->status(),
+            $exception !== null => class_basename($exception),
+            default => 'Không rõ lỗi',
+        };
     }
 
     /** @return list<string> */
     private static function tagsFor(Lead $lead): array
     {
-        $industry = $lead->site?->settings['industry_tag'] ?? null;
+        $industry = $lead->site?->industryTag();
 
         return array_values(array_filter([
             'rfq',
             'site-'.$lead->site?->domain,
-            is_string($industry) && $industry !== '' ? 'nganh-'.$industry : null,
+            $industry !== null ? 'nganh-'.$industry : null,
             $lead->is_verified ? null : 'chua-xac-minh',
         ]));
     }

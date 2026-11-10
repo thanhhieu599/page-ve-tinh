@@ -63,7 +63,14 @@ final class MauticClient
 
     private function http(): PendingRequest
     {
-        return Http::baseUrl(rtrim((string) config('services.mautic.url'), '/'))
+        $url = rtrim((string) config('services.mautic.url'), '/');
+
+        // Basic Auth gửi mật khẩu trong mỗi request: không bao giờ gửi qua http thường.
+        if (! str_starts_with(strtolower($url), 'https://')) {
+            throw new RuntimeException('MAUTIC_URL phải dùng https://.');
+        }
+
+        return Http::baseUrl($url)
             ->withBasicAuth((string) config('services.mautic.username'), (string) config('services.mautic.password'))
             ->acceptJson()
             ->asJson()

@@ -106,5 +106,8 @@ Database CMS tách riêng khỏi database Mautic (Q13).
 ## Bổ sung khi triển khai (issue #11)
 
 - `leads.mautic_contact_id`: id contact bên Mautic sau khi đồng bộ. Index (site_id, synced_to_mautic_at) cho bộ lọc "Chưa đồng bộ".
-- Lead mới → job `SyncLeadToMautic` (hàng đợi): tạo/cập nhật contact theo email, tag `rfq`, `site-<domain>`, `nganh-<industry_tag>`, `chua-xac-minh` (nếu chưa qua Turnstile); UTM qua `/contacts/{id}/utm/add`; ghi chú nhu cầu; campaign `settings.mautic_campaign_id` của site. Thử 5 lần (1, 5, 15, 60 phút), sau đó email `DEV_ALERT_EMAIL`.
+- Lead mới → job `SyncLeadToMautic` (hàng đợi): tạo/cập nhật contact theo email, tag `rfq`, `site-<domain>`, `nganh-<industry_tag>`, `chua-xac-minh` (nếu chưa qua Turnstile); UTM qua `/contacts/{id}/utm/add`; ghi chú nhu cầu; campaign `settings.mautic_campaign_id` của site. Thử 5 lần (1, 5, 15, 60 phút), sau đó ghi log lỗi và email `DEV_ALERT_EMAIL` (chỉ mã lỗi, không kèm nội dung phản hồi).
+- `leads.mautic_synced_steps` (JSON): các bước đã xong (`utm`, `note`, `campaign`); lần thử lại bỏ qua bước đã xong để không tạo ghi chú/UTM trùng. Job là duy nhất theo lead (không xếp hàng trùng khi bấm "Đồng bộ lại" nhiều lần).
+- Lead chưa xác minh (chưa qua Turnstile) vẫn vào Mautic với tag `chua-xac-minh` nhưng **không** vào campaign tự động.
+- `MAUTIC_URL` bắt buộc https (Basic Auth). Cấu hình site: `settings.mautic_campaign_id` (số), `settings.industry_tag` (chữ thường, số, gạch nối).
 

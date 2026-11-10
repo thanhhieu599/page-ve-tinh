@@ -25,7 +25,7 @@
 - Middleware đọc HTTP `Host` để xác định `site_id`.
 - Mọi truy vấn tự lọc theo `site_id` qua global scope; dev không phải tự nhớ thêm điều kiện.
 - Mỗi site có thư mục theme riêng `resources/themes/{site}` và cấu hình riêng
-  (logo, màu, GA4 ID, Search Console, Mautic form ID).
+  (logo, màu, GA4 ID, Search Console, Mautic campaign ID, mã ngành gắn tag Mautic).
 - Thêm site mới chỉ bằng thao tác trong trang quản trị + tạo theme, không sửa code lõi.
 
 ## Thư viện dùng sẵn (không tự viết)

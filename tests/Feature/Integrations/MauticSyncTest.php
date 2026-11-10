@@ -13,6 +13,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Testing\TestResponse;
@@ -93,12 +94,10 @@ class MauticSyncTest extends TestCase
             && $r['utm_source'] === 'zalo' && $r['utm_medium'] === 'oa' && $r['utm_campaign'] === 'vpp-thang-11');
         Http::assertSent(fn (Request $r) => $r->url() === self::MAUTIC.'/api/notes/new'
             && $r['lead'] === 4321 && str_contains($r['text'], 'Cần 200 thùng giấy A4 mỗi tháng.'));
-        Http::assertSent(fn (Request $r) => $r->url() === self::MAUTIC.'/api/campaigns/7/contact/4321/add');
+        // Chưa qua Turnstile (có thể là bot): vào Mautic có tag, nhưng không vào campaign chăm sóc.
+        Http::assertNotSent(fn (Request $r) => str_contains($r->url(), '/api/campaigns/'));
 
-        $editor = User::factory()->editor()->hasAttached($this->vpp)->create();
-        $this->actingAs($editor)
-            ->get('https://admin.trangthietbi.test/admin/vpptrangthietbi.com.vn/leads?filters[mautic][value]=0')
-            ->assertDontSee('mai.nguyen@abc-vn.com');
+        $this->unsyncedListAsEditor()->assertDontSee('mai.nguyen@abc-vn.com');
     }
 
     private function unsyncedListAsEditor(): TestResponse
@@ -178,7 +177,7 @@ class MauticSyncTest extends TestCase
 
         dispatch_sync(new SyncLeadToMautic($lead->id));
 
-        Http::assertSentCount(4);
+        Http::assertSentCount(3);
     }
 
     public function test_verified_lead_carries_no_unverified_tag_and_single_word_names_still_work(): void
@@ -194,5 +193,112 @@ class MauticSyncTest extends TestCase
 
         Http::assertSent(fn (Request $r) => $r->url() === self::MAUTIC.'/api/contacts/new'
             && $r['firstname'] === 'Hùng' && $r['lastname'] === '' && ! in_array('chua-xac-minh', $r['tags'], true));
+        Http::assertSent(fn (Request $r) => $r->url() === self::MAUTIC.'/api/campaigns/7/contact/1/add');
+    }
+
+    public function test_a_retry_after_partial_success_does_not_duplicate_the_note_or_utm(): void
+    {
+        Queue::fake();
+        $this->submitQuote();
+        $lead = Lead::query()->firstOrFail();
+        $noteDown = true;
+        $sent = [];
+        Http::fake(function (Request $request) use (&$noteDown, &$sent) {
+            $path = (string) parse_url($request->url(), PHP_URL_PATH);
+            if ($path === '/api/notes/new' && $noteDown) {
+                return Http::response(['error' => 'down'], 503);
+            }
+            $sent[] = $path;
+
+            return $path === '/api/contacts/new'
+                ? Http::response(['contact' => ['id' => 4321]], 201)
+                : Http::response(['success' => 1]);
+        });
+
+        try {
+            (new SyncLeadToMautic($lead->id))->handle(app(MauticClient::class));
+            $this->fail('Lỗi ghi chú phải ném ngoại lệ để thử lại.');
+        } catch (RequestException) {
+        }
+        $noteDown = false;
+        (new SyncLeadToMautic($lead->id))->handle(app(MauticClient::class));
+
+        $this->assertSame(1, count(array_keys($sent, '/api/contacts/4321/utm/add', true)));
+        $this->assertSame(1, count(array_keys($sent, '/api/notes/new', true)));
+        $this->unsyncedListAsEditor()->assertDontSee('mai.nguyen@abc-vn.com');
+    }
+
+    public function test_the_same_lead_is_not_queued_twice_while_a_sync_is_pending(): void
+    {
+        Queue::fake();
+        $this->submitQuote();
+        $lead = Lead::query()->firstOrFail();
+        $this->workOn($this->vpp, User::factory()->editor()->hasAttached($this->vpp)->create());
+
+        Livewire::test(ListLeads::class)->callTableAction('resyncMautic', $lead);
+
+        Queue::assertPushed(SyncLeadToMautic::class, 1);
+    }
+
+    public function test_credentials_are_never_sent_over_plain_http(): void
+    {
+        Queue::fake();
+        config(['services.mautic.url' => 'http://mautic.trangthietbi.vn']);
+        Http::fake();
+        $this->submitQuote();
+
+        try {
+            (new SyncLeadToMautic(Lead::query()->firstOrFail()->id))->handle(app(MauticClient::class));
+            $this->fail('MAUTIC_URL không phải https phải báo lỗi.');
+        } catch (\RuntimeException) {
+        }
+
+        Http::assertNothingSent();
+    }
+
+    public function test_the_alert_email_does_not_leak_the_mautic_response_body(): void
+    {
+        Mail::fake();
+        Log::spy();
+        config(['sites.alert_email' => 'dev@trangthietbi.vn']);
+        Http::fake(['*' => Http::response(['error' => 'contact mai.nguyen@abc-vn.com bị từ chối'], 422)]);
+        $exception = new RequestException(Http::get('https://mautic.trangthietbi.vn/api/x'));
+
+        (new SyncLeadToMautic(99))->failed($exception);
+
+        Mail::assertSent(LeadSyncFailed::class, function (LeadSyncFailed $mail): bool {
+            $html = $mail->render();
+
+            return str_contains($html, 'HTTP 422') && str_contains($html, '5 lần')
+                && ! str_contains($html, 'mai.nguyen@abc-vn.com');
+        });
+        Log::shouldHaveReceived('error')->once();
+    }
+
+    public function test_a_failed_sync_is_logged_even_without_an_alert_email(): void
+    {
+        Mail::fake();
+        Log::spy();
+        config(['sites.alert_email' => null]);
+
+        (new SyncLeadToMautic(99))->failed(new \RuntimeException('down'));
+
+        Mail::assertNothingSent();
+        Log::shouldHaveReceived('error')->once();
+    }
+
+    public function test_resync_warns_instead_of_pretending_when_mautic_is_not_configured(): void
+    {
+        config(['services.mautic.url' => null]);
+        $this->submitQuote();
+        $lead = Lead::query()->firstOrFail();
+        Queue::fake();
+        $this->workOn($this->vpp, User::factory()->editor()->hasAttached($this->vpp)->create());
+
+        Livewire::test(ListLeads::class)
+            ->callTableAction('resyncMautic', $lead)
+            ->assertNotified('Mautic chưa được cấu hình');
+
+        Queue::assertNothingPushed();
     }
 }

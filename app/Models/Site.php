@@ -35,6 +35,22 @@ class Site extends Model
         return is_string($id) && preg_match('/^G-[A-Z0-9]{4,20}$/', $id) ? $id : null;
     }
 
+    /** Campaign Mautic nhận lead của site (settings.mautic_campaign_id). */
+    public function mauticCampaignId(): ?int
+    {
+        $id = $this->settings['mautic_campaign_id'] ?? null;
+
+        return is_numeric($id) && (int) $id > 0 ? (int) $id : null;
+    }
+
+    /** Mã ngành gắn tag Mautic `nganh-<mã>` (settings.industry_tag), chỉ chữ thường, số, gạch nối. */
+    public function industryTag(): ?string
+    {
+        $tag = $this->settings['industry_tag'] ?? null;
+
+        return is_string($tag) && preg_match('/^[a-z0-9-]{1,50}$/', $tag) ? $tag : null;
+    }
+
     public static function findActiveByHost(string $host): ?self
     {
         return static::query()

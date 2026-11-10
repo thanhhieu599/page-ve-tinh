@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Leads\Tables;
 use App\Enums\LeadStatus;
 use App\Jobs\SyncLeadToMautic;
 use App\Models\Lead;
+use App\Support\Mautic\MauticClient;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Notifications\Notification;
@@ -54,6 +55,15 @@ class LeadsTable
                     ->visible(fn (Lead $record): bool => ! $record->isSyncedToMautic())
                     ->authorize('update')
                     ->action(function (Lead $record): void {
+                        if (! MauticClient::configured()) {
+                            Notification::make()->title('Mautic chưa được cấu hình')
+                                ->body('Cần đặt MAUTIC_URL, MAUTIC_USERNAME, MAUTIC_PASSWORD trên máy chủ rồi thử lại.')
+                                ->warning()->send();
+
+                            return;
+                        }
+
+                        // Job là duy nhất theo lead: bấm nhiều lần không tạo thêm job.
                         SyncLeadToMautic::dispatch($record->id);
                         Notification::make()->title('Đã đưa lead vào hàng đợi đồng bộ Mautic')->success()->send();
                     }),
