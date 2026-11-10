@@ -9,7 +9,7 @@
             <label>Đến ngày<br><input type="date" name="to" value="{{ $report->to->toDateString() }}"></label>
             <x-filament::button type="submit">Xem</x-filament::button>
         </form>
-        <p style="margin-top: .75rem;">Từ {{ $report->from->format('d/m/Y') }} đến {{ $report->to->format('d/m/Y') }}. Search Console trễ khoảng 2 ngày; lead tính theo ngày gửi, doanh thu theo ngày chốt (giờ Việt Nam).</p>
+        <p style="margin-top: .75rem;">Từ {{ $report->from->format('d/m/Y') }} đến {{ $report->to->format('d/m/Y') }}. Search Console trễ khoảng 2 ngày và tính ngày theo giờ Thái Bình Dương; lead tính theo ngày gửi, doanh thu theo ngày chốt (giờ Việt Nam). Tổng lượt hiển thị/nhấp khớp màn hình Search Console; bảng top trang tính theo từng trang.</p>
     </x-filament::section>
 
     <x-filament::section>
@@ -34,8 +34,9 @@
                             <td style="text-align: left;"><strong>{{ $row->site->name }}</strong><br><small>{{ $row->site->domain }}</small></td>
                             <td>{{ $number($row->impressions) }}</td>
                             <td>{{ $number($row->clicks) }}</td>
-                            <td>{{ $row->ctr() === null ? '–' : $number($row->ctr(), 1).'%' }}</td>
-                            <td>{{ $row->averagePosition() === null ? '–' : $number($row->averagePosition(), 1) }}</td>
+                            @php([$ctr, $position] = [$row->ctr(), $row->averagePosition()])
+                            <td>{{ $ctr === null ? '–' : $number($ctr, 1).'%' }}</td>
+                            <td>{{ $position === null ? '–' : $number($position, 1) }}</td>
                             <td>{{ $number($row->leads) }}</td>
                             <td>{{ $number($row->wonLeads) }}</td>
                             <td>{{ $number($row->revenue) }} đ</td>

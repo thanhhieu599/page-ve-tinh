@@ -3,14 +3,15 @@
 namespace App\Support\Reports;
 
 use App\Enums\LeadStatus;
-use App\Jobs\PullSearchConsoleData;
+use App\Models\GscPageDaily;
+use App\Models\GscSiteDaily;
 use App\Models\Lead;
 use App\Models\Scopes\SiteScope;
 use App\Models\Site;
+use App\Support\SearchConsole\SearchConsoleClient;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Báo cáo tổng hợp theo site cho ban giám đốc: số liệu Search Console và kết quả bán hàng
@@ -27,7 +28,7 @@ final class SiteReport
     /** 28 ngày gần nhất có số liệu Search Console (Google trễ khoảng 2 ngày). */
     public static function defaultPeriod(): self
     {
-        $to = CarbonImmutable::now(self::timezone())->startOfDay()->subDays(PullSearchConsoleData::DELAY_DAYS);
+        $to = CarbonImmutable::parse(SearchConsoleClient::latestDataDay()->toDateString(), self::timezone());
 
         return new self($to->subDays(self::DEFAULT_DAYS - 1), $to);
     }
@@ -44,11 +45,10 @@ final class SiteReport
         }
         $ids = $sites->keys()->all();
 
-        $search = DB::table('gsc_page_daily')
-            ->whereIn('site_id', $ids)
-            ->whereBetween('date', [$this->from->toDateString(), $this->to->toDateString()])
+        // Tổng property theo ngày (khớp màn hình Search Console), không cộng dồn theo trang.
+        $search = $this->inPeriod(GscSiteDaily::withoutGlobalScope(SiteScope::class)->whereIn('site_id', $ids))
             ->groupBy('site_id')
-            ->selectRaw('site_id, SUM(impressions) AS impressions, SUM(clicks) AS clicks, SUM(position * impressions) AS weighted_position')
+            ->selectRaw('site_id, SUM(impressions) AS impressions, SUM(clicks) AS clicks, SUM(position * impressions) AS position_times_impressions')
             ->get()->keyBy('site_id');
 
         [$start, $end] = $this->utcBounds();
@@ -62,24 +62,35 @@ final class SiteReport
             site: $site,
             impressions: (int) ($search[$site->id]->impressions ?? 0),
             clicks: (int) ($search[$site->id]->clicks ?? 0),
-            weightedPosition: (float) ($search[$site->id]->weighted_position ?? 0),
+            positionTimesImpressions: (float) ($search[$site->id]->position_times_impressions ?? 0),
             leads: (int) ($leads[$site->id] ?? 0),
             wonLeads: (int) ($won[$site->id]->total ?? 0),
             revenue: (int) ($won[$site->id]->revenue ?? 0),
         ))->values()->all();
     }
 
-    /** @return Collection<int, object{page_url: string, clicks: int, impressions: int}> trang nhiều lượt nhấp nhất */
+    /** @return Collection<int, GscPageDaily> trang nhiều lượt nhấp nhất (page_url, clicks, impressions) */
     public function topPages(Site $site): Collection
     {
-        return DB::table('gsc_page_daily')
-            ->where('site_id', $site->id)
-            ->whereBetween('date', [$this->from->toDateString(), $this->to->toDateString()])
-            ->groupBy('page_url')
+        return $this->inPeriod(GscPageDaily::withoutGlobalScope(SiteScope::class)->where('site_id', $site->id))
+            ->groupBy('page_hash', 'page_url')
             ->selectRaw('page_url, SUM(clicks) AS clicks, SUM(impressions) AS impressions')
             ->orderByDesc('clicks')->orderBy('page_url')
             ->limit(self::TOP_PAGES)
             ->get();
+    }
+
+    /**
+     * Ngày Search Console là ngày theo lịch (giờ Thái Bình Dương); lọc theo đúng ngày lịch đã chọn.
+     *
+     * @template TModel of \Illuminate\Database\Eloquent\Model
+     *
+     * @param  Builder<TModel>  $query
+     * @return Builder<TModel>
+     */
+    private function inPeriod(Builder $query): Builder
+    {
+        return $query->whereBetween('date', [$this->from->toDateString(), $this->to->toDateString()]);
     }
 
     /** @param  list<int>  $siteIds */

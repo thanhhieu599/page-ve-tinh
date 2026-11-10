@@ -154,7 +154,8 @@ Database CMS tách riêng khỏi database Mautic (Q13).
 
 ## Bổ sung khi triển khai (issue #16)
 
-- `gsc_page_daily` (site_id, page_url ≤ 512, date, impressions, clicks, ctr, position), unique (site_id, page_url, date), index (site_id, date). Ghi bằng upsert: chạy lại không nhân đôi.
+- `gsc_page_daily` (site_id, page_url ≤ 2048, page_hash = sha1(page_url), date, impressions, clicks, ctr, position), unique (site_id, page_hash, date) để URL dài không đè nhau, index (site_id, date). Ghi bằng upsert: chạy lại không nhân đôi.
+- `gsc_site_daily` (site_id, date, impressions, clicks, ctr, position), unique (site_id, date): tổng property, khớp màn hình Search Console; báo cáo tổng hợp đọc bảng này.
 - `sites.settings.gsc_property`: `sc-domain:ten-mien` hoặc `https://ten-mien/`; trống thì site không được kéo số liệu.
-- Job `PullSearchConsoleData` (mỗi site một job, thử lại 3 lần), lệnh `search-console:pull`, lịch hằng ngày 07:10 giờ Việt Nam. Xác thực bằng service account (file JSON ở `GSC_CREDENTIALS_PATH`, JWT ký RS256, token giữ 50 phút). Hướng dẫn cài: `docs/search-console.md`.
+- Job `PullSearchConsoleData` (mỗi site một job, không chạy trùng, thử lại 3 lần), lệnh `search-console:pull [--days=N]` (mọi site có property, kể cả site đang tắt; `--days=480` để lấy lịch sử lần đầu), lịch hằng ngày 07:10 giờ Việt Nam. Xác thực bằng service account (file JSON ở `GSC_CREDENTIALS_PATH`, JWT ký RS256, token giữ 50 phút). Hướng dẫn cài: `docs/search-console.md`.
 - Trang "Báo cáo": theo site và khoảng ngày (mặc định 28 ngày gần nhất có số liệu, tối đa 366 ngày): lượt hiển thị, lượt nhấp, CTR, vị trí trung bình (trọng số theo lượt hiển thị), lead, lead thắng, doanh thu đã chốt; top 10 trang theo lượt nhấp. Admin mọi site, Biên tập site được gán.

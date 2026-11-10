@@ -11,7 +11,7 @@ final readonly class SiteReportRow
         public Site $site,
         public int $impressions,
         public int $clicks,
-        public float $weightedPosition,
+        public float $positionTimesImpressions,
         public int $leads,
         public int $wonLeads,
         public int $revenue,
@@ -26,6 +26,6 @@ final readonly class SiteReportRow
     /** Vị trí trung bình, có trọng số theo lượt hiển thị (cách Search Console tính). */
     public function averagePosition(): ?float
     {
-        return $this->impressions > 0 ? $this->weightedPosition / $this->impressions : null;
+        return $this->impressions > 0 ? $this->positionTimesImpressions / $this->impressions : null;
     }
 }

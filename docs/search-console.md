@@ -25,13 +25,22 @@ vào bảng `gsc_page_daily`. Ban giám đốc xem ở trang quản trị, mục
 2. Trang quản trị → **Site vệ tinh** → sửa site → ô **Property Search Console**:
    - Domain property: `sc-domain:vpptrangthietbi.com.vn`
    - URL-prefix property: `https://vpptrangthietbi.com.vn/` (có "/" cuối)
-3. Chạy thử ngay (không chờ lịch): `php artisan search-console:pull`.
+3. Lần đầu kết nối: lấy lại lịch sử (Search Console giữ khoảng 16 tháng), không thì báo cáo
+   28 ngày sẽ thiếu số liệu trong vài tuần đầu:
+   `php artisan search-console:pull --days=480`
+   Sau đó lịch hằng ngày tự kéo 7 ngày gần nhất.
 
 ## Cách tính
 
-- Mỗi lần chạy kéo 7 ngày gần nhất có số liệu (Google trễ khoảng 2 ngày) và ghi đè theo
-  (site, trang, ngày): chạy lại không nhân đôi, số liệu tạm được cập nhật thành số chốt.
+- Mỗi lần chạy kéo 7 ngày gần nhất có số liệu (Google trễ khoảng 2 ngày, ngày tính theo giờ
+  Thái Bình Dương), gồm cả số liệu tạm (`dataState=all`), và ghi đè theo (site, ngày) và
+  (site, trang, ngày): chạy lại không nhân đôi, số tạm được thay bằng số chốt ở lần sau.
+- Hai loại số liệu: **tổng property** theo ngày (`gsc_site_daily`, khớp màn hình Search Console)
+  và **theo trang** (`gsc_page_daily`, cho bảng top trang). Cộng các trang lại sẽ ra số lớn hơn
+  tổng property, vì một lượt tìm có thể hiện nhiều trang của site.
 - Báo cáo: CTR = tổng lượt nhấp / tổng lượt hiển thị; vị trí trung bình có trọng số theo lượt
   hiển thị (như Search Console). Lead tính theo ngày gửi form, doanh thu theo ngày chốt (Thắng),
   giờ Việt Nam.
+- Lỗi: thiếu file khoá → log cảnh báo; lỗi sau 3 lần thử (vd. 403 khi service account chưa được
+  thêm vào property) → log lỗi và nằm trong `failed_jobs`.
 - Admin xem mọi site; Biên tập xem site được gán; Người viết không xem.

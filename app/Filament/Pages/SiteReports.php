@@ -17,7 +17,7 @@ use Throwable;
  * Báo cáo tổng hợp theo site: Search Console (hiển thị, nhấp, CTR, vị trí) và bán hàng
  * (lead, lead thắng, doanh thu đã chốt). Admin xem mọi site, Biên tập xem site được gán.
  */
-class SiteReportPage extends Page
+class SiteReports extends Page
 {
     protected static ?string $slug = 'bao-cao';
 
@@ -76,9 +76,12 @@ class SiteReportPage extends Page
         }
 
         try {
-            return CarbonImmutable::createFromFormat('Y-m-d', $value, (string) config('app.display_timezone'))?->startOfDay();
+            $date = CarbonImmutable::createFromFormat('!Y-m-d', $value, (string) config('app.display_timezone'));
         } catch (Throwable) {
             return null;
         }
+
+        // Ngày không có thật (vd. 31/02) bị Carbon dồn sang tháng sau: từ chối.
+        return $date !== null && $date->format('Y-m-d') === $value ? $date : null;
     }
 }

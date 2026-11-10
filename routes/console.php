@@ -53,16 +53,25 @@ Artisan::command('sites:ensure-pages', function () {
     }
 })->purpose('Tạo trang giới thiệu, chính sách quyền riêng tư, liên hệ còn thiếu cho các site (dạng nháp)');
 
-// Kéo số liệu Search Console cho mọi site đang hoạt động đã cấu hình property (mỗi site một job).
-Artisan::command('search-console:pull', function () {
-    $sites = Site::query()->where('is_active', true)->orderBy('id')->get()
-        ->filter(fn (Site $site) => $site->searchConsoleProperty() !== null);
+// Kéo số liệu Search Console cho mọi site đã cấu hình property (kể cả site đang tắt), mỗi site một job.
+// Lần đầu kết nối một site: chạy một lần với --days=480 để lấy lại lịch sử (Search Console giữ ~16 tháng).
+Artisan::command('search-console:pull {--days='.PullSearchConsoleData::DAILY_DAYS.' : Số ngày gần nhất cần kéo}', function () {
+    $days = (int) $this->option('days');
+    if ($days < 1 || $days > PullSearchConsoleData::MAX_DAYS) {
+        $this->error('--days phải từ 1 đến '.PullSearchConsoleData::MAX_DAYS.'.');
+
+        return 1;
+    }
+
+    $sites = Site::query()->orderBy('id')->get()->filter(fn (Site $site) => $site->searchConsoleProperty() !== null);
 
     foreach ($sites as $site) {
-        PullSearchConsoleData::dispatch($site->id);
-        $this->line("Đã xếp hàng kéo Search Console: {$site->domain}");
+        PullSearchConsoleData::dispatch($site->id, $days);
+        $this->line("Đã xếp hàng kéo Search Console ({$days} ngày): {$site->domain}");
     }
-})->purpose('Kéo số liệu Search Console theo trang cho các site đã cấu hình');
 
-// Hằng ngày 07:10 giờ Việt Nam (cần cron chạy `php artisan schedule:run` mỗi phút trên máy chủ).
-Schedule::command('search-console:pull')->dailyAt('07:10')->timezone('Asia/Ho_Chi_Minh');
+    return 0;
+})->purpose('Kéo số liệu Search Console cho các site đã cấu hình property');
+
+// Hằng ngày 07:10 giờ Việt Nam (cần cron chạy `php artisan schedule:run` mỗi phút và hàng đợi đang chạy).
+Schedule::command('search-console:pull')->dailyAt('07:10')->timezone(config('app.display_timezone'));
