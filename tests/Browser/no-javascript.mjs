@@ -26,6 +26,10 @@ const pages = [
         mustContain: ['Giấy văn phòng', 'Cách chọn giấy in A4 cho văn phòng nhà máy'],
     },
     {
+        path: '/lien-he',
+        mustContain: ['Liên hệ và yêu cầu báo giá', 'Thông tin công ty', 'Gửi yêu cầu báo giá'],
+    },
+    {
         path: '/tac-gia/bien-tap-dt',
         mustContain: ['Ban biên tập D&T', 'Cách chọn giấy in A4 cho văn phòng nhà máy'],
     },

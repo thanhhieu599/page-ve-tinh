@@ -2,6 +2,8 @@
 
 namespace App\Support\Indexing;
 
+use App\Enums\PageKind;
+use App\Models\Page;
 use App\Models\Post;
 use App\Models\Scopes\SiteScope;
 use App\Models\Site;
@@ -23,10 +25,9 @@ final class IndexReadiness
         return new self([
             self::publishedPosts($site),
             self::authorProfiles($site),
-            // Trang tĩnh chưa có trong hệ thống; issue #15 sẽ thay bằng kiểm tra thật.
-            new ReadinessItem('Trang giới thiệu công ty', false, 'Chưa có (làm ở issue #15)'),
-            new ReadinessItem('Chính sách quyền riêng tư', false, 'Chưa có (làm ở issue #15)'),
-            new ReadinessItem('Trang liên hệ', false, 'Chưa có (làm ở issue #15)'),
+            self::requiredPage($site, PageKind::About, 'Trang giới thiệu công ty'),
+            self::requiredPage($site, PageKind::Privacy, 'Chính sách quyền riêng tư'),
+            self::requiredPage($site, PageKind::Contact, 'Trang liên hệ'),
         ]);
     }
 
@@ -57,6 +58,17 @@ final class IndexReadiness
             $passed,
             $passed ? "Đủ {$count} bài" : "Mới có {$count}/".self::MIN_PUBLISHED_POSTS.' bài',
         );
+    }
+
+    private static function requiredPage(Site $site, PageKind $kind, string $label): ReadinessItem
+    {
+        $page = Page::withoutGlobalScope(SiteScope::class)->where('site_id', $site->id)->where('kind', $kind)->first();
+
+        return new ReadinessItem($label, (bool) $page?->is_published, match (true) {
+            $page === null => 'Chưa có trang (chạy lệnh php artisan sites:ensure-pages)',
+            ! $page->is_published => 'Còn ở dạng nháp: biên tập và bật hiển thị trong mục Trang bắt buộc',
+            default => 'Đã hiển thị tại '.$kind->path(),
+        });
     }
 
     private static function authorProfiles(Site $site): ReadinessItem

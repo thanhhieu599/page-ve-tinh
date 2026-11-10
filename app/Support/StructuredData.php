@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\CompanyProfile;
 use App\Models\Faq;
 use App\Models\Post;
 use App\Models\Product;
@@ -22,30 +23,31 @@ use Spatie\SchemaOrg\Schema;
  */
 final class StructuredData
 {
-    /** D&T, thông tin thống nhất trên mọi site (config/company.php). */
+    /** D&T, thông tin thống nhất trên mọi site (CompanyProfile). */
     public static function organization(): Organization
     {
+        $company = CompanyProfile::current();
         $organization = self::publisher()
-            ->alternateName((string) config('company.name'))
-            ->url((string) config('company.url'));
+            ->alternateName((string) $company->value('name'))
+            ->url((string) $company->value('url'));
 
-        $logo = (string) config('company.logo');
+        $logo = (string) $company->value('logo_url');
         if (str_starts_with($logo, 'https://')) {
             $organization->logo($logo);
         }
 
         // Mục chưa cấu hình thì bỏ hẳn, không khai giá trị rỗng.
         foreach (['taxID' => 'tax_id', 'telephone' => 'phone', 'email' => 'email'] as $property => $key) {
-            if (filled(config("company.{$key}"))) {
-                $organization->setProperty($property, (string) config("company.{$key}"));
+            if (($value = $company->value($key)) !== null) {
+                $organization->setProperty($property, $value);
             }
         }
 
-        if (filled(config('company.street_address'))) {
+        if ($company->value('street_address') !== null) {
             $organization->address(Schema::postalAddress()
-                ->streetAddress((string) config('company.street_address'))
-                ->addressLocality((string) config('company.locality'))
-                ->addressRegion((string) config('company.region'))
+                ->streetAddress((string) $company->value('street_address'))
+                ->addressLocality((string) $company->value('locality'))
+                ->addressRegion((string) $company->value('region'))
                 ->addressCountry('VN'));
         }
 
@@ -59,8 +61,8 @@ final class StructuredData
     private static function publisher(): Organization
     {
         return Schema::organization()
-            ->identifier(rtrim((string) config('company.url'), '/').'/#organization')
-            ->name((string) config('company.legal_name'));
+            ->identifier(rtrim((string) CompanyProfile::current()->value('url'), '/').'/#organization')
+            ->name((string) CompanyProfile::current()->value('legal_name'));
     }
 
     public static function article(Post $post, Site $site): Article

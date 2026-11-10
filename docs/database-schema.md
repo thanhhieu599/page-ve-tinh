@@ -140,3 +140,13 @@ Database CMS tách riêng khỏi database Mautic (Q13).
 - Chính sách liên kết khi lưu bài (`App\Support\ContentLinkRules`): link sang domain site vệ tinh khác (kể cả www, subdomain, viết hoa, href không nháy, "\\") → chặn; khôi phục bản cũ có link cấm cũng bị chặn; link sang trangthietbi.vn (và subdomain) → chặn, trừ link mua của sản phẩm đang bán trên site hoặc bài có `has_purchase_context`. Link trong khối sản phẩm/báo giá của theme không thuộc nội dung bài nên luôn được phép.
 - Footer theme: ghi rõ thuộc D&T, chỉ nhãn điều hướng, không anchor từ khoá, không link sang site vệ tinh khác hay trangthietbi.vn. Test chạy cho mọi theme trong `resources/themes`.
 - Việc để sau (đã thống nhất): cảnh báo trong trang quản trị liệt kê các bài đang có link mua tới sản phẩm đã ngừng bán (bài vẫn hiện, nhưng lần sửa tiếp theo sẽ bị chặn cho tới khi gỡ link).
+
+## Bổ sung khi triển khai (issue #15)
+
+- `company_profile` (một dòng): name, legal_name, url, logo_url, tax_id, phone, email, street_address, locality, region. Admin sửa ở "Thông tin công ty"; mục trống lấy mặc định `COMPANY_*` trong `.env`. Dùng cho footer, trang giới thiệu/liên hệ, chính sách, schema Organization, nhận diện trangthietbi.vn trong chính sách liên kết.
+- `pages` (site_id, kind, title, content, meta_description, is_published), unique (site_id, kind). `kind`: `gioi-thieu`, `chinh-sach-quyen-rieng-tu`, `lien-he` (cũng là đường dẫn). Tạo site là tự có 3 trang nháp với nội dung mẫu; trang nháp trả 404. Không thêm/xoá trong trang quản trị; Biên tập/Admin sửa và bật hiển thị. Nội dung lọc HTML như bài viết, theo chính sách liên kết (được nhắc trangthietbi.vn, không link site vệ tinh khác).
+- Trang giới thiệu và liên hệ tự hiện khối thông tin công ty; trang liên hệ có form báo giá. Footer và sitemap chỉ gồm trang đã bật. Ô đồng ý của form báo giá trỏ `/chinh-sach-quyen-rieng-tu`.
+- Checklist mở index (#12) nay kiểm tra 3 trang này đã bật hiển thị.
+- `sites.settings` thêm: `logo` (đường dẫn trên disk public, thư mục `site-logos`), `primary_color` (#rgb/#rrggbb → biến CSS `--brand-color`), `gsc_verification` (thẻ meta google-site-verification). Mọi khoá được kiểm tra định dạng khi đọc (`Site::logoUrl()`, `brandColor()`, `searchConsoleToken()`, `ga4Id()`, `mauticCampaignId()`, `industryTag()`).
+- Theme: thư mục trong `config('sites.themes_path')` (mặc định `resources/themes`) có `layout.blade.php`. Thêm site = thêm ở màn hình "Site vệ tinh" (chỉ Admin) + thư mục theme, không sửa code lõi.
+- Site tạo trước bản này: chạy `php artisan sites:ensure-pages` một lần sau khi migrate.

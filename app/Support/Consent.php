@@ -15,5 +15,6 @@ final class Consent
         .'(họ tên, công ty, email, số điện thoại, nhu cầu) để liên hệ tư vấn, báo giá và gửi thông tin sản phẩm liên quan, '
         .'theo Chính sách bảo vệ dữ liệu cá nhân.';
 
-    public const POLICY_PATH = '/chinh-sach-bao-mat';
+    /** Trùng PageKind::Privacy->path(). */
+    public const POLICY_PATH = '/chinh-sach-quyen-rieng-tu';
 }

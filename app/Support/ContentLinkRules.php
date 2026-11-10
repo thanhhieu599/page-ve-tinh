@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\CompanyProfile;
 use App\Models\Product;
 use App\Models\Scopes\SiteScope;
 use App\Models\Site;
@@ -68,7 +69,7 @@ final class ContentLinkRules
 
     private static function isStore(string $host): bool
     {
-        $store = self::bareHost((string) parse_url((string) config('company.url'), PHP_URL_HOST));
+        $store = self::bareHost(CompanyProfile::current()->host());
 
         return $store !== '' && self::isSameOrSubdomain($host, $store);
     }

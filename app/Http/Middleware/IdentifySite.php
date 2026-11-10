@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\Site;
 use App\Support\CurrentSite;
+use App\Support\Theme;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\View;
@@ -26,7 +27,7 @@ class IdentifySite
 
         $this->currentSite->set($site);
 
-        View::replaceNamespace('theme', resource_path('themes/'.$site->theme));
+        View::replaceNamespace('theme', Theme::path($site->theme));
         View::share('site', $site);
 
         return $next($request);

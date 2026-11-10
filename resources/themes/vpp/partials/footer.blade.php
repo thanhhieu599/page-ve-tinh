@@ -6,8 +6,12 @@
     Có test tự động cho mọi theme: tests/Feature/PublicSite/FooterLinkPolicyTest.php
 --}}
 <footer class="site-footer">
-    <p>{{ $site->name }} là website chuyên đề thuộc {{ config('company.legal_name') }} ({{ parse_url((string) config('company.url'), PHP_URL_HOST) }}).</p>
+    @php($company = \App\Models\CompanyProfile::current())
+    <p>{{ $site->name }} là website chuyên đề thuộc {{ $company->value('legal_name') }} ({{ $company->host() }}).</p>
     <nav aria-label="Liên kết cuối trang">
         <a href="{{ \App\Http\Controllers\QuoteRequestController::PATH }}">Yêu cầu báo giá</a>
+        @foreach (\App\Models\Page::query()->published()->get() as $requiredPage)
+            <a href="{{ $requiredPage->path() }}">{{ $requiredPage->kind->getLabel() }}</a>
+        @endforeach
     </nav>
 </footer>

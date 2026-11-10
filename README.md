@@ -37,6 +37,10 @@ php artisan admin:create email@congty.vn --name="Họ tên"
 
 Rồi vào `http://<ADMIN_DOMAIN>:8000/admin`.
 
+Sau mỗi lần kéo code mới có migration: `php artisan migrate`. Bản có trang bắt buộc (#15) cần chạy thêm
+một lần `php artisan sites:ensure-pages` để site tạo từ trước có trang giới thiệu, chính sách, liên hệ (nháp).
+Thông tin công ty D&T sửa trong trang quản trị, mục "Thông tin công ty" (chỉ Admin).
+
 Hàng đợi (đẩy lead sang Mautic): production dùng `QUEUE_CONNECTION=redis` và chạy liên tục
 `php artisan queue:work --tries=5` (supervisor/systemd). Local không cấu hình Mautic thì không cần.
 

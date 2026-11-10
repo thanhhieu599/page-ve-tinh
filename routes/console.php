@@ -1,6 +1,8 @@
 <?php
 
 use App\Enums\Role;
+use App\Models\Page;
+use App\Models\Site;
 use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Validator;
@@ -39,3 +41,12 @@ Artisan::command('admin:create {email} {--name=Admin}', function (string $email)
 
     return 0;
 })->purpose('Tạo tài khoản Admin cho trang quản trị');
+
+// Tạo trang bắt buộc còn thiếu (nháp, nội dung mẫu) cho mọi site; không ghi đè trang đã có.
+// Chạy một lần khi deploy bản có trang bắt buộc, cho các site tạo từ trước.
+Artisan::command('sites:ensure-pages', function () {
+    foreach (Site::query()->orderBy('id')->get() as $site) {
+        Page::ensureRequiredFor($site);
+        $this->line("Đã kiểm tra trang bắt buộc: {$site->domain}");
+    }
+})->purpose('Tạo trang giới thiệu, chính sách quyền riêng tư, liên hệ còn thiếu cho các site (dạng nháp)');

@@ -1,7 +1,9 @@
 <?php
 
+use App\Enums\PageKind;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\PageController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\QuoteRequestController;
@@ -18,6 +20,10 @@ Route::middleware([IdentifySite::class, CaptureAttribution::class])->group(funct
     Route::get('/danh-muc/{slug}', [CategoryController::class, 'show'])->name('categories.show');
     Route::get('/tac-gia/{slug}', [AuthorController::class, 'show'])->name('authors.show');
     Route::get('/san-pham/{slug}', [ProductController::class, 'show'])->name('products.show');
+
+    foreach (PageKind::cases() as $kind) {
+        Route::get($kind->path(), [PageController::class, 'show'])->defaults('kind', $kind->value)->name('pages.'.$kind->value);
+    }
 
     Route::get(QuoteRequestController::PATH, [QuoteRequestController::class, 'create'])->name('quote.create');
     Route::post(QuoteRequestController::PATH, [QuoteRequestController::class, 'store'])->name('quote.store');

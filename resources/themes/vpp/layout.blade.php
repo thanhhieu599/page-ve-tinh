@@ -15,6 +15,12 @@
     @if ($metaDescription !== '')
         <meta name="description" content="{!! $metaDescription !!}">
     @endif
+    @if ($gscToken = $site->searchConsoleToken())
+        <meta name="google-site-verification" content="{{ $gscToken }}">
+    @endif
+    @if ($brandColor = $site->brandColor())
+        <style>:root { --brand-color: {{ $brandColor }}; }</style>
+    @endif
     @php($ga4Id = $site->ga4Id())
     @if ($ga4Id)
         <script async src="https://www.googletagmanager.com/gtag/js?id={{ $ga4Id }}"></script>
@@ -31,7 +37,13 @@
 </head>
 <body>
     <header>
-        <a href="/">{{ $site->name }}</a>
+        <a href="/">
+            @if ($logo = $site->logoUrl())
+                <img src="{{ $logo }}" alt="{{ $site->name }}" height="48">
+            @else
+                {{ $site->name }}
+            @endif
+        </a>
     </header>
 
     <main>

@@ -2,8 +2,10 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Enums\PageKind;
 use App\Filament\Pages\SearchIndexing;
 use App\Models\Author;
+use App\Models\Page;
 use App\Models\Post;
 use App\Models\Site;
 use App\Models\User;
@@ -50,7 +52,7 @@ class IndexSwitchTest extends TestCase
             ->assertSeeText('Trang giới thiệu công ty')
             ->assertSeeText('Chính sách quyền riêng tư')
             ->assertSeeText('Trang liên hệ')
-            ->assertSeeText('Chưa có (làm ở issue #15)');
+            ->assertSeeText('Còn ở dạng nháp: biên tập và bật hiển thị trong mục Trang bắt buộc');
     }
 
     public function test_posts_without_an_author_profile_are_reported(): void
@@ -99,5 +101,34 @@ class IndexSwitchTest extends TestCase
             ->callAction('disableIndexing');
 
         $this->get('https://vpptrangthietbi.com.vn/robots.txt')->assertDontSee('Sitemap:');
+    }
+
+    private function publishRequiredPages(): void
+    {
+        Page::withoutGlobalScopes()->where('site_id', $this->vpp->id)->update(['is_published' => true]);
+    }
+
+    public function test_an_admin_turns_indexing_on_once_every_condition_is_met(): void
+    {
+        $this->publishPosts(20, Author::factory()->create(['bio' => 'Chuyên viên EHS 10 năm kinh nghiệm.']));
+        $this->publishRequiredPages();
+        $this->workOn($this->vpp, $this->user('admin'));
+
+        Livewire::test(SearchIndexing::class)
+            ->assertActionEnabled('enableIndexing')
+            ->callAction('enableIndexing');
+
+        $this->get('https://vpptrangthietbi.com.vn/robots.txt')->assertSee('Sitemap: https://vpptrangthietbi.com.vn/sitemap.xml', escape: false);
+        $this->get('https://vpptrangthietbi.com.vn/gioi-thieu')->assertHeaderMissing('X-Robots-Tag');
+    }
+
+    public function test_one_unpublished_required_page_keeps_the_switch_locked(): void
+    {
+        $this->publishPosts(20, Author::factory()->create(['bio' => 'Chuyên viên EHS 10 năm kinh nghiệm.']));
+        $this->publishRequiredPages();
+        Page::withoutGlobalScopes()->where('site_id', $this->vpp->id)->where('kind', PageKind::Privacy)->update(['is_published' => false]);
+        $this->workOn($this->vpp, $this->user('admin'));
+
+        Livewire::test(SearchIndexing::class)->assertActionDisabled('enableIndexing');
     }
 }

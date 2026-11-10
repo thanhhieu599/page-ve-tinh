@@ -10,6 +10,10 @@ return [
     | Domain riêng của trang quản trị. Trang quản trị không chạy trên domain site
     | công khai, để tách cookie đăng nhập và không bị quy tắc URL công khai can thiệp.
     */
+    // Thư mục chứa theme; mỗi theme là một thư mục con có layout.blade.php.
+    // Thêm site mới chỉ cần thêm thư mục theme, không sửa code lõi.
+    'themes_path' => env('SITES_THEMES_PATH', resource_path('themes')),
+
     'admin_domain' => env('ADMIN_DOMAIN', 'admin.localhost'),
 
     /*
