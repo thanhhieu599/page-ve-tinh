@@ -129,3 +129,11 @@ Database CMS tách riêng khỏi database Mautic (Q13).
 - Organization có `@id` = `<COMPANY_URL>/#organization`; `publisher` của Article trỏ cùng `@id`. Logo chỉ nhận URL https. Ảnh dùng `Site::absoluteUrl()` (giữ nguyên URL CDN tuyệt đối).
 - Bài viết: `Article` (headline, mô tả nếu có, tác giả + URL trang hồ sơ, ngày đăng/cập nhật theo giờ Việt Nam, ảnh = OG image hoặc ảnh thư viện đầu tiên trong bài, publisher = D&T); `FAQPage` khi bài có câu hỏi, đúng thứ tự hiển thị.
 - Sản phẩm: `Product` (tên, SKU, mô tả, ảnh, URL); `offers` (giá VND, `priceValidUntil`) **chỉ khi** giá còn hạn 14 ngày. Không khai tồn kho.
+
+## Bổ sung khi triển khai (issue #14)
+
+- `keyword_map` (site_id, keyword, target_url, intent): `keyword` lưu dạng chuẩn (chữ thường, một khoảng trắng), collation `utf8mb4_bin`, **unique toàn hệ thống** (mỗi từ khoá một trang đích). `target_url` là đường dẫn chuẩn trong site. `intent`: informational / commercial / transactional / navigational.
+- Gán từ khoá đã thuộc trang khác (cùng hoặc khác site) → báo lỗi kèm URL trang đang giữ; chỉ Admin bật "Chuyển từ khoá sang trang này" để ghi đè (dòng cũ được chuyển, không nhân đôi). Người viết không vào màn hình này.
+- `posts.has_purchase_context` (mặc định false): bài có ngữ cảnh mua hàng/báo giá; chỉ Biên tập/Admin thấy và bật.
+- Chính sách liên kết khi lưu bài (`App\Support\LinkPolicy`): link sang domain site vệ tinh khác (kể cả www) → chặn; link sang trangthietbi.vn (và subdomain) → chặn, trừ link mua của sản phẩm đang bán trên site hoặc bài có `has_purchase_context`. Link trong khối sản phẩm/báo giá của theme không thuộc nội dung bài nên luôn được phép.
+- Footer theme: ghi rõ thuộc D&T, chỉ nhãn điều hướng, không anchor từ khoá, không link sang site vệ tinh khác hay trangthietbi.vn. Test chạy cho mọi theme trong `resources/themes`.

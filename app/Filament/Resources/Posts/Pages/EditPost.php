@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Posts\Pages;
 
 use App\Enums\PostStatus;
 use App\Filament\Resources\Posts\Concerns\GuardsContentImages;
+use App\Filament\Resources\Posts\Concerns\GuardsContentLinks;
 use App\Filament\Resources\Posts\PostResource;
 use App\Models\Category;
 use App\Models\Post;
@@ -24,6 +25,7 @@ use Illuminate\Support\Facades\Gate;
 class EditPost extends EditRecord
 {
     use GuardsContentImages;
+    use GuardsContentLinks;
 
     protected static string $resource = PostResource::class;
 
@@ -34,6 +36,7 @@ class EditPost extends EditRecord
     protected function mutateFormDataBeforeSave(array $data): array
     {
         $this->ensureImagesComeFromLibrary($data);
+        $this->ensureLinksFollowPolicy($data, $this->post()->has_purchase_context);
 
         return $data;
     }

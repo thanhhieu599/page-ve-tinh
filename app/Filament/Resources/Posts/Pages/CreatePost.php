@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Posts\Pages;
 
 use App\Enums\PostStatus;
 use App\Filament\Resources\Posts\Concerns\GuardsContentImages;
+use App\Filament\Resources\Posts\Concerns\GuardsContentLinks;
 use App\Filament\Resources\Posts\PostResource;
 use App\Models\Post;
 use App\Models\Site;
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 class CreatePost extends CreateRecord
 {
     use GuardsContentImages;
+    use GuardsContentLinks;
 
     protected static string $resource = PostResource::class;
 
@@ -24,6 +26,7 @@ class CreatePost extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $this->ensureImagesComeFromLibrary($data);
+        $this->ensureLinksFollowPolicy($data);
 
         return $data;
     }

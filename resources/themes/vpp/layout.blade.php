@@ -37,5 +37,7 @@
     <main>
         @yield('content')
     </main>
+
+    @include('theme::partials.footer')
 </body>
 </html>

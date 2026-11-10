@@ -6,6 +6,7 @@ use App\Filament\Resources\Posts\Actions\InsertMediaAction;
 use App\Filament\Support\TenantSite;
 use App\Models\Post;
 use App\Models\Tag;
+use App\Models\User;
 use App\Support\MediaLibrary;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
@@ -14,6 +15,7 @@ use Filament\Forms\Components\RichEditor\RichEditorTool;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
@@ -104,6 +106,13 @@ class PostForm
                             ['undo', 'redo'],
                         ]),
                 ]),
+
+                Section::make('Liên kết sang trangthietbi.vn')->schema([
+                    Toggle::make('has_purchase_context')
+                        ->label('Bài có ngữ cảnh mua hàng/báo giá')
+                        ->helperText('Bật thì bài được link sang mọi trang của trangthietbi.vn. Không bật: chỉ được link tới link mua của sản phẩm đang bán trên site.')
+                        ->default(false),
+                ])->visible(fn (): bool => auth()->user() instanceof User && auth()->user()->isReviewer()),
 
                 Section::make('Phân loại và tác giả')->columns(2)->schema([
                     Select::make('categories')

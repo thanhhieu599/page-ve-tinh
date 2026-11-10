@@ -35,7 +35,7 @@ class Post extends Model
     // status, published_at, review_note chỉ đổi qua các bước duyệt bên dưới.
     protected $fillable = [
         'slug', 'locale', 'title', 'excerpt', 'content',
-        'seo_title', 'meta_description', 'og_image', 'author_id',
+        'seo_title', 'meta_description', 'og_image', 'author_id', 'has_purchase_context',
     ];
 
     protected static function booted(): void
@@ -186,6 +186,7 @@ class Post extends Model
     protected function casts(): array
     {
         return [
+            'has_purchase_context' => 'boolean',
             'published_at' => 'datetime',
             'status' => PostStatus::class,
         ];
