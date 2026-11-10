@@ -28,6 +28,15 @@ class Author extends Model
                 $author->slug = Str::slug($author->name);
             }
         });
+
+        // Trang tác giả có trên mọi site, nên URL cũ được chuyển 301 trên mọi site.
+        static::updated(function (Author $author): void {
+            if ($author->wasChanged('slug')) {
+                foreach (Site::query()->pluck('id') as $siteId) {
+                    Redirect::recordMove($siteId, self::PATH_PREFIX.$author->getOriginal('slug'), $author->path());
+                }
+            }
+        });
     }
 
     /** @return HasMany<Post, $this> */

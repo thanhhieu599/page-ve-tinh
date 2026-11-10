@@ -2,7 +2,11 @@
 
 @section('title', $author->name)
 
+@section('meta_description', \Illuminate\Support\Str::limit((string) $author->bio, 160))
+
 @section('content')
+    @include('theme::partials.breadcrumb', ['trail' => [[$author->name, null]]])
+
     <section class="author-profile">
         <h1>{{ $author->name }}</h1>
 

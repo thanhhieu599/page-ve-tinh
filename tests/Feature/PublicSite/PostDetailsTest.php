@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\PublicSite;
 
+use App\Models\Author;
 use App\Models\Category;
 use App\Models\Faq;
 use App\Models\Post;
@@ -77,5 +78,48 @@ class PostDetailsTest extends TestCase
         $this->get('https://vpptrangthietbi.com.vn/kien-thuc/but-ky-khac-ten')
             ->assertSee('<a href="/danh-muc/but">Bút viết</a>', escape: false)
             ->assertDontSee('<a href="/danh-muc/qua-tang">', escape: false);
+    }
+
+    public function test_author_page_has_a_breadcrumb(): void
+    {
+        Author::factory()->create(['slug' => 'nguyen-van-an', 'name' => 'Nguyễn Văn An']);
+
+        $this->get('https://vpptrangthietbi.com.vn/tac-gia/nguyen-van-an')
+            ->assertSeeInOrder(['<nav aria-label="Breadcrumb"', '<a href="/">Trang chủ</a>', 'Nguyễn Văn An'], escape: false);
+    }
+
+    public function test_meta_description_is_rendered_for_posts_and_categories(): void
+    {
+        Category::factory()->for($this->vpp)->create(['slug' => 'giay', 'meta_description' => 'Giấy văn phòng cho nhà máy FDI.']);
+        Post::factory()->for($this->vpp)->published()->create(['slug' => 'giay-in', 'meta_description' => 'Cách chọn giấy in A4.']);
+
+        $this->get('https://vpptrangthietbi.com.vn/danh-muc/giay')
+            ->assertSee('<meta name="description" content="Giấy văn phòng cho nhà máy FDI.">', escape: false);
+        $this->get('https://vpptrangthietbi.com.vn/kien-thuc/giay-in')
+            ->assertSee('<meta name="description" content="Cách chọn giấy in A4.">', escape: false);
+    }
+
+    public function test_category_page_never_lists_a_post_of_another_site_even_if_linked(): void
+    {
+        $ppe = Site::factory()->create(['domain' => 'ppe.example.vn']);
+        $paper = Category::factory()->for($this->vpp)->create(['slug' => 'giay']);
+        $foreign = Post::factory()->for($ppe)->published()->create(['title' => 'Bài của site PPE']);
+        $foreign->categories()->attach($paper);
+
+        $this->get('https://vpptrangthietbi.com.vn/danh-muc/giay')->assertOk()->assertDontSee('Bài của site PPE');
+    }
+
+    public function test_no_empty_meta_description_tag_when_there_is_nothing_to_say(): void
+    {
+        Category::factory()->for($this->vpp)->create(['slug' => 'giay', 'meta_description' => null]);
+
+        $this->get('https://vpptrangthietbi.com.vn/danh-muc/giay')->assertDontSee('name="description"', escape: false);
+    }
+
+    public function test_meta_description_is_escaped(): void
+    {
+        Category::factory()->for($this->vpp)->create(['slug' => 'giay', 'meta_description' => '"><script>alert(1)</script>']);
+
+        $this->get('https://vpptrangthietbi.com.vn/danh-muc/giay')->assertDontSee('<script>alert(1)', escape: false);
     }
 }

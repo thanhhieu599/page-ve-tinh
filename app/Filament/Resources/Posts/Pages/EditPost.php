@@ -2,8 +2,11 @@
 
 namespace App\Filament\Resources\Posts\Pages;
 
+use App\Enums\PostStatus;
 use App\Filament\Resources\Posts\PostResource;
+use App\Models\Category;
 use App\Models\Post;
+use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
@@ -15,6 +18,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Gate;
 
 class EditPost extends EditRecord
 {
@@ -51,7 +55,19 @@ class EditPost extends EditRecord
                 ])
                 ->action(function (array $data): void {
                     $this->save(shouldRedirect: false, shouldSendSavedNotification: false);
-                    $this->post()->publish(Carbon::parse($data['published_at']));
+
+                    // Danh mục vừa lưu có thể làm bài cần duyệt chuyên môn: kiểm tra lại quyền đăng.
+                    $post = $this->post();
+                    $post->load('categories');
+                    if (Gate::denies('publish', $post)) {
+                        Notification::make()->title('Bài thuộc danh mục cần duyệt chuyên môn')
+                            ->body('Đã lưu thay đổi nhưng chưa đăng. Cần người có quyền duyệt chuyên môn đăng bài này.')
+                            ->danger()->send();
+
+                        return;
+                    }
+
+                    $post->publish(Carbon::parse($data['published_at']));
                     Notification::make()
                         ->title($this->post()->isScheduled() ? 'Đã hẹn giờ đăng' : 'Đã đăng bài')
                         ->success()->send();
@@ -76,6 +92,29 @@ class EditPost extends EditRecord
                 RestoreAction::make(),
             ]),
         ];
+    }
+
+    /**
+     * Bài đang hiện trên site: người không có quyền duyệt chuyên môn không được đưa nó
+     * vào danh mục cần duyệt chuyên môn (sẽ thành nội dung PPE chưa qua duyệt).
+     */
+    protected function beforeSave(): void
+    {
+        $post = $this->post();
+        $user = auth()->user();
+        $categoryIds = $this->data['categories'] ?? [];
+
+        if ($post->status !== PostStatus::Published || ! $user instanceof User || $user->isExpertReviewer()) {
+            return;
+        }
+
+        if (Category::anyUnderExpertReview(is_array($categoryIds) ? $categoryIds : [])) {
+            Notification::make()->title('Không lưu được')
+                ->body('Bài đang hiện trên site không thể chuyển vào danh mục cần duyệt chuyên môn nếu bạn không có quyền duyệt chuyên môn.')
+                ->danger()->send();
+
+            $this->halt();
+        }
     }
 
     private function post(): Post

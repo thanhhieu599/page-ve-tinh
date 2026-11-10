@@ -29,13 +29,14 @@ class CategoryPolicy
         return $user->isReviewer();
     }
 
+    /** Xoá danh mục cần duyệt chuyên môn sẽ gỡ bảo vệ khỏi các bài trong đó, nên chỉ Admin. */
     public function delete(User $user, Category $category): bool
     {
-        return $user->isReviewer();
+        return $category->requires_expert_review ? $user->isAdmin() : $user->isReviewer();
     }
 
     public function deleteAny(User $user): bool
     {
-        return $user->isReviewer();
+        return $user->isAdmin();
     }
 }

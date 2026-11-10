@@ -2,6 +2,8 @@
 
 @section('title', $category->seo_title ?: $category->name)
 
+@section('meta_description', (string) $category->meta_description)
+
 @section('content')
     @include('theme::partials.breadcrumb', ['trail' => collect($category->ancestry())
         ->map(fn ($item) => [$item->name, $item->is($category) ? null : $item->path()])->all()])

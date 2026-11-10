@@ -51,5 +51,16 @@ Database CMS tách riêng khỏi database Mautic (Q13).
 | `post_revisions` | post_id, **title**, content, user_id, created_at | Thêm `title` để khôi phục cả tiêu đề |
 | `sites` (thêm cột) | requires_expert_review | Site PPE: chỉ người có quyền duyệt chuyên môn đăng/sửa bài đang hiện |
 
-Chưa có: `author_id` (làm cùng bảng `authors`, issue #6).
+## Bổ sung khi triển khai (issue #6)
+
+| Bảng / thay đổi | Cột quan trọng | Ghi chú |
+|---|---|---|
+| `categories` | site_id, parent_id, slug, name, description, seo_title, meta_description, locale, requires_expert_review | Cờ duyệt chuyên môn kế thừa xuống danh mục con; chỉ Admin đổi/xoá danh mục có cờ |
+| `post_category` | post_id, category_id (+ id) | Danh mục gắn đầu tiên dùng cho breadcrumb |
+| `tags`, `post_tag` | site_id, slug, name | Tag trùng tên trong site được dùng lại |
+| `faqs` | post_id, question, answer, sort, locale | |
+| `authors` | name, slug, job_title, bio, expertise, avatar, linkedin_url | **Không có site_id**: tác giả dùng chung mọi site (hồ sơ E-E-A-T thống nhất); danh sách bài lọc theo site đang xem |
+| `posts.author_id` | | |
+
+Đổi slug danh mục hoặc tác giả cũng tự tạo redirect 301 (tác giả: trên mọi site).
 

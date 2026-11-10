@@ -23,6 +23,9 @@ class Category extends Model
 
     public const PATH_PREFIX = '/danh-muc/';
 
+    /** Giới hạn độ sâu khi đi ngược lên danh mục cha (phòng dữ liệu lỗi tạo vòng). */
+    private const MAX_DEPTH = 10;
+
     protected $fillable = [
         'parent_id', 'slug', 'locale', 'name', 'description',
         'seo_title', 'meta_description', 'requires_expert_review',
@@ -39,6 +42,13 @@ class Category extends Model
         static::saving(function (Category $category): void {
             if (blank($category->slug)) {
                 $category->slug = Str::slug($category->name);
+            }
+        });
+
+        // Đổi slug: URL danh mục cũ chuyển 301 sang URL mới.
+        static::updated(function (Category $category): void {
+            if ($category->wasChanged('slug')) {
+                Redirect::recordMove($category->site_id, self::PATH_PREFIX.$category->getOriginal('slug'), $category->path());
             }
         });
     }
@@ -99,14 +109,39 @@ class Category extends Model
     public function ancestry(): array
     {
         $chain = [];
+        $seenIds = [];
         $current = $this;
 
-        while ($current !== null && ! in_array($current, $chain, true) && count($chain) < 10) {
+        while ($current !== null && ! in_array($current->id, $seenIds, true) && count($chain) < self::MAX_DEPTH) {
             array_unshift($chain, $current);
+            $seenIds[] = $current->id;
             $current = $current->parent;
         }
 
         return $chain;
+    }
+
+    /** Danh mục này hoặc một danh mục cha của nó yêu cầu duyệt chuyên môn. */
+    public function isUnderExpertReview(): bool
+    {
+        foreach ($this->ancestry() as $category) {
+            if ($category->requires_expert_review) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Có danh mục nào (hoặc danh mục cha của nó) trong danh sách yêu cầu duyệt chuyên môn không.
+     *
+     * @param  array<int|string>  $categoryIds
+     */
+    public static function anyUnderExpertReview(array $categoryIds): bool
+    {
+        return static::query()->whereKey($categoryIds)->get()
+            ->contains(fn (Category $category) => $category->isUnderExpertReview());
     }
 
     public function path(): string

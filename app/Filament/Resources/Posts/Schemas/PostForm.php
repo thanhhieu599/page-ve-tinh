@@ -104,8 +104,12 @@ class PostForm
                             TextInput::make('name')->label('Tên tag')->required()->maxLength(255),
                         ])
                         ->createOptionUsing(function (array $data): int {
-                            $tag = new Tag(['name' => $data['name']]);
-                            $tag->site_id = (int) TenantSite::id();
+                            // Tag trùng tên trong site thì dùng lại, không tạo bản sao.
+                            $tag = Tag::query()->firstOrNew([
+                                'site_id' => TenantSite::id(),
+                                'slug' => Str::slug($data['name']),
+                            ]);
+                            $tag->name = $tag->exists ? $tag->name : $data['name'];
                             $tag->save();
 
                             return $tag->id;
@@ -119,7 +123,7 @@ class PostForm
                 ]),
 
                 Section::make('Câu hỏi thường gặp (FAQ)')
-                    ->description('Hiện cuối bài và dùng cho schema FAQPage. Kéo thả để sắp thứ tự.')
+                    ->description('Hiện cuối bài viết. Kéo thả để sắp thứ tự.')
                     ->schema([
                         Repeater::make('faqs')
                             ->hiddenLabel()
@@ -150,6 +154,7 @@ class PostForm
                     FileUpload::make('og_image')
                         ->label('Ảnh chia sẻ (OG image)')
                         ->image()
+                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                         ->disk('public')
                         ->directory('og-images'),
                 ]),

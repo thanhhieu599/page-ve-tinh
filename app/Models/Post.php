@@ -163,7 +163,7 @@ class Post extends Model
     public function requiresExpertReview(): bool
     {
         return (bool) $this->site?->requires_expert_review
-            || $this->categories->contains(fn (Category $category) => $category->requires_expert_review);
+            || $this->categories->contains(fn (Category $category) => $category->isUnderExpertReview());
     }
 
     public function isScheduled(): bool
