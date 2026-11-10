@@ -22,9 +22,6 @@ use Illuminate\Validation\Rules\Unique;
 
 class ProductForm
 {
-    /** Link mua chỉ được trỏ về trang sản phẩm trên trangthietbi.vn (chính sách liên kết). */
-    public const BUY_URL_PATTERN = '#^https://(www\.)?trangthietbi\.vn(/|$)#';
-
     public static function configure(Schema $schema): Schema
     {
         return $schema
@@ -44,12 +41,15 @@ class ProductForm
                         TextInput::make('sku')->label('Mã SKU')->required()->maxLength(100)
                             ->unique(ignoreRecord: true, modifyRuleUsing: fn (Unique $rule) => TenantSite::unique($rule)),
                         TextInput::make('price')->label('Giá tham khảo (VNĐ, chưa VAT)')
-                            ->integer()->minValue(0)->suffix('đ')
-                            ->helperText('Đổi giá sẽ tự cập nhật ngày giá. Giá chỉ hiện trên site trong '.Product::PRICE_VALID_DAYS.' ngày kể từ ngày cập nhật.'),
+                            ->integer()->minValue(0)->maxValue(Product::MAX_PRICE)->suffix('đ')
+                            ->helperText('Đổi giá sẽ tự cập nhật ngày giá. Giá hiện trên site đến hết ngày thứ '.Product::PRICE_VALID_DAYS.' kể từ ngày cập nhật. Để trống hoặc 0 = chưa có giá.'),
                         TextInput::make('buy_url')->label('Link mua trên trangthietbi.vn')->maxLength(255)
                             ->placeholder('https://trangthietbi.vn/...')
-                            ->rules(['nullable', 'regex:'.self::BUY_URL_PATTERN])
-                            ->validationMessages(['regex' => 'Link mua phải là trang trên https://trangthietbi.vn.']),
+                            ->rule(fn (): \Closure => function (string $attribute, mixed $value, \Closure $fail): void {
+                                if (! Product::isAllowedBuyUrl(is_string($value) ? $value : null)) {
+                                    $fail('Link mua phải là trang trên https://trangthietbi.vn.');
+                                }
+                            }),
                         KeyValue::make('specs')->label('Thông số')->keyLabel('Thông số')->valueLabel('Giá trị')
                             ->columnSpanFull(),
                     ]),
@@ -72,7 +72,7 @@ class ProductForm
                         TextEntry::make('price_updated_at')->label('Ngày cập nhật giá')
                             ->state(fn (?Product $record): string => $record?->price_updated_at
                                 ? $record->price_updated_at->timezone(config('app.display_timezone'))->format('d/m/Y H:i')
-                                    .' (hiện trên site đến '.$record->priceExpiresAt()?->timezone(config('app.display_timezone'))->format('d/m/Y').')'
+                                    .' (hiện trên site đến hết ngày '.$record->priceShownUntil()?->format('d/m/Y').')'
                                 : 'Chưa có giá')
                             ->visibleOn('edit'),
                     ]),

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Products\Tables;
 
+use App\Enums\PriceStatus;
 use App\Models\Product;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
@@ -20,17 +21,12 @@ class ProductsTable
                     ->formatStateUsing(fn (Product $record): string => $record->formattedPrice())
                     ->placeholder('—'),
                 TextColumn::make('price_status')->label('Giá trên site')->badge()
-                    ->state(fn (Product $record): string => match (true) {
-                        $record->price === null => 'Chưa có giá',
-                        ! $record->hasFreshPrice() => 'Hết hạn, đang ẩn',
-                        default => 'Hiện đến '.$record->priceExpiresAt()?->timezone(config('app.display_timezone'))->format('d/m'),
+                    ->state(fn (Product $record): string => match ($record->priceStatus()) {
+                        PriceStatus::None => 'Chưa có giá',
+                        PriceStatus::Expired => 'Hết hạn, đang ẩn',
+                        default => 'Hiện đến hết '.$record->priceShownUntil()?->format('d/m'),
                     })
-                    ->color(fn (Product $record): string => match (true) {
-                        $record->price === null => 'gray',
-                        ! $record->hasFreshPrice() => 'danger',
-                        now()->diffInDays($record->priceExpiresAt(), true) <= Product::PRICE_WARNING_DAYS => 'warning',
-                        default => 'success',
-                    }),
+                    ->color(fn (Product $record): string => $record->priceStatus()->color()),
                 IconColumn::make('is_active')->label('Hiện')->boolean(),
             ])
             ->defaultSort('name')

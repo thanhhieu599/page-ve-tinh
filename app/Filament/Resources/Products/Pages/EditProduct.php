@@ -47,7 +47,7 @@ class EditProduct extends EditRecord
                 ->color('success')
                 ->visible(fn (): bool => $this->product()->price !== null)
                 ->requiresConfirmation()
-                ->modalDescription('Giá giữ nguyên, ngày cập nhật giá đổi thành hôm nay, giá tiếp tục hiện trên site thêm '.Product::PRICE_VALID_DAYS.' ngày.')
+                ->modalDescription('Chỉ xác nhận khi đã kiểm tra lại giá với Sapo/nhà cung cấp. Giá giữ nguyên, ngày cập nhật giá đổi thành hôm nay, giá tiếp tục hiện trên site thêm '.Product::PRICE_VALID_DAYS.' ngày.')
                 ->action(function (): void {
                     $this->product()->confirmPrice();
                     $this->refreshFormData(['price_updated_at']);

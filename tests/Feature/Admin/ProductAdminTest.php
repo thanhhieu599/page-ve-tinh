@@ -130,4 +130,26 @@ class ProductAdminTest extends TestCase
             ->call('create')
             ->assertHasFormErrors(['products.0']);
     }
+
+    public function test_unrealistic_prices_are_rejected(): void
+    {
+        $this->workOn($this->vpp, User::factory()->writer()->hasAttached($this->vpp)->create());
+
+        foreach ([-1, 50_000_000_001] as $price) {
+            Livewire::test(CreateProduct::class)
+                ->fillForm(['name' => 'Sản phẩm', 'sku' => 'SP-1', 'price' => $price])
+                ->call('create')
+                ->assertHasFormErrors(['price']);
+        }
+    }
+
+    public function test_buy_link_host_is_not_case_sensitive(): void
+    {
+        $this->workOn($this->vpp, User::factory()->writer()->hasAttached($this->vpp)->create());
+
+        Livewire::test(CreateProduct::class)
+            ->fillForm(['name' => 'Sản phẩm', 'sku' => 'SP-1', 'buy_url' => 'https://TrangThietBi.vn/san-pham-x'])
+            ->call('create')
+            ->assertHasNoFormErrors();
+    }
 }

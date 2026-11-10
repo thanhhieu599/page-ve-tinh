@@ -74,3 +74,14 @@ Database CMS tách riêng khỏi database Mautic (Q13).
 - Ảnh đang dùng trong bài không xoá được.
 - Đường dẫn file công khai là tương đối (`/storage/...`) để mỗi domain tự phục vụ. Khi cần URL tuyệt đối (og:image, sitemap) phải ghép domain của site.
 
+## Bổ sung khi triển khai (issue #8)
+
+| Bảng / thay đổi | Cột quan trọng | Ghi chú |
+|---|---|---|
+| `products` | site_id, name, sku, specs, buy_url, price (VNĐ, chưa VAT), price_updated_at, **slug, description, media_id**, is_active, source | UNIQUE(site_id, sku), UNIQUE(site_id, slug). `slug`, `description`, `media_id` (ảnh từ thư viện) do CMS quản lý, nhập CSV/Sapo không ghi đè |
+| `post_product` | post_id, product_id | Khối "Sản phẩm liên quan" trong bài |
+
+- Giá chỉ đổi qua `setPrice()` (0 = bỏ giá, chặn âm và > 50 tỷ) để `price_updated_at` luôn đi kèm.
+- Giá cập nhật ngày D (giờ Việt Nam) hiện trên site đến hết ngày D + 14; sau đó hiện "Liên hệ báo giá".
+- `buy_url` chỉ nhận `https://trangthietbi.vn/...`. Đổi slug sản phẩm tự tạo redirect 301.
+

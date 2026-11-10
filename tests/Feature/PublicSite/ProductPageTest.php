@@ -113,4 +113,45 @@ class ProductPageTest extends TestCase
             ->assertSee('Liên hệ báo giá')
             ->assertDontSee('Sản phẩm đã ngừng');
     }
+
+    public function test_price_lasts_until_the_end_of_day_14_in_vietnam_time(): void
+    {
+        // Cập nhật 23:30 ngày 01/11 giờ Việt Nam.
+        $this->travelTo(Carbon::parse('2026-11-01 16:30:00', 'UTC'));
+        $this->product()->setPrice(89000);
+
+        $this->travelTo(Carbon::parse('2026-11-15 16:59:00', 'UTC')); // 23:59 ngày 15/11 VN = ngày 14
+        $this->get('https://vpptrangthietbi.com.vn/san-pham/giay-double-a-a4-80gsm')->assertSee('89.000 đ');
+
+        $this->travelTo(Carbon::parse('2026-11-15 17:01:00', 'UTC')); // 00:01 ngày 16/11 VN = ngày 15
+        $this->get('https://vpptrangthietbi.com.vn/san-pham/giay-double-a-a4-80gsm')
+            ->assertSee('Liên hệ báo giá')->assertDontSee('89.000');
+    }
+
+    public function test_morning_update_is_not_cut_off_in_the_middle_of_day_14(): void
+    {
+        // Cập nhật 15:00 ngày 01/11 VN; đến 20:00 ngày 15/11 VN (ngày 14) giá vẫn còn.
+        $this->travelTo(Carbon::parse('2026-11-01 08:00:00', 'UTC'));
+        $this->product()->setPrice(89000);
+
+        $this->travelTo(Carbon::parse('2026-11-15 13:00:00', 'UTC'));
+        $this->get('https://vpptrangthietbi.com.vn/san-pham/giay-double-a-a4-80gsm')->assertSee('89.000 đ');
+    }
+
+    public function test_zero_price_means_no_price(): void
+    {
+        $this->product()->setPrice(0);
+
+        $this->get('https://vpptrangthietbi.com.vn/san-pham/giay-double-a-a4-80gsm')
+            ->assertSee('Liên hệ báo giá')->assertDontSee('0 đ');
+    }
+
+    public function test_renaming_a_product_redirects_its_old_url(): void
+    {
+        $product = $this->product();
+        $product->update(['slug' => 'giay-a4-double-a-80gsm']);
+
+        $this->get('https://vpptrangthietbi.com.vn/san-pham/giay-double-a-a4-80gsm')
+            ->assertStatus(301)->assertRedirect('https://vpptrangthietbi.com.vn/san-pham/giay-a4-double-a-80gsm');
+    }
 }
