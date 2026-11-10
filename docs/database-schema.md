@@ -134,8 +134,9 @@ Database CMS tách riêng khỏi database Mautic (Q13).
 
 - `keyword_map` (site_id, keyword, target_url, intent): `keyword` lưu dạng chuẩn (chữ thường, một khoảng trắng), collation `utf8mb4_bin`, **unique toàn hệ thống** (mỗi từ khoá một trang đích). `target_url` là đường dẫn chuẩn trong site. `intent`: informational / commercial / transactional / navigational.
 - Gán từ khoá đã thuộc trang khác (cùng hoặc khác site) → báo lỗi kèm URL trang đang giữ; chỉ Admin bật "Chuyển từ khoá sang trang này" để ghi đè (dòng cũ được chuyển, không nhân đôi). Người viết không vào màn hình này.
-- Từ khoá chuẩn hoá Unicode NFC trước khi lưu/so khớp. Ngoại lệ có chủ đích với quy tắc collation chung: cột `keyword` dùng `utf8mb4_bin` để "găng tay" và "gang tay" là hai từ khoá khác nhau.
+- Từ khoá chuẩn hoá Unicode NFC trước khi lưu/so khớp. Ngoại lệ có chủ đích với quy tắc collation chung: cột `keyword` dùng `utf8mb4_bin` để "găng tay" và "gang tay" là hai từ khoá khác nhau. (Chủ dự án đã duyệt ngày 10/11/2026.)
 - Biên tập: gán từ khoá mới, đổi mục đích. Chỉ Admin: đổi trang đích, ghi đè, xoá (policy `reassign`/`delete`), để không ai lách quy tắc bằng sửa hoặc xoá rồi tạo lại.
 - `posts.has_purchase_context` (mặc định false): bài có ngữ cảnh mua hàng/báo giá; chỉ Biên tập/Admin thấy và bật.
 - Chính sách liên kết khi lưu bài (`App\Support\ContentLinkRules`): link sang domain site vệ tinh khác (kể cả www, subdomain, viết hoa, href không nháy, "\\") → chặn; khôi phục bản cũ có link cấm cũng bị chặn; link sang trangthietbi.vn (và subdomain) → chặn, trừ link mua của sản phẩm đang bán trên site hoặc bài có `has_purchase_context`. Link trong khối sản phẩm/báo giá của theme không thuộc nội dung bài nên luôn được phép.
 - Footer theme: ghi rõ thuộc D&T, chỉ nhãn điều hướng, không anchor từ khoá, không link sang site vệ tinh khác hay trangthietbi.vn. Test chạy cho mọi theme trong `resources/themes`.
+- Việc để sau (đã thống nhất): cảnh báo trong trang quản trị liệt kê các bài đang có link mua tới sản phẩm đã ngừng bán (bài vẫn hiện, nhưng lần sửa tiếp theo sẽ bị chặn cho tới khi gỡ link).
