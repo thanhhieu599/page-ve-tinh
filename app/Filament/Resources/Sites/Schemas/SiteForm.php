@@ -35,6 +35,9 @@ class SiteForm
                     // Tên miền là địa chỉ của site và của trang quản trị site: cố định sau khi tạo.
                     ->disabledOn('edit'),
                 TextInput::make('name')->label('Tên site')->required()->maxLength(255),
+                TextInput::make('settings.tagline')->label('Câu giới thiệu trang chủ')->maxLength(200)->columnSpanFull()
+                    ->placeholder('Văn phòng phẩm cho nhà máy: báo giá theo số lượng, xuất VAT, giao tận KCN.')
+                    ->helperText('Hiện dưới tên site ở trang chủ và làm mô tả trang chủ trên Google.'),
                 Select::make('theme')
                     ->label('Theme')
                     ->options(fn (): array => array_combine(Theme::available(), Theme::available()))

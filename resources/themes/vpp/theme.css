@@ -1,0 +1,110 @@
+/*
+ * Theme VPP – tông màu theo trangthietbi.vn: đỏ (thương hiệu), xanh đậm, đen, trắng.
+ * Màu đỏ đổi được theo site (trang quản trị → Site vệ tinh → Màu thương hiệu): layout ghi đè --color-brand.
+ * Không dùng web font: chữ hệ thống, trang hiện ngay (tốt cho LCP/CLS).
+ */
+@import 'tailwindcss';
+
+@source './**/*.blade.php';
+
+@theme {
+    --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    --color-brand: #c1272d;
+    --color-brand-dark: #9b1d22;
+    --color-navy: #0f2a44;
+    --color-navy-light: #1d4370;
+    --color-ink: #111827;
+    --color-muted: #4b5563;
+    --color-line: #e5e7eb;
+    --color-surface: #f5f6f8;
+}
+
+@layer base {
+    html { -webkit-text-size-adjust: 100%; }
+    body { @apply bg-white font-sans text-ink antialiased; }
+    a { @apply text-navy-light underline-offset-2 hover:text-brand; }
+    h1 { @apply text-2xl font-bold leading-tight text-ink md:text-3xl; }
+    h2 { @apply text-xl font-bold leading-snug text-ink; }
+    h3 { @apply text-lg font-semibold text-ink; }
+    img { @apply h-auto max-w-full; }
+    :focus-visible { @apply outline-2 outline-offset-2 outline-brand; }
+}
+
+@layer components {
+    .container-site { @apply mx-auto w-full max-w-6xl px-4; }
+
+    /* Nút */
+    .button { @apply inline-flex items-center justify-center gap-2 rounded-md border border-navy px-4 py-2.5 font-semibold text-navy no-underline transition hover:bg-navy hover:text-white; }
+    .button-primary { @apply border-brand bg-brand text-white hover:border-brand-dark hover:bg-brand-dark hover:text-white; }
+
+    /* Breadcrumb */
+    .breadcrumb { @apply mb-5 text-sm text-muted; }
+    .breadcrumb ol { @apply flex flex-wrap items-center gap-x-2 gap-y-1; }
+    .breadcrumb li:not(:last-child)::after { content: '›'; @apply ml-2 text-gray-400; }
+    .breadcrumb a { @apply text-muted no-underline hover:text-brand; }
+    .breadcrumb [aria-current] { @apply text-ink; }
+
+    /* Nội dung bài và trang tĩnh */
+    .post-content, .page-content, .description { @apply leading-relaxed text-[1.0625rem]; }
+    .post-content > * + *, .page-content > * + * { @apply mt-4; }
+    .post-content h2, .page-content h2 { @apply mt-8 text-xl; }
+    .post-content h3, .page-content h3 { @apply mt-6; }
+    .post-content ul, .page-content ul { @apply list-disc pl-6; }
+    .post-content ol, .page-content ol { @apply list-decimal pl-6; }
+    .post-content li + li, .page-content li + li { @apply mt-1; }
+    .post-content blockquote { @apply border-l-4 border-brand bg-surface px-4 py-3 italic; }
+    .post-content table, .specs { @apply w-full border-collapse text-sm; }
+    .post-content th, .post-content td, .specs th, .specs td { @apply border border-line px-3 py-2 text-left align-top; }
+    .post-content th, .specs th { @apply bg-surface font-semibold; }
+    .post-content img { @apply rounded-md; }
+    .byline { @apply mt-2 text-sm text-muted; }
+    /* Dòng chữ không quá dài để dễ đọc (khoảng 70–80 ký tự). */
+    main > article { @apply max-w-3xl; }
+    .post-content, .page-content { @apply mt-6; }
+
+    /* Danh sách bài */
+    .post-list { @apply grid gap-4 sm:grid-cols-2; }
+    .post-list li { @apply rounded-lg border border-line p-4; }
+    .post-list h2 { @apply text-lg; }
+    .post-list h2 a { @apply text-ink no-underline hover:text-brand; }
+    .post-list p { @apply mt-2 text-sm text-muted; }
+    .pagination { @apply mt-6 flex items-center justify-between gap-4 text-sm; }
+
+    /* Sản phẩm */
+    .sku { @apply mt-1 text-sm text-muted; }
+    .price { @apply my-4 rounded-lg bg-surface p-4; }
+    .price strong { @apply text-2xl text-brand; }
+    .price small { @apply text-muted; }
+    .actions { @apply my-5 flex flex-wrap gap-3; }
+    .related-products ul { @apply grid gap-4 sm:grid-cols-2; }
+    .related-products li { @apply rounded-lg border border-line p-4; }
+
+    /* Khối có tiêu đề trong bài */
+    .related-products, .faq, .quote-request, .company-info { @apply mt-10; }
+    .related-products > h2, .faq > h2, .quote-request > h2, .company-info > h2 { @apply mb-4 border-l-4 border-brand pl-3; }
+    .faq h3 { @apply mt-4; }
+    .faq p { @apply mt-1 text-muted; }
+    .company-info { @apply rounded-lg bg-surface p-5; }
+    .company-info ul { @apply mt-2 space-y-1; }
+    .author-job-title { @apply font-semibold text-brand; }
+
+    /* Form yêu cầu báo giá */
+    .quote-form { @apply grid max-w-2xl gap-4; }
+    .quote-form label { @apply font-semibold; }
+    .quote-form input[type='text'], .quote-form input[type='email'], .quote-form input[type='tel'], .quote-form textarea {
+        @apply mt-1 block w-full rounded-md border border-gray-300 px-3 py-2.5 text-base focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20;
+    }
+    .quote-form input[type='checkbox'] { @apply mr-2 h-4 w-4 align-middle accent-brand; }
+    .quote-form label:has(input[type='checkbox']) { @apply text-sm font-normal text-muted; }
+    .quote-form button[type='submit'] { @apply inline-flex w-full cursor-pointer items-center justify-center rounded-md bg-brand px-6 py-3 text-lg font-semibold text-white transition hover:bg-brand-dark sm:w-auto; }
+    .form-errors { @apply rounded-md border border-brand bg-red-50 p-4 text-brand-dark; }
+    .form-errors ul { @apply list-disc pl-5; }
+
+    /* Footer */
+    .site-footer { @apply mt-16 bg-ink py-10 text-sm text-gray-300; }
+    .site-footer > * { @apply mx-auto max-w-6xl px-4; }
+    .site-footer > * + * { @apply mt-3; }
+    .site-footer .company-details span { @apply whitespace-nowrap; }
+    .site-footer nav { @apply flex flex-wrap gap-x-5 gap-y-2 pt-3; }
+    .site-footer a { @apply text-white no-underline hover:text-brand; }
+}

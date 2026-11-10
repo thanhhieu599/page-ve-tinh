@@ -68,6 +68,7 @@ class SitemapTest extends TestCase
 
         $this->assertStringStartsWith('text/xml', (string) $response->headers->get('Content-Type'));
         $this->assertSame([
+            'https://vpptrangthietbi.com.vn/',
             'https://vpptrangthietbi.com.vn/danh-muc/giay-a4',
             'https://vpptrangthietbi.com.vn/danh-muc/giay-van-phong',
             'https://vpptrangthietbi.com.vn/kien-thuc/cach-chon-giay-in-a4',
@@ -76,6 +77,7 @@ class SitemapTest extends TestCase
         ], $this->locs($response));
 
         $this->assertSame([
+            'https://ppetrangthietbi.vn/',
             'https://ppetrangthietbi.vn/kien-thuc/gang-tay-towa',
             'https://ppetrangthietbi.vn/san-pham/gang-tay-towa-370',
         ], $this->locs($this->get('https://ppetrangthietbi.vn/sitemap.xml')));
@@ -89,6 +91,7 @@ class SitemapTest extends TestCase
         $this->travelTo('2026-11-10 10:00:00');
         $xml = simplexml_load_string((string) $this->get('https://vpptrangthietbi.com.vn/sitemap.xml')->getContent());
 
-        $this->assertStringStartsWith('2026-11-05', (string) $xml->url[0]->lastmod);
+        $post = $xml->xpath('//*[local-name()="url"][*[local-name()="loc"]="https://vpptrangthietbi.com.vn/kien-thuc/cach-chon-giay-in-a4"]')[0];
+        $this->assertStringStartsWith('2026-11-05', (string) $post->lastmod);
     }
 }

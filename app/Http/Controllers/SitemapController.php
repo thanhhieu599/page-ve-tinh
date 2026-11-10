@@ -10,7 +10,6 @@ use App\Models\RequiredPage;
 use App\Support\CurrentSite;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Spatie\Sitemap\Sitemap;
 use Spatie\Sitemap\Tags\Url;
 use Symfony\Component\HttpFoundation\Response;
@@ -32,7 +31,7 @@ class SitemapController extends Controller
         $site = $currentSite->get();
         abort_if($site === null, 404);
 
-        $sitemap = Sitemap::create();
+        $sitemap = Sitemap::create()->add(Url::create($site->url('/')));
         $add = function (Post|Category|Author|Product|RequiredPage $model) use ($sitemap, $site): void {
             $sitemap->add(Url::create($site->url($model->path()))->setLastModificationDate($model->updated_at));
         };
@@ -41,10 +40,7 @@ class SitemapController extends Controller
 
         $hasPublishedPost = fn (Builder $query) => $query->published();
 
-        self::withAncestors(
-            Category::query()->get([...self::COLUMNS, 'parent_id']),
-            Category::query()->whereHas('posts', $hasPublishedPost)->pluck('id'),
-        )->each($add);
+        Category::live(self::COLUMNS)->each($add);
 
         Author::query()->whereHas('posts', $hasPublishedPost)->get(self::COLUMNS)->each($add);
 
@@ -53,28 +49,5 @@ class SitemapController extends Controller
         RequiredPage::query()->published()->get(['id', 'kind', 'updated_at'])->each($add);
 
         return $sitemap->toResponse($request);
-    }
-
-    /**
-     * Danh mục có bài và mọi danh mục cha của chúng (trang danh mục cha liệt kê cả bài của con).
-     *
-     * @param  Collection<int, Category>  $all
-     * @param  Collection<int, int>  $withPostIds
-     * @return Collection<int, Category>
-     */
-    private static function withAncestors(Collection $all, Collection $withPostIds): Collection
-    {
-        $byId = $all->keyBy('id');
-        $included = [];
-
-        foreach ($withPostIds as $id) {
-            // Giới hạn độ sâu để dữ liệu lỗi (vòng cha–con) không làm treo.
-            for ($depth = 0; $id !== null && isset($byId[$id]) && ! isset($included[$id]) && $depth < Category::MAX_DEPTH; $depth++) {
-                $included[$id] = $byId[$id];
-                $id = $byId[$id]->parent_id;
-            }
-        }
-
-        return collect(array_values($included));
     }
 }

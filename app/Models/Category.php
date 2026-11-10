@@ -4,11 +4,13 @@ namespace App\Models;
 
 use App\Models\Concerns\BelongsToSite;
 use Database\Factories\CategoryFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 /**
@@ -51,6 +53,30 @@ class Category extends Model
                 Redirect::recordMove($category->site_id, self::PATH_PREFIX.$category->getOriginal('slug'), $category->path());
             }
         });
+    }
+
+    /**
+     * Danh mục "đang sống" của site hiện tại: có bài đã đăng, kèm mọi danh mục cha
+     * (trang danh mục cha liệt kê cả bài của con). Dùng cho sitemap, menu, trang chủ.
+     *
+     * @param  list<string>  $columns
+     * @return Collection<int, Category>
+     */
+    public static function live(array $columns = ['*']): Collection
+    {
+        $columns = $columns === ['*'] ? $columns : array_values(array_unique([...$columns, 'id', 'parent_id']));
+        $byId = static::query()->get($columns)->keyBy('id');
+        $included = [];
+
+        foreach (static::query()->whereHas('posts', fn (Builder $query) => $query->published())->pluck('id') as $id) {
+            // Giới hạn độ sâu để dữ liệu lỗi (vòng cha–con) không làm treo.
+            for ($depth = 0; $id !== null && isset($byId[$id]) && ! isset($included[$id]) && $depth < self::MAX_DEPTH; $depth++) {
+                $included[$id] = $byId[$id];
+                $id = $byId[$id]->parent_id;
+            }
+        }
+
+        return collect(array_values($included));
     }
 
     /** @return BelongsTo<Category, $this> */

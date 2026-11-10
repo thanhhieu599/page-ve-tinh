@@ -8,6 +8,10 @@ const domain = 'vpptrangthietbi.com.vn';
 
 const pages = [
     {
+        path: '/',
+        mustContain: ['Văn phòng phẩm D&T', 'Yêu cầu báo giá theo số lượng', 'Cách chọn giấy in A4 cho văn phòng nhà máy', 'Giấy Double A A4 80gsm'],
+    },
+    {
         path: '/kien-thuc/cach-chon-giay-in-a4',
         mustContain: [
             'Cách chọn giấy in A4 cho văn phòng nhà máy',

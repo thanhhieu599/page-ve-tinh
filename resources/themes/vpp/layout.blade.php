@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title') | {{ $site->name }}</title>
+    <title>@hasSection('title')@yield('title') | {{ $site->name }}@else{{ $site->name }}@endif</title>
     <link rel="canonical" href="@hasSection('canonical')@yield('canonical')@else{{ \App\Support\CanonicalUrl::for($site, request()) }}@endif">
     {{-- Site chưa bật index: mọi trang noindex. Đã bật: trang tự khai @section('robots') nếu cần. --}}
     @php($robots = $site->is_indexable ? trim($__env->yieldContent('robots')) : \App\Models\Site::NOINDEX)
@@ -18,8 +18,10 @@
     @if ($gscToken = $site->searchConsoleToken())
         <meta name="google-site-verification" content="{{ $gscToken }}">
     @endif
+    @vite('resources/themes/'.\App\Support\Theme::resolve($site->theme).'/theme.css')
     @if ($brandColor = $site->brandColor())
-        <style>:root { --brand-color: {{ $brandColor }}; } a, h1, h2 { color: var(--brand-color); } header { border-bottom: 3px solid var(--brand-color); }</style>
+        {{-- Màu thương hiệu riêng của site thay màu đỏ mặc định của theme. --}}
+        <style>:root { --brand-color: {{ $brandColor }}; --color-brand: var(--brand-color); }</style>
     @endif
     @php($ga4Id = $site->ga4Id())
     @if ($ga4Id)
@@ -36,17 +38,9 @@
     @stack('head-scripts')
 </head>
 <body>
-    <header>
-        <a href="/">
-            @if ($logo = $site->logoUrl())
-                <img src="{{ $logo }}" alt="{{ $site->name }}"@if ($logoWidth = $site->logoWidth()) width="{{ $logoWidth }}"@endif height="{{ \App\Models\Site::LOGO_HEIGHT }}">
-            @else
-                {{ $site->name }}
-            @endif
-        </a>
-    </header>
+    @include('theme::partials.header')
 
-    <main>
+    <main class="container-site py-6 md:py-8">
         @yield('content')
     </main>
 

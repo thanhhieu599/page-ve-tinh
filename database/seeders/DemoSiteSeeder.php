@@ -48,7 +48,7 @@ class DemoSiteSeeder extends Seeder
     {
         $site = Site::query()->updateOrCreate(
             ['domain' => self::DOMAIN],
-            ['name' => 'Văn phòng phẩm D&T', 'theme' => 'vpp', 'settings' => [], 'is_active' => true],
+            ['name' => 'Văn phòng phẩm D&T', 'theme' => 'vpp', 'settings' => ['tagline' => 'Văn phòng phẩm cho nhà máy và văn phòng doanh nghiệp: báo giá theo số lượng, xuất VAT, giao tận KCN.'], 'is_active' => true],
         );
 
         // Trang bắt buộc: site tạo từ trước có thể chưa có; bật hiển thị để xem thử khi chạy local.

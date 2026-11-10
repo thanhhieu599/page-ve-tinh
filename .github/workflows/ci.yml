@@ -84,6 +84,9 @@ jobs:
           npm ci
           npx playwright install --with-deps chromium
 
+      - name: Build CSS theme
+        run: npm run build
+
       - name: Chuẩn bị ứng dụng và dữ liệu mẫu
         run: |
           cp .env.example .env

@@ -3,6 +3,7 @@
 use App\Enums\PageKind;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\QuoteRequestController;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/sitemap.xml', SitemapController::class)->middleware(IdentifySite::class)->name('sitemap');
 
 Route::middleware([IdentifySite::class, CaptureAttribution::class])->group(function () {
+    Route::get('/', HomeController::class)->name('home');
     Route::get('/kien-thuc/{slug}', [PostController::class, 'show'])->name('posts.show');
     Route::get('/danh-muc/{slug}', [CategoryController::class, 'show'])->name('categories.show');
     Route::get('/tac-gia/{slug}', [AuthorController::class, 'show'])->name('authors.show');

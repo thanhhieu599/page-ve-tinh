@@ -11,8 +11,11 @@
         "intervention/image": "^3.11",
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0",
+        "league/flysystem-aws-s3-v3": "^3.35",
         "mews/purifier": "^3.4",
+        "spatie/laravel-backup": "^10.4",
         "spatie/laravel-permission": "^7.0",
+        "spatie/laravel-responsecache": "^8.6",
         "spatie/laravel-sitemap": "^8.2",
         "spatie/schema-org": "^5.0"
     },
