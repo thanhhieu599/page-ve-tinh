@@ -103,3 +103,8 @@ Database CMS tách riêng khỏi database Mautic (Q13).
 - Nguồn truy cập (trang vào đầu, UTM) ghi vào phiên ở lần vào đầu tiên (middleware CaptureAttribution).
 - Lead chỉ xem/sửa bởi Biên tập/Admin; thông tin khách và bằng chứng đồng ý chỉ đọc.
 
+## Bổ sung khi triển khai (issue #11)
+
+- `leads.mautic_contact_id`: id contact bên Mautic sau khi đồng bộ. Index (site_id, synced_to_mautic_at) cho bộ lọc "Chưa đồng bộ".
+- Lead mới → job `SyncLeadToMautic` (hàng đợi): tạo/cập nhật contact theo email, tag `rfq`, `site-<domain>`, `nganh-<industry_tag>`, `chua-xac-minh` (nếu chưa qua Turnstile); UTM qua `/contacts/{id}/utm/add`; ghi chú nhu cầu; campaign `settings.mautic_campaign_id` của site. Thử 5 lần (1, 5, 15, 60 phút), sau đó email `DEV_ALERT_EMAIL`.
+

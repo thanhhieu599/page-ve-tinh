@@ -2,6 +2,13 @@
 
 return [
 
+    // Mautic REST API (Basic Auth). Để trống = không đồng bộ lead (local).
+    'mautic' => [
+        'url' => env('MAUTIC_URL'),
+        'username' => env('MAUTIC_USERNAME'),
+        'password' => env('MAUTIC_PASSWORD'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Third Party Services

@@ -37,6 +37,9 @@ php artisan admin:create email@congty.vn --name="Họ tên"
 
 Rồi vào `http://<ADMIN_DOMAIN>:8000/admin`.
 
+Hàng đợi (đẩy lead sang Mautic): production dùng `QUEUE_CONNECTION=redis` và chạy liên tục
+`php artisan queue:work --tries=5` (supervisor/systemd). Local không cấu hình Mautic thì không cần.
+
 Kiểm tra:
 
 - `php artisan test`: test tự động (cần database `pvt_test`, xem `phpunit.xml`).

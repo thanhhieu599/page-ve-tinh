@@ -26,6 +26,10 @@
         <env name="ADMIN_DOMAIN" value="admin.trangthietbi.test" force="true"/>
         <env name="TURNSTILE_SITE_KEY" value="" force="true"/>
         <env name="TURNSTILE_SECRET_KEY" value="" force="true"/>
+        <env name="MAUTIC_URL" value="" force="true"/>
+        <env name="MAUTIC_USERNAME" value="" force="true"/>
+        <env name="MAUTIC_PASSWORD" value="" force="true"/>
+        <env name="DEV_ALERT_EMAIL" value="" force="true"/>
         <env name="TRUSTED_PROXIES" value="" force="true"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>

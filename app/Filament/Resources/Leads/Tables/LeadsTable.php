@@ -3,11 +3,18 @@
 namespace App\Filament\Resources\Leads\Tables;
 
 use App\Enums\LeadStatus;
+use App\Jobs\SyncLeadToMautic;
+use App\Models\Lead;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
+use Filament\Notifications\Notification;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class LeadsTable
 {
@@ -27,11 +34,29 @@ class LeadsTable
                 TextColumn::make('utm_campaign')->label('Chiến dịch')->placeholder('—')->toggleable(),
                 TextColumn::make('landing_url')->label('Trang vào đầu')->limit(40)->toggleable(),
                 IconColumn::make('is_verified')->label('Xác minh')->boolean(),
+                IconColumn::make('synced_to_mautic_at')->label('Mautic')
+                    ->state(fn (Lead $record): bool => $record->isSyncedToMautic())->boolean(),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
                 SelectFilter::make('status')->label('Trạng thái')->options(LeadStatus::class),
+                TernaryFilter::make('mautic')->label('Mautic')
+                    ->trueLabel('Đã đồng bộ')->falseLabel('Chưa đồng bộ')
+                    ->queries(
+                        true: fn (Builder $query) => $query->whereNotNull('synced_to_mautic_at'),
+                        false: fn (Builder $query) => $query->whereNull('synced_to_mautic_at'),
+                    ),
             ])
-            ->recordActions([EditAction::make()->label('Xem / cập nhật')]);
+            ->recordActions([
+                EditAction::make()->label('Xem / cập nhật'),
+                Action::make('resyncMautic')->label('Đồng bộ lại Mautic')
+                    ->icon(Heroicon::OutlinedArrowPath)
+                    ->visible(fn (Lead $record): bool => ! $record->isSyncedToMautic())
+                    ->authorize('update')
+                    ->action(function (Lead $record): void {
+                        SyncLeadToMautic::dispatch($record->id);
+                        Notification::make()->title('Đã đưa lead vào hàng đợi đồng bộ Mautic')->success()->send();
+                    }),
+            ]);
     }
 }

@@ -28,6 +28,9 @@ return [
     */
     'quote_rate_limit' => ['attempts' => 5, 'decay_seconds' => 600],
 
+    /* Email nhận cảnh báo kỹ thuật (vd. lead không đồng bộ được sang Mautic). */
+    'alert_email' => env('DEV_ALERT_EMAIL'),
+
     'force_https' => (bool) env('FORCE_HTTPS', true),
 
     /*
