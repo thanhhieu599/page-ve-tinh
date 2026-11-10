@@ -4,7 +4,10 @@ namespace Tests\Feature\Admin;
 
 use App\Models\Site;
 use App\Models\User;
+use Filament\Auth\Pages\Login;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class AdminAccessTest extends TestCase
@@ -68,11 +71,39 @@ class AdminAccessTest extends TestCase
 
         $this->artisan('admin:create', ['email' => 'thuy@trangthietbi.vn', '--name' => 'Ngô Đình Thụy'])
             ->expectsQuestion('Mật khẩu (ít nhất 12 ký tự)', 'mat-khau-du-dai-123')
+            ->expectsQuestion('Nhập lại mật khẩu', 'mat-khau-du-dai-123')
             ->assertSuccessful();
 
         $admin = User::query()->where('email', 'thuy@trangthietbi.vn')->firstOrFail();
         $this->actingAs($admin)
             ->get('https://admin.trangthietbi.test/admin/vpptrangthietbi.com.vn')
             ->assertOk();
+    }
+
+    public function test_admin_created_from_the_command_line_can_log_in_with_that_password(): void
+    {
+        Site::factory()->create(['domain' => 'vpptrangthietbi.com.vn']);
+        $this->artisan('admin:create', ['email' => 'admin@congty.vn'])
+            ->expectsQuestion('Mật khẩu (ít nhất 12 ký tự)', 'admintrangthietbivn')
+            ->expectsQuestion('Nhập lại mật khẩu', 'admintrangthietbivn')
+            ->assertSuccessful();
+
+        Filament::setCurrentPanel('admin');
+        Livewire::test(Login::class)
+            ->fillForm(['email' => 'admin@congty.vn', 'password' => 'admintrangthietbivn'])
+            ->call('authenticate')
+            ->assertHasNoFormErrors();
+
+        $this->assertAuthenticated();
+    }
+
+    public function test_mistyped_confirmation_creates_nothing(): void
+    {
+        $this->artisan('admin:create', ['email' => 'admin@congty.vn'])
+            ->expectsQuestion('Mật khẩu (ít nhất 12 ký tự)', 'admintrangthietbivn')
+            ->expectsQuestion('Nhập lại mật khẩu', 'admintrangthietbivm')
+            ->assertFailed();
+
+        $this->assertDatabaseMissing('users', ['email' => 'admin@congty.vn']);
     }
 }

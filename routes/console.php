@@ -7,7 +7,14 @@ use Illuminate\Support\Facades\Validator;
 
 // Tạo (hoặc nâng quyền) tài khoản Admin, dùng khi dựng server lần đầu.
 Artisan::command('admin:create {email} {--name=Admin}', function (string $email) {
+    $this->line('Mật khẩu sẽ không hiện khi gõ, đó là bình thường. Hãy TẮT bộ gõ tiếng Việt (Unikey/EVKey) trước khi gõ.');
     $password = (string) $this->secret('Mật khẩu (ít nhất 12 ký tự)');
+
+    if ($password !== (string) $this->secret('Nhập lại mật khẩu')) {
+        $this->error('Hai lần nhập mật khẩu không khớp. Chưa tạo tài khoản, hãy chạy lại lệnh.');
+
+        return 1;
+    }
 
     $validator = Validator::make(
         ['email' => $email, 'password' => $password],
@@ -28,7 +35,7 @@ Artisan::command('admin:create {email} {--name=Admin}', function (string $email)
     );
     $user->assignRole(Role::Admin->value);
 
-    $this->info("Đã tạo Admin: {$email}");
+    $this->info("Đã tạo Admin: {$email}. Đăng nhập tại https://".config('sites.admin_domain').'/admin');
 
     return 0;
 })->purpose('Tạo tài khoản Admin cho trang quản trị');
