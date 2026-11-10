@@ -3,7 +3,6 @@
 namespace App\Policies;
 
 use App\Enums\PostStatus;
-use App\Enums\Role;
 use App\Models\Post;
 use App\Models\User;
 
@@ -109,6 +108,6 @@ class PostPolicy
 
     private function isReviewer(User $user): bool
     {
-        return $user->hasAnyRole([Role::Admin->value, Role::Editor->value]);
+        return $user->isReviewer();
     }
 }

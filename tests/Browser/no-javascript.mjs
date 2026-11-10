@@ -12,7 +12,18 @@ const pages = [
         mustContain: [
             'Cách chọn giấy in A4 cho văn phòng nhà máy',
             'Định lượng 70gsm phù hợp in nội bộ, 80gsm cho hồ sơ gửi khách hàng.',
+            'Nên chọn giấy 70gsm hay 80gsm?',
+            'Ban biên tập D&T',
+            'Giấy văn phòng',
         ],
+    },
+    {
+        path: '/danh-muc/giay-van-phong',
+        mustContain: ['Giấy văn phòng', 'Cách chọn giấy in A4 cho văn phòng nhà máy'],
+    },
+    {
+        path: '/tac-gia/bien-tap-dt',
+        mustContain: ['Ban biên tập D&T', 'Cách chọn giấy in A4 cho văn phòng nhà máy'],
     },
 ];
 

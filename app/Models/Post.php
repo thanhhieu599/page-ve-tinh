@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
@@ -33,7 +35,7 @@ class Post extends Model
     // status, published_at, review_note chỉ đổi qua các bước duyệt bên dưới.
     protected $fillable = [
         'slug', 'locale', 'title', 'excerpt', 'content',
-        'seo_title', 'meta_description', 'og_image',
+        'seo_title', 'meta_description', 'og_image', 'author_id',
     ];
 
     protected static function booted(): void
@@ -86,6 +88,36 @@ class Post extends Model
         return Attribute::make(set: fn (?string $value) => Purifier::clean((string) $value, 'post_content'));
     }
 
+    /** @return BelongsTo<Author, $this> */
+    public function author(): BelongsTo
+    {
+        return $this->belongsTo(Author::class);
+    }
+
+    /** @return BelongsToMany<Category, $this> */
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(Category::class, 'post_category')->withPivot('id');
+    }
+
+    /** @return HasMany<Faq, $this> */
+    public function faqs(): HasMany
+    {
+        return $this->hasMany(Faq::class)->orderBy('sort')->orderBy('id');
+    }
+
+    /** @return BelongsToMany<Tag, $this> */
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class);
+    }
+
+    /** Danh mục dùng cho breadcrumb: danh mục được gắn đầu tiên. */
+    public function primaryCategory(): ?Category
+    {
+        return $this->categories->sortBy('pivot.id')->first();
+    }
+
     /** @return HasMany<PostRevision, $this> */
     public function revisions(): HasMany
     {
@@ -127,10 +159,11 @@ class Post extends Model
         $this->save();
     }
 
-    /** Bài thuộc site yêu cầu duyệt chuyên môn (PPE). */
+    /** Bài thuộc site hoặc danh mục yêu cầu duyệt chuyên môn (PPE). */
     public function requiresExpertReview(): bool
     {
-        return (bool) $this->site?->requires_expert_review;
+        return (bool) $this->site?->requires_expert_review
+            || $this->categories->contains(fn (Category $category) => $category->requires_expert_review);
     }
 
     public function isScheduled(): bool

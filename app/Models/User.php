@@ -49,6 +49,12 @@ class User extends Authenticatable implements FilamentUser, HasTenants
         return $this->hasRole(Role::Admin->value);
     }
 
+    /** Biên tập hoặc Admin: được duyệt bài và quản lý cấu trúc nội dung. */
+    public function isReviewer(): bool
+    {
+        return $this->hasAnyRole([Role::Admin->value, Role::Editor->value]);
+    }
+
     public function isExpertReviewer(): bool
     {
         return $this->isAdmin() || $this->hasPermissionTo(Permission::ApproveExpertContent->value);

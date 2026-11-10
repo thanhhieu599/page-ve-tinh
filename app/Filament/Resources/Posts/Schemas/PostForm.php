@@ -2,10 +2,11 @@
 
 namespace App\Filament\Resources\Posts\Schemas;
 
+use App\Filament\Support\TenantSite;
 use App\Models\Post;
-use App\Models\Site;
-use Filament\Facades\Filament;
+use App\Models\Tag;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -16,6 +17,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Unique;
 
@@ -61,7 +63,7 @@ class PostForm
                         ])
                         ->unique(
                             ignoreRecord: true,
-                            modifyRuleUsing: fn (Unique $rule) => $rule->where('site_id', self::currentSiteId()),
+                            modifyRuleUsing: fn (Unique $rule) => TenantSite::unique($rule),
                         )
                         ->live(onBlur: true)
                         ->hint(fn (?string $state): ?string => self::pathLengthWarning($state))
@@ -82,6 +84,56 @@ class PostForm
                         ->label('Nội dung')
                         ->required(),
                 ]),
+
+                Section::make('Phân loại và tác giả')->columns(2)->schema([
+                    Select::make('categories')
+                        ->label('Danh mục')
+                        ->helperText('Danh mục đầu tiên dùng cho breadcrumb.')
+                        ->relationship('categories', 'name', modifyQueryUsing: fn (Builder $query) => TenantSite::scope($query))
+                        ->multiple()
+                        ->preload()
+                        ->searchable(),
+
+                    Select::make('tags')
+                        ->label('Tag')
+                        ->relationship('tags', 'name', modifyQueryUsing: fn (Builder $query) => TenantSite::scope($query))
+                        ->multiple()
+                        ->preload()
+                        ->searchable()
+                        ->createOptionForm([
+                            TextInput::make('name')->label('Tên tag')->required()->maxLength(255),
+                        ])
+                        ->createOptionUsing(function (array $data): int {
+                            $tag = new Tag(['name' => $data['name']]);
+                            $tag->site_id = (int) TenantSite::id();
+                            $tag->save();
+
+                            return $tag->id;
+                        }),
+
+                    Select::make('author_id')
+                        ->label('Tác giả')
+                        ->relationship('author', 'name')
+                        ->searchable()
+                        ->preload(),
+                ]),
+
+                Section::make('Câu hỏi thường gặp (FAQ)')
+                    ->description('Hiện cuối bài và dùng cho schema FAQPage. Kéo thả để sắp thứ tự.')
+                    ->schema([
+                        Repeater::make('faqs')
+                            ->hiddenLabel()
+                            ->relationship()
+                            ->orderColumn('sort')
+                            ->collapsible()
+                            ->itemLabel(fn (array $state): ?string => $state['question'] ?? null)
+                            ->addActionLabel('Thêm câu hỏi')
+                            ->defaultItems(0)
+                            ->schema([
+                                TextInput::make('question')->label('Câu hỏi')->required()->maxLength(500),
+                                Textarea::make('answer')->label('Trả lời')->required()->rows(3),
+                            ]),
+                    ]),
 
                 Section::make('SEO')->schema([
                     TextInput::make('seo_title')
@@ -116,12 +168,5 @@ class PostForm
         }
 
         return "Đường dẫn dài {$length} ký tự, nên dưới ".Post::MAX_PATH_LENGTH.'.';
-    }
-
-    private static function currentSiteId(): ?int
-    {
-        $tenant = Filament::getTenant();
-
-        return $tenant instanceof Site ? $tenant->id : null;
     }
 }
