@@ -76,6 +76,11 @@ class Product extends Model
         });
     }
 
+    public static function isValidPrice(int $price): bool
+    {
+        return $price >= 0 && $price <= self::MAX_PRICE;
+    }
+
     public static function isAllowedBuyUrl(?string $url): bool
     {
         return blank($url) || preg_match(self::BUY_URL_PATTERN, (string) $url) === 1;
@@ -84,7 +89,7 @@ class Product extends Model
     /** Đặt giá mới (0 hoặc null = bỏ giá); ngày cập nhật giá luôn đi kèm. */
     public function setPrice(?int $price): void
     {
-        if ($price !== null && ($price < 0 || $price > self::MAX_PRICE)) {
+        if ($price !== null && ! self::isValidPrice($price)) {
             throw new InvalidArgumentException("Giá không hợp lệ: {$price}");
         }
 

@@ -189,4 +189,64 @@ class SapoImportTest extends TestCase
             ->assertNotified('Nhập CSV xong: 1 tạo mới, 0 cập nhật, 0 ẩn, 0 dòng lỗi');
         $this->get('https://vpptrangthietbi.com.vn/san-pham/giay-double-a-a4-80gsm')->assertOk()->assertSee('500 tờ/ram');
     }
+
+    public function test_full_file_mode_never_hides_anything_when_the_file_is_unreadable_or_empty(): void
+    {
+        $this->import($this->csv([self::HEADER, ['Bìa còng 7cm', 'BC-7', '25000', '', '', '', 'Đang bán']]));
+
+        $this->import(UploadedFile::fake()->createWithContent('sai.csv', "Ten,Gia\nBia cong,25000\n"), fullFile: true);
+        $this->import($this->csv([self::HEADER]), fullFile: true);
+
+        $this->get('https://vpptrangthietbi.com.vn/san-pham/bia-cong-7cm')->assertOk();
+    }
+
+    public function test_full_file_mode_keeps_a_product_whose_row_has_an_error(): void
+    {
+        $this->import($this->csv([self::HEADER, ['Bìa còng 7cm', 'BC-7', '25000', '', '', '', 'Đang bán']]));
+
+        $this->import($this->csv([self::HEADER, ['Bìa còng 7cm', 'BC-7', 'liên hệ', '', '', '', 'Đang bán']]), fullFile: true)
+            ->assertNotified('Nhập CSV xong: 0 tạo mới, 0 cập nhật, 0 ẩn, 1 dòng lỗi');
+
+        $this->get('https://vpptrangthietbi.com.vn/san-pham/bia-cong-7cm')->assertOk();
+    }
+
+    public function test_prices_with_decimals_or_separators_are_read_correctly(): void
+    {
+        $this->import($this->csv([self::HEADER,
+            ['A', 'P-1', '89000.00', '', '', '', ''],
+            ['B', 'P-2', '89.000,00', '', '', '', ''],
+            ['C', 'P-3', '1,250,000', '', '', '', ''],
+            ['D', 'P-4', '89.000 đ', '', '', '', ''],
+        ]));
+
+        $this->get('https://vpptrangthietbi.com.vn/san-pham/a')->assertSee('89.000 đ');
+        $this->get('https://vpptrangthietbi.com.vn/san-pham/b')->assertSee('89.000 đ');
+        $this->get('https://vpptrangthietbi.com.vn/san-pham/c')->assertSee('1.250.000 đ');
+        $this->get('https://vpptrangthietbi.com.vn/san-pham/d')->assertSee('89.000 đ');
+    }
+
+    public function test_duplicate_sku_in_one_file_is_reported_and_the_first_row_wins(): void
+    {
+        $this->import($this->csv([self::HEADER,
+            ['Bìa còng 7cm', 'BC-7', '25000', '', '', '', ''],
+            ['Bìa còng 7cm (dòng lặp)', 'BC-7', '99000', '', '', '', ''],
+        ]))->assertNotified('Nhập CSV xong: 1 tạo mới, 0 cập nhật, 0 ẩn, 1 dòng lỗi');
+
+        $this->get('https://vpptrangthietbi.com.vn/san-pham/bia-cong-7cm')->assertSee('25.000 đ')->assertDontSee('99.000');
+    }
+
+    public function test_new_product_already_discontinued_counts_as_created_only(): void
+    {
+        $this->import($this->csv([self::HEADER, ['Bìa cũ', 'BC-OLD', '25000', '', '', '', 'Ngừng giao dịch']]))
+            ->assertNotified('Nhập CSV xong: 1 tạo mới, 0 cập nhật, 0 ẩn, 0 dòng lỗi');
+
+        $this->get('https://vpptrangthietbi.com.vn/san-pham/bia-cu')->assertStatus(410);
+    }
+
+    public function test_sync_refuses_to_run_without_a_site(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        app(ProductSync::class)->sync(0, [1 => new ProductRecord(sku: 'X', name: 'X')], ProductSource::Csv);
+    }
 }

@@ -18,6 +18,7 @@ use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Throwable;
 
 class ListProducts extends ListRecords
 {
@@ -40,26 +41,33 @@ class ListProducts extends ListRecords
                         ->required(),
                     Toggle::make('full_file')
                         ->label('Đây là danh sách đầy đủ')
-                        ->helperText('Bật khi file chứa toàn bộ sản phẩm đang bán: SKU không có trong file sẽ bị ẩn (sản phẩm tạo tay không bị ảnh hưởng).'),
+                        ->helperText('Bật khi file chứa TOÀN BỘ sản phẩm đang bán: SKU không có trong file sẽ bị ẩn (sản phẩm tạo tay không bị ảnh hưởng). File lỗi định dạng hoặc rỗng thì không ẩn gì.'),
                 ])
                 ->action(function (array $data): void {
                     $file = $data['file'];
                     assert($file instanceof TemporaryUploadedFile);
 
-                    $report = app(ProductSync::class)->sync(
-                        (int) TenantSite::id(),
-                        app(SapoCsvReader::class)->read($file->getRealPath()),
-                        ProductSource::Csv,
-                        (bool) ($data['full_file'] ?? false),
-                    );
+                    try {
+                        $report = app(ProductSync::class)->sync(
+                            (int) TenantSite::id(),
+                            app(SapoCsvReader::class)->read($file->getRealPath()),
+                            ProductSource::Csv,
+                            (bool) ($data['full_file'] ?? false),
+                        );
+                    } catch (Throwable $exception) {
+                        report($exception);
+                        Notification::make()->title('Nhập CSV thất bại, chưa có thay đổi nào được lưu')
+                            ->body('Hãy kiểm tra file hoặc báo dev. Chi tiết đã được ghi log.')
+                            ->danger()->persistent()->send();
 
-                    $errors = collect($report->errors)->take(10)
-                        ->map(fn (array $error): string => "Dòng {$error['row']}".($error['sku'] ? " ({$error['sku']})" : '').": {$error['reason']}")
-                        ->implode("\n");
+                        return;
+                    }
+
+                    $errors = $report->errorLines();
 
                     Notification::make()
                         ->title('Nhập CSV xong: '.$report->summary())
-                        ->body($errors !== '' ? $errors.(count($report->errors) > 10 ? "\n…" : '') : null)
+                        ->body($errors !== '' ? $errors : null)
                         ->{$report->errors === [] ? 'success' : 'warning'}()
                         ->persistent()
                         ->send();
@@ -69,8 +77,7 @@ class ListProducts extends ListRecords
                 ->icon(Heroicon::OutlinedArrowDownTray)
                 ->color('gray')
                 ->action(fn () => response()->streamDownload(function (): void {
-                    echo "\xEF\xBB\xBF".implode(',', SapoCsvReader::TEMPLATE_HEADER)."\r\n";
-                    echo 'Giấy Double A A4 80gsm,DA-A4-80,89000,https://trangthietbi.vn/giay-double-a-a4-80gsm,500 tờ/ram,Đang bán'."\r\n";
+                    echo SapoCsvReader::template();
                 }, 'mau-nhap-san-pham.csv', ['Content-Type' => 'text/csv; charset=UTF-8'])),
             CreateAction::make(),
         ];

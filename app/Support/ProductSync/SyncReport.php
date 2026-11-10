@@ -19,6 +19,19 @@ final class SyncReport
         $this->errors[] = ['row' => $row, 'sku' => $sku, 'reason' => $reason];
     }
 
+    /** Tối đa $limit dòng lỗi để hiện cho người nhập. */
+    public function errorLines(int $limit = 10): string
+    {
+        $lines = collect($this->errors)->take($limit)
+            ->map(fn (array $error): string => "Dòng {$error['row']}".($error['sku'] ? " ({$error['sku']})" : '').": {$error['reason']}");
+
+        if (count($this->errors) > $limit) {
+            $lines->push('… và '.(count($this->errors) - $limit).' dòng lỗi khác');
+        }
+
+        return $lines->implode("\n");
+    }
+
     public function summary(): string
     {
         return "{$this->created} tạo mới, {$this->updated} cập nhật, {$this->hidden} ẩn, ".count($this->errors).' dòng lỗi';

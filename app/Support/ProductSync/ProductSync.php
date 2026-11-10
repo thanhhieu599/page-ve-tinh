@@ -8,6 +8,7 @@ use App\Models\Scopes\SiteScope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 
 /**
  * Bộ đồng bộ sản phẩm dùng chung cho mọi nguồn (CSV, Sapo API).
@@ -26,15 +27,36 @@ final class ProductSync
      */
     public function sync(int $siteId, iterable $records, ProductSource $source, bool $fullFile = false): SyncReport
     {
-        $report = new SyncReport;
-        $seenSkus = [];
+        if ($siteId <= 0) {
+            throw new InvalidArgumentException('Đồng bộ sản phẩm phải chỉ định một site.');
+        }
 
-        DB::transaction(function () use ($siteId, $records, $source, $fullFile, $report, &$seenSkus): void {
+        $report = new SyncReport;
+
+        // Cả lần nhập là một giao dịch: lỗi giữa chừng thì không có thay đổi dở dang nào.
+        DB::transaction(function () use ($siteId, $records, $source, $fullFile, $report): void {
+            /** @var array<string, int> $seenSkus SKU (chữ thường) → dòng đầu tiên */
+            $seenSkus = [];
+            $fileIsUsable = true;
+
             foreach ($records as $row => $record) {
                 if (is_string($record)) {
                     $report->addError($row, null, $record);
+                    // Lỗi đọc cả file (dòng tiêu đề): không đủ căn cứ để ẩn gì cả.
+                    $fileIsUsable = $fileIsUsable && $row !== 1;
 
                     continue;
+                }
+
+                $key = mb_strtolower(trim($record->sku));
+                if ($key !== '' && isset($seenSkus[$key])) {
+                    $report->addError($row, $record->sku, "SKU trùng với dòng {$seenSkus[$key]}, bỏ qua dòng này");
+
+                    continue;
+                }
+                if ($key !== '') {
+                    // Dòng lỗi vẫn tính là "có trong file", để chế độ file đầy đủ không ẩn nhầm.
+                    $seenSkus[$key] = $row;
                 }
 
                 $error = $this->validate($record);
@@ -44,12 +66,11 @@ final class ProductSync
                     continue;
                 }
 
-                $seenSkus[] = $record->sku;
                 $this->apply($siteId, $record, $source, $report, $row);
             }
 
-            if ($fullFile) {
-                $this->hideMissing($siteId, $seenSkus, $report);
+            if ($fullFile && $fileIsUsable && $seenSkus !== []) {
+                $this->hideMissing($siteId, array_keys($seenSkus), $report);
             }
         });
 
@@ -60,15 +81,17 @@ final class ProductSync
     {
         return match (true) {
             trim($record->sku) === '' => 'Thiếu mã SKU',
-            $record->price !== null && ($record->price < 0 || $record->price > Product::MAX_PRICE) => 'Giá không hợp lệ',
-            ! Product::isAllowedBuyUrl($record->buyUrl) => 'Link mua phải là trang trên https://trangthietbi.vn',
+            mb_strlen($record->sku) > 100 => 'Mã SKU dài quá 100 ký tự',
+            $record->name !== null && mb_strlen($record->name) > 255 => 'Tên sản phẩm dài quá 255 ký tự',
+            $record->price !== null && ! Product::isValidPrice($record->price) => 'Giá không hợp lệ',
+            ! Product::isAllowedBuyUrl($record->buyUrl) || mb_strlen((string) $record->buyUrl) > 255 => 'Link mua phải là trang trên https://trangthietbi.vn',
             default => null,
         };
     }
 
     private function apply(int $siteId, ProductRecord $record, ProductSource $source, SyncReport $report, int $row): void
     {
-        $product = $this->forSite($siteId)->where('sku', $record->sku)->first();
+        $product = $this->forSite($siteId)->where('sku', trim($record->sku))->first();
 
         if ($product === null) {
             if (blank($record->name)) {
@@ -79,7 +102,7 @@ final class ProductSync
 
             $product = new Product;
             $product->site_id = $siteId;
-            $product->sku = $record->sku;
+            $product->sku = trim($record->sku);
             $product->slug = $this->uniqueSlug($siteId, (string) $record->name);
             $product->is_active = true;
             $isNew = true;
@@ -98,10 +121,10 @@ final class ProductSync
         }
         $product->source = $source;
 
-        $wasActive = $isNew || $product->is_active;
+        // "Ẩn" chỉ đếm sản phẩm đang hiện bị ẩn đi, không đếm sản phẩm mới tạo đã ngừng bán.
+        $wasActive = ! $isNew && $product->is_active;
         if ($record->discontinued) {
-            $product->is_active = false;
-            $product->discontinued_at ??= now();
+            $this->discontinue($product);
         } elseif ($product->discontinued_at !== null) {
             $product->is_active = true;
             $product->discontinued_at = null;
@@ -130,15 +153,21 @@ final class ProductSync
         $missing = $this->forSite($siteId)
             ->where('is_active', true)
             ->where('source', '!=', ProductSource::Manual->value)
-            ->whereNotIn('sku', $seenSkus)
-            ->get();
+            ->get()
+            ->reject(fn (Product $product): bool => in_array(mb_strtolower(trim($product->sku)), $seenSkus, true));
 
         foreach ($missing as $product) {
-            $product->is_active = false;
-            $product->discontinued_at = now();
+            $this->discontinue($product);
             $product->save();
             $report->hidden++;
         }
+    }
+
+    /** Ẩn vì ngừng bán trên nguồn (khác ẩn tay: có thể tự hiện lại khi bán lại). */
+    private function discontinue(Product $product): void
+    {
+        $product->is_active = false;
+        $product->discontinued_at ??= now();
     }
 
     /** @return Builder<Product> */

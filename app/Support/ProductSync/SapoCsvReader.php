@@ -24,9 +24,33 @@ final class SapoCsvReader
     private const SPEC_PREFIX = 'thong so:';
 
     /** Giá trị cột Trạng thái nghĩa là ngừng bán. */
-    private const DISCONTINUED = ['ngung ban', 'ngung kinh doanh', 'ngung', 'inactive', 'khong ban', '0'];
+    private const DISCONTINUED = ['ngung ban', 'ngung kinh doanh', 'ngung giao dich', 'ngung', 'inactive', 'khong ban', '0'];
 
-    public const TEMPLATE_HEADER = ['Tên sản phẩm', 'Mã SKU', 'Giá bán lẻ', 'Link mua', 'Thông số: Quy cách', 'Trạng thái'];
+    private const TEMPLATE_HEADER = ['Tên sản phẩm', 'Mã SKU', 'Giá bán lẻ', 'Link mua', 'Thông số: Quy cách', 'Trạng thái'];
+
+    private const TEMPLATE_ROW = ['Giấy Double A A4 80gsm', 'DA-A4-80', '89000', 'https://trangthietbi.vn/giay-double-a-a4-80gsm', '500 tờ/ram', 'Đang bán'];
+
+    /** Nội dung file mẫu (UTF-8 có BOM để Excel mở đúng tiếng Việt). */
+    public static function template(): string
+    {
+        return "\xEF\xBB\xBF".implode(',', self::TEMPLATE_HEADER)."\r\n".implode(',', self::TEMPLATE_ROW)."\r\n";
+    }
+
+    /**
+     * "89.000", "89,000", "1,250,000", "89000.00", "89.000,00", "89.000 đ" → số đồng.
+     * Phần lẻ (1–2 chữ số sau dấu chấm/phẩy cuối) bị bỏ; dấu ngăn cách hàng nghìn bị bỏ.
+     */
+    public static function parsePrice(string $value): ?int
+    {
+        $value = trim((string) preg_replace('/\s*(đ|vnđ|vnd)$/iu', '', trim($value)));
+        if ($value === '' || ! preg_match('/^\d[\d.,\s]*$/', $value)) {
+            return null;
+        }
+
+        $value = (string) preg_replace('/[.,]\d{1,2}$/', '', str_replace(' ', '', $value));
+
+        return (int) preg_replace('/\D/', '', $value);
+    }
 
     /**
      * @return array<int, ProductRecord|string> khoá là số dòng trong file (dòng tiêu đề là 1)
@@ -95,7 +119,8 @@ final class SapoCsvReader
         $cell = fn (string $field): ?string => isset($map[$field]) ? trim((string) ($cells[$map[$field]] ?? '')) : null;
 
         $price = $cell('price');
-        if ($price !== null && $price !== '' && ! preg_match('/^[\d.,\s]+(đ|vnd|vnđ)?$/iu', $price)) {
+        $parsedPrice = $price === null || $price === '' ? null : self::parsePrice($price);
+        if ($price !== null && $price !== '' && $parsedPrice === null) {
             return "Giá \"{$price}\" không đọc được";
         }
 
@@ -114,7 +139,7 @@ final class SapoCsvReader
         return new ProductRecord(
             sku: (string) $cell('sku'),
             name: $cell('name'),
-            price: $price === null || $price === '' ? null : (int) preg_replace('/\D/', '', $price),
+            price: $parsedPrice,
             buyUrl: $cell('buy_url'),
             specs: $specs,
             discontinued: in_array(self::normalize((string) $cell('status')), self::DISCONTINUED, true),
