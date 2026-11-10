@@ -43,6 +43,7 @@ Thông tin công ty D&T sửa trong trang quản trị, mục "Thông tin công 
 
 Lịch chạy tự động (kéo Search Console hằng ngày) cần cron `php artisan schedule:run` mỗi phút trên máy chủ.
 Cài Search Console: `docs/search-console.md`.
+Dựng máy chủ staging/production, deploy, Cloudflare, sao lưu và khôi phục: `docs/van-hanh.md`.
 
 Hàng đợi (đẩy lead sang Mautic): production dùng `QUEUE_CONNECTION=redis` và chạy liên tục
 `php artisan queue:work --tries=5` (supervisor/systemd). Local không cấu hình Mautic thì không cần.

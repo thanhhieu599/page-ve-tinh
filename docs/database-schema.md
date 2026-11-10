@@ -159,3 +159,10 @@ Database CMS tách riêng khỏi database Mautic (Q13).
 - `sites.settings.gsc_property`: `sc-domain:ten-mien` hoặc `https://ten-mien/`; trống thì site không được kéo số liệu.
 - Job `PullSearchConsoleData` (mỗi site một job, không chạy trùng, thử lại 3 lần), lệnh `search-console:pull [--days=N]` (mọi site có property, kể cả site đang tắt; `--days=480` để lấy lịch sử lần đầu), lịch hằng ngày 07:10 giờ Việt Nam. Xác thực bằng service account (file JSON ở `GSC_CREDENTIALS_PATH`, JWT ký RS256, token giữ 50 phút). Hướng dẫn cài: `docs/search-console.md`.
 - Trang "Báo cáo": theo site và khoảng ngày (mặc định 28 ngày gần nhất có số liệu, tối đa 366 ngày): lượt hiển thị, lượt nhấp, CTR, vị trí trung bình (trọng số theo lượt hiển thị), lead, lead thắng, doanh thu đã chốt; top 10 trang theo lượt nhấp. Admin mọi site, Biên tập site được gán.
+
+## Bổ sung khi triển khai (issue #17)
+
+- Không thêm bảng. `sites.settings.tagline`: câu giới thiệu trang chủ (cũng là meta description trang chủ).
+- Cache toàn trang (spatie/laravel-responsecache) cho route công khai: khoá theo tên miền + đường dẫn (bỏ qua UTM/gclid); không cache khi phiên có lỗi form/dữ liệu vừa nhập, không cache trang cảm ơn; hết hạn lúc 0 giờ VN và tối đa 1 giờ; lưu nội dung trong trang quản trị thì xoá cache (`App\Support\PageCache`).
+- Sao lưu (spatie/laravel-backup): database + `storage/app/public`, mã hoá, ra disk `backup` (S3); giữ 30 ngày + 12 tháng. Vận hành: `docs/van-hanh.md`.
+
