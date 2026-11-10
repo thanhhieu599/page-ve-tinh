@@ -66,6 +66,15 @@ class Site extends Model
         return (config('sites.force_https') ? 'https' : 'http').'://'.$this->domain.$path;
     }
 
+    /**
+     * Địa chỉ tuyệt đối cho một URL công khai: giữ nguyên nếu đã tuyệt đối (vd. ảnh trên CDN),
+     * còn đường dẫn tương đối (/storage/...) thì ghép domain của site.
+     */
+    public function absoluteUrl(string $url): string
+    {
+        return preg_match('#^https?://#i', $url) === 1 ? $url : $this->url($url);
+    }
+
     /** Cho Google index site. Chỉ được khi site đạt checklist (IndexReadiness). */
     public function enableIndexing(): void
     {

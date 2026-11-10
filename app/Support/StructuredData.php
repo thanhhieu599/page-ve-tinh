@@ -25,13 +25,17 @@ final class StructuredData
     /** D&T, thông tin thống nhất trên mọi site (config/company.php). */
     public static function organization(): Organization
     {
-        $organization = Schema::organization()
-            ->name((string) config('company.legal_name'))
+        $organization = self::publisher()
             ->alternateName((string) config('company.name'))
             ->url((string) config('company.url'));
 
+        $logo = (string) config('company.logo');
+        if (str_starts_with($logo, 'https://')) {
+            $organization->logo($logo);
+        }
+
         // Mục chưa cấu hình thì bỏ hẳn, không khai giá trị rỗng.
-        foreach (['logo' => 'logo', 'taxID' => 'tax_id', 'telephone' => 'phone', 'email' => 'email'] as $property => $key) {
+        foreach (['taxID' => 'tax_id', 'telephone' => 'phone', 'email' => 'email'] as $property => $key) {
             if (filled(config("company.{$key}"))) {
                 $organization->setProperty($property, (string) config("company.{$key}"));
             }
@@ -48,22 +52,37 @@ final class StructuredData
         return $organization;
     }
 
+    /**
+     * Phần nhận diện của D&T: cùng @id với node Organization đầy đủ trên trang, để Google
+     * hiểu publisher của bài chính là tổ chức đó.
+     */
+    private static function publisher(): Organization
+    {
+        return Schema::organization()
+            ->identifier(rtrim((string) config('company.url'), '/').'/#organization')
+            ->name((string) config('company.legal_name'));
+    }
+
     public static function article(Post $post, Site $site): Article
     {
         $article = Schema::article()
             ->headline($post->title)
-            ->description((string) ($post->meta_description ?: $post->excerpt))
             ->mainEntityOfPage($site->url($post->path()))
             ->datePublished(self::local($post->published_at))
             ->dateModified(self::local($post->updated_at))
-            ->publisher(self::organization());
+            ->publisher(self::publisher());
+
+        $description = $post->meta_description ?: $post->excerpt;
+        if (filled($description)) {
+            $article->description((string) $description);
+        }
 
         // Ảnh chia sẻ (OG) nếu có; không thì ảnh thư viện đầu tiên trong bài.
         $image = $post->og_image
             ? Storage::disk('public')->url($post->og_image)
             : ContentImages::firstLibraryImage($post->content, $post->site_id)?->url();
         if ($image !== null) {
-            $article->image([$site->url($image)]);
+            $article->image([$site->absoluteUrl($image)]);
         }
 
         if ($post->author) {
@@ -90,14 +109,14 @@ final class StructuredData
         }
 
         if ($product->image) {
-            $schema->image([$site->url($product->image->url())]);
+            $schema->image([$site->absoluteUrl($product->image->url())]);
         }
 
         if ($product->hasFreshPrice()) {
             $schema->offers(Schema::offer()
                 ->price($product->price)
                 ->priceCurrency('VND')
-                ->priceValidUntil((string) $product->priceShownUntil()?->toDateString())
+                ->priceValidUntil((string) $product->priceShownUntil()?->toDateString()) // luôn có khi giá còn hạn
                 ->url($url));
         }
 

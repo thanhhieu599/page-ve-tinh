@@ -126,5 +126,6 @@ Database CMS tách riêng khỏi database Mautic (Q13).
 - Không thêm bảng. Schema JSON-LD sinh khi hiển thị bằng spatie/schema-org (`App\Support\StructuredData`).
 - Thông tin D&T ở một nơi: `config/company.php` (biến môi trường `COMPANY_*`). Mục trống thì schema bỏ qua.
 - Mọi trang: `Organization` (D&T). Trang có breadcrumb: `BreadcrumbList` sinh từ chính danh sách breadcrumb hiển thị.
-- Bài viết: `Article` (headline, mô tả, tác giả + URL trang hồ sơ, ngày đăng/cập nhật theo giờ Việt Nam, ảnh = OG image hoặc ảnh thư viện đầu tiên trong bài, publisher = D&T); `FAQPage` khi bài có câu hỏi, đúng thứ tự hiển thị.
+- Organization có `@id` = `<COMPANY_URL>/#organization`; `publisher` của Article trỏ cùng `@id`. Logo chỉ nhận URL https. Ảnh dùng `Site::absoluteUrl()` (giữ nguyên URL CDN tuyệt đối).
+- Bài viết: `Article` (headline, mô tả nếu có, tác giả + URL trang hồ sơ, ngày đăng/cập nhật theo giờ Việt Nam, ảnh = OG image hoặc ảnh thư viện đầu tiên trong bài, publisher = D&T); `FAQPage` khi bài có câu hỏi, đúng thứ tự hiển thị.
 - Sản phẩm: `Product` (tên, SKU, mô tả, ảnh, URL); `offers` (giá VND, `priceValidUntil`) **chỉ khi** giá còn hạn 14 ngày. Không khai tồn kho.

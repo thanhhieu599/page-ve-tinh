@@ -84,33 +84,44 @@ final class ContentImages
             }
         }
 
+        return self::libraryMediaIn($directories, $siteId);
+    }
+
+    /**
+     * Ảnh thư viện của chính site này theo thư mục; ảnh site khác không được nhận.
+     *
+     * @param  list<string>  $directories
+     * @return array<string, Media>
+     */
+    private static function libraryMediaIn(array $directories, int $siteId): array
+    {
         if ($directories === []) {
             return [];
         }
 
-        // Chỉ ảnh của chính site này; ảnh site khác không được gắn thông tin thư viện.
         return Media::withoutGlobalScope(SiteScope::class)
             ->where('site_id', $siteId)
-            ->whereIn('path', array_unique($directories))
+            ->whereIn('path', array_values(array_unique($directories)))
             ->get()
             ->keyBy('path')
             ->all();
     }
 
+    /**
+     * Mọi src của thẻ <img> trong nội dung, theo thứ tự xuất hiện.
+     *
+     * @return list<string>
+     */
+    private static function sources(string $html): array
+    {
+        return preg_match_all('/<img\b[^>]*\bsrc\s*=\s*["\']([^"\']*)["\']/i', $html, $matches) ? $matches[1] : [];
+    }
+
     /** Ảnh thư viện đầu tiên (của chính site) trong nội dung bài, dùng làm ảnh đại diện khi cần. */
     public static function firstLibraryImage(string $html, int $siteId): ?Media
     {
-        if (! preg_match_all('/<img\b[^>]*\bsrc\s*=\s*["\']([^"\']*)["\']/i', $html, $matches)) {
-            return null;
-        }
-
-        $directories = array_values(array_unique(array_filter(array_map(self::directoryOf(...), $matches[1]))));
-        if ($directories === []) {
-            return null;
-        }
-
-        $library = Media::withoutGlobalScope(SiteScope::class)->where('site_id', $siteId)
-            ->whereIn('path', $directories)->get()->keyBy('path');
+        $directories = array_values(array_filter(array_map(self::directoryOf(...), self::sources($html))));
+        $library = self::libraryMediaIn($directories, $siteId);
 
         foreach ($directories as $directory) {
             if (isset($library[$directory])) {
@@ -128,16 +139,11 @@ final class ContentImages
      */
     public static function foreignSources(string $html, int $siteId): array
     {
-        if (! preg_match_all('/<img\b[^>]*\bsrc\s*=\s*["\']([^"\']*)["\']/i', $html, $matches)) {
-            return [];
-        }
-
-        $directories = array_values(array_filter(array_map(self::directoryOf(...), $matches[1])));
-        $known = Media::withoutGlobalScope(SiteScope::class)->where('site_id', $siteId)
-            ->whereIn('path', $directories)->pluck('path')->all();
+        $sources = self::sources($html);
+        $known = array_keys(self::libraryMediaIn(array_values(array_filter(array_map(self::directoryOf(...), $sources))), $siteId));
 
         return array_values(array_filter(
-            $matches[1],
+            $sources,
             fn (string $src): bool => ! in_array(self::directoryOf($src), $known, true),
         ));
     }

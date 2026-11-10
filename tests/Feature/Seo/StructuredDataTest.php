@@ -94,7 +94,7 @@ class StructuredDataTest extends TestCase
         ], $article['author']);
         $this->assertSame('Organization', $article['publisher']['@type']);
         $this->assertSame('Công ty TNHH TMDV Phát triển Kỹ thuật D & T', $article['publisher']['name']);
-        $this->assertSame('https://trangthietbi.vn', $article['publisher']['url']);
+        $this->assertSame('https://trangthietbi.vn/#organization', $article['publisher']['@id']);
     }
 
     public function test_every_page_names_dt_as_the_same_organization_on_every_site(): void
@@ -114,6 +114,7 @@ class StructuredDataTest extends TestCase
 
         $expected = [
             '@type' => 'Organization',
+            '@id' => 'https://trangthietbi.vn/#organization',
             'name' => 'Công ty TNHH TMDV Phát triển Kỹ thuật D & T',
             'alternateName' => 'D&T',
             'url' => 'https://trangthietbi.vn',
@@ -301,5 +302,42 @@ class StructuredDataTest extends TestCase
         Post::factory()->for($this->vpp)->published()->create(['slug' => 'cach-chon-giay-in-a4', 'content' => '<p>Chỉ có chữ.</p>']);
 
         $this->assertArrayNotHasKey('image', $this->one($this->get('https://vpptrangthietbi.com.vn/kien-thuc/cach-chon-giay-in-a4'), 'Article'));
+    }
+
+    public function test_images_served_from_a_cdn_keep_their_own_address(): void
+    {
+        Storage::fake('public', ['url' => 'https://cdn.trangthietbi.vn/storage']);
+        Post::factory()->for($this->vpp)->published()->create(['slug' => 'cach-chon-giay-in-a4', 'og_image' => 'og-images/giay-a4.webp']);
+
+        $article = $this->one($this->get('https://vpptrangthietbi.com.vn/kien-thuc/cach-chon-giay-in-a4'), 'Article');
+
+        $this->assertSame(['https://cdn.trangthietbi.vn/storage/og-images/giay-a4.webp'], $article['image']);
+    }
+
+    public function test_the_article_publisher_is_the_same_organization_node_as_the_page(): void
+    {
+        Post::factory()->for($this->vpp)->published()->create(['slug' => 'cach-chon-giay-in-a4']);
+        $response = $this->get('https://vpptrangthietbi.com.vn/kien-thuc/cach-chon-giay-in-a4');
+
+        $organization = $this->one($response, 'Organization');
+        $article = $this->one($response, 'Article');
+
+        $this->assertSame('https://trangthietbi.vn/#organization', $organization['@id']);
+        $this->assertSame('https://trangthietbi.vn/#organization', $article['publisher']['@id']);
+        $this->assertSame('Công ty TNHH TMDV Phát triển Kỹ thuật D & T', $article['publisher']['name']);
+    }
+
+    public function test_an_article_without_summary_declares_no_empty_description(): void
+    {
+        Post::factory()->for($this->vpp)->published()->create(['slug' => 'cach-chon-giay-in-a4', 'excerpt' => null, 'meta_description' => null]);
+
+        $this->assertArrayNotHasKey('description', $this->one($this->get('https://vpptrangthietbi.com.vn/kien-thuc/cach-chon-giay-in-a4'), 'Article'));
+    }
+
+    public function test_a_logo_that_is_not_an_https_address_is_left_out(): void
+    {
+        config(['company.logo' => 'logo.png']);
+
+        $this->assertArrayNotHasKey('logo', $this->one($this->get('https://vpptrangthietbi.com.vn/yeu-cau-bao-gia'), 'Organization'));
     }
 }
