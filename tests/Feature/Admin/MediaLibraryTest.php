@@ -3,11 +3,15 @@
 namespace Tests\Feature\Admin;
 
 use App\Filament\Resources\Media\Pages\CreateMedia;
+use App\Filament\Resources\Media\Pages\ListMedia;
+use App\Filament\Resources\Posts\Actions\InsertMediaAction;
 use App\Filament\Resources\Posts\Pages\CreatePost;
 use App\Models\Media;
+use App\Models\Post;
 use App\Models\Site;
 use App\Models\User;
 use App\Support\MediaLibrary;
+use Filament\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -148,5 +152,55 @@ class MediaLibraryTest extends TestCase
         Livewire::test(CreatePost::class)
             ->callFormComponentAction('content', 'insertMedia', data: ['media_id' => $foreign->id], arguments: self::SELECTION)
             ->assertHasFormComponentActionErrors(['media_id']);
+    }
+
+    public function test_saving_a_post_with_an_image_from_outside_the_library_is_refused(): void
+    {
+        $this->workOn($this->vpp, User::factory()->writer()->hasAttached($this->vpp)->create());
+
+        Livewire::test(CreatePost::class)
+            ->fillForm(['title' => 'Bài có ảnh ngoài', 'content' => '<p>x</p><p><img src="https://example.com/a.jpg" alt="a"></p>'])
+            ->call('create')
+            ->assertHasFormErrors(['content']);
+    }
+
+    public function test_older_images_can_be_found_by_searching_their_alt(): void
+    {
+        $file = UploadedFile::fake()->image('old.jpg', 800, 600);
+        $old = MediaLibrary::store($file->getRealPath(), 'Găng tay len cũ', $this->vpp->id);
+        Media::query()->whereKey($old->id)->update(['created_at' => now()->subYear()]);
+        foreach (range(1, 3) as $i) {
+            $f = UploadedFile::fake()->image("n{$i}.jpg", 100, 100);
+            MediaLibrary::store($f->getRealPath(), "Ảnh mới {$i}", $this->vpp->id);
+        }
+        $this->workOn($this->vpp, User::factory()->writer()->hasAttached($this->vpp)->create());
+
+        $this->assertSame([$old->id => 'Găng tay len cũ'], InsertMediaAction::search('găng tay', limit: 2));
+    }
+
+    public function test_image_used_in_a_post_cannot_be_deleted(): void
+    {
+        $file = UploadedFile::fake()->image('a.jpg', 800, 600);
+        $used = MediaLibrary::store($file->getRealPath(), 'Đang dùng', $this->vpp->id);
+        $file2 = UploadedFile::fake()->image('b.jpg', 800, 600);
+        $unused = MediaLibrary::store($file2->getRealPath(), 'Không dùng', $this->vpp->id);
+        Post::factory()->for($this->vpp)->create(['content' => '<p><img src="'.$used->url().'" alt=""></p>']);
+        $this->workOn($this->vpp, User::factory()->editor()->hasAttached($this->vpp)->create());
+
+        Livewire::test(ListMedia::class)
+            ->assertTableActionHidden(DeleteAction::class, $used)
+            ->assertTableActionVisible(DeleteAction::class, $unused);
+    }
+
+    public function test_storing_without_a_site_writes_no_files(): void
+    {
+        $file = UploadedFile::fake()->image('a.jpg', 800, 600);
+
+        try {
+            MediaLibrary::store($file->getRealPath(), 'Ảnh', 0);
+            $this->fail('Phải báo lỗi khi không có site.');
+        } catch (\InvalidArgumentException) {
+            $this->assertSame([], Storage::disk('public')->allFiles());
+        }
     }
 }

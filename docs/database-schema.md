@@ -64,3 +64,13 @@ Database CMS tách riêng khỏi database Mautic (Q13).
 
 Đổi slug danh mục hoặc tác giả cũng tự tạo redirect 301 (tác giả: trên mọi site).
 
+## Bổ sung khi triển khai (issue #7)
+
+| Bảng / thay đổi | Cột quan trọng | Ghi chú |
+|---|---|---|
+| `media` | site_id, path, alt, width, height, size, **variants** | `path` là thư mục chứa bản WebP 480/960/1600px; `variants` là danh sách chiều rộng đã tạo |
+
+- Ảnh trong bài chỉ được chèn từ thư viện của site; ảnh dán từ nơi khác bị từ chối khi lưu và bị bỏ khi hiển thị.
+- Ảnh đang dùng trong bài không xoá được.
+- Đường dẫn file công khai là tương đối (`/storage/...`) để mỗi domain tự phục vụ. Khi cần URL tuyệt đối (og:image, sitemap) phải ghép domain của site.
+

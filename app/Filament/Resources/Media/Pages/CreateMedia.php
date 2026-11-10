@@ -19,6 +19,6 @@ class CreateMedia extends CreateRecord
         $file = $data['file'];
         assert($file instanceof TemporaryUploadedFile);
 
-        return MediaLibrary::store($file->getRealPath(), $data['alt'], (int) TenantSite::id());
+        return MediaLibrary::storeUpload($file, $data['alt'], TenantSite::id());
     }
 }

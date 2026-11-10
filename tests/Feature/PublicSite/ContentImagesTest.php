@@ -24,7 +24,7 @@ class ContentImagesTest extends TestCase
         $this->vpp = Site::factory()->create(['domain' => 'vpptrangthietbi.com.vn']);
     }
 
-    public function test_library_image_in_a_post_has_alt_size_srcset_and_lazy_loading(): void
+    public function test_library_image_in_a_post_has_alt_size_and_srcset(): void
     {
         $file = UploadedFile::fake()->image('giay.jpg', 2000, 1000);
         $media = MediaLibrary::store($file->getRealPath(), 'Ram giấy A4 80gsm', $this->vpp->id);
@@ -40,7 +40,6 @@ class ContentImagesTest extends TestCase
         $this->assertMatchesRegularExpression('/<img[^>]+width="1600"[^>]+height="800"/', $html);
         $this->assertMatchesRegularExpression('/<img[^>]+srcset="[^"]*480\.webp 480w, [^"]*960\.webp 960w, [^"]*1600\.webp 1600w"/', $html);
         $this->assertMatchesRegularExpression('/<img[^>]+sizes="[^"]+"/', $html);
-        $this->assertMatchesRegularExpression('/<img[^>]+loading="lazy"/', $html);
         $this->assertMatchesRegularExpression('/<img[^>]+decoding="async"/', $html);
     }
 
@@ -69,7 +68,9 @@ class ContentImagesTest extends TestCase
             'content' => '<p><img src="'.$foreign->url().'" alt=""></p>',
         ]);
 
-        $this->get('https://vpptrangthietbi.com.vn/kien-thuc/bai')->assertDontSee('Ảnh site khác');
+        $this->get('https://vpptrangthietbi.com.vn/kien-thuc/bai')
+            ->assertDontSee('Ảnh site khác')
+            ->assertDontSee($foreign->url(), escape: false);
     }
 
     public function test_image_urls_are_relative_so_each_site_serves_its_own_images(): void
@@ -86,5 +87,37 @@ class ContentImagesTest extends TestCase
         $this->get('https://vpptrangthietbi.com.vn/kien-thuc/bai')
             ->assertSee('src="/storage/media/'.$this->vpp->id.'/', escape: false)
             ->assertDontSee('src="http', escape: false);
+    }
+
+    public function test_first_image_loads_immediately_and_later_ones_lazily(): void
+    {
+        $first = UploadedFile::fake()->image('a.jpg', 800, 600);
+        $second = UploadedFile::fake()->image('b.jpg', 800, 600);
+        $one = MediaLibrary::store($first->getRealPath(), 'Ảnh một', $this->vpp->id);
+        $two = MediaLibrary::store($second->getRealPath(), 'Ảnh hai', $this->vpp->id);
+        Post::factory()->for($this->vpp)->published()->create([
+            'slug' => 'hai-anh',
+            'content' => '<p><img src="'.$one->url().'" alt=""></p><p>Đoạn giữa.</p><p><img src="'.$two->url().'" alt=""></p>',
+        ]);
+
+        $html = $this->get('https://vpptrangthietbi.com.vn/kien-thuc/hai-anh')->getContent();
+
+        $this->assertMatchesRegularExpression('/<img[^>]+alt="Ảnh một"[^>]*>/u', $html);
+        preg_match_all('/<img[^>]*>/u', $html, $tags);
+        $this->assertStringNotContainsString('loading="lazy"', $tags[0][0]);
+        $this->assertStringContainsString('fetchpriority="high"', $tags[0][0]);
+        $this->assertStringContainsString('loading="lazy"', $tags[0][1]);
+    }
+
+    public function test_image_without_known_dimensions_is_never_published(): void
+    {
+        Post::factory()->for($this->vpp)->published()->create([
+            'slug' => 'anh-ngoai',
+            'content' => '<p>Chữ vẫn còn.</p><p><img src="https://example.com/anh-ngoai.jpg" alt="Ảnh ngoài"></p>',
+        ]);
+
+        $this->get('https://vpptrangthietbi.com.vn/kien-thuc/anh-ngoai')
+            ->assertSee('Chữ vẫn còn.')
+            ->assertDontSee('anh-ngoai.jpg');
     }
 }

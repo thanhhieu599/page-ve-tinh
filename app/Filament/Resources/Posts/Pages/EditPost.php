@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Posts\Pages;
 
 use App\Enums\PostStatus;
+use App\Filament\Resources\Posts\Concerns\GuardsContentImages;
 use App\Filament\Resources\Posts\PostResource;
 use App\Models\Category;
 use App\Models\Post;
@@ -22,7 +23,20 @@ use Illuminate\Support\Facades\Gate;
 
 class EditPost extends EditRecord
 {
+    use GuardsContentImages;
+
     protected static string $resource = PostResource::class;
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        $this->ensureImagesComeFromLibrary($data);
+
+        return $data;
+    }
 
     protected function getHeaderActions(): array
     {

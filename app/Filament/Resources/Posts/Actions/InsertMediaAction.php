@@ -7,7 +7,6 @@ use App\Filament\Support\TenantSite;
 use App\Models\Media;
 use App\Support\MediaLibrary;
 use Filament\Actions\Action;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\RichEditor\EditorCommand;
 use Filament\Forms\Components\Select;
@@ -34,18 +33,16 @@ class InsertMediaAction
             ->schema([
                 Select::make('media_id')
                     ->label('Chọn ảnh có sẵn')
-                    ->options(fn (): array => TenantSite::scope(Media::query())
-                        ->latest()->limit(200)->pluck('alt', 'id')->all())
+                    ->helperText('Gõ vài chữ trong mô tả ảnh để tìm.')
+                    ->options(fn (): array => self::search(null))
+                    ->getSearchResultsUsing(fn (string $search): array => self::search($search))
+                    ->getOptionLabelUsing(fn ($value): ?string => TenantSite::scope(Media::query())->whereKey($value)->value('alt'))
                     ->searchable()
                     ->live()
                     ->exists('media', 'id', fn (Exists $rule) => $rule->where('site_id', TenantSite::id()))
                     ->requiredWithout('upload'),
-                FileUpload::make('upload')
+                MediaForm::uploadInput('upload')
                     ->label('Hoặc tải ảnh mới')
-                    ->image()
-                    ->acceptedFileTypes(MediaLibrary::ACCEPTED_TYPES)
-                    ->maxSize(10240)
-                    ->storeFiles(false)
                     ->hidden(fn (Get $get): bool => filled($get('media_id'))),
                 MediaForm::altInput()
                     ->required(fn (Get $get): bool => filled($get('upload')))
@@ -68,6 +65,21 @@ class InsertMediaAction
             });
     }
 
+    /**
+     * Ảnh của site đang chọn, mới nhất trước; tìm theo mô tả (alt) khi có từ khoá.
+     *
+     * @return array<int, string>
+     */
+    public static function search(?string $term, int $limit = 50): array
+    {
+        return TenantSite::scope(Media::query())
+            ->when(filled($term), fn ($query) => $query->where('alt', 'like', '%'.$term.'%'))
+            ->latest()
+            ->limit($limit)
+            ->pluck('alt', 'id')
+            ->all();
+    }
+
     /** @param  array<string, mixed>  $data */
     private static function storeUpload(array $data): Media
     {
@@ -75,6 +87,6 @@ class InsertMediaAction
         $file = is_array($upload) ? reset($upload) : $upload;
         assert($file instanceof TemporaryUploadedFile);
 
-        return MediaLibrary::store($file->getRealPath(), (string) $data['alt'], (int) TenantSite::id());
+        return MediaLibrary::storeUpload($file, (string) $data['alt'], TenantSite::id());
     }
 }

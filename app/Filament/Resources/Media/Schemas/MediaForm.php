@@ -14,17 +14,23 @@ class MediaForm
         return $schema
             ->columns(1)
             ->components([
-                FileUpload::make('file')
+                self::uploadInput('file')
                     ->label('Ảnh')
-                    ->image()
-                    ->acceptedFileTypes(MediaLibrary::ACCEPTED_TYPES)
-                    ->maxSize(10240)
-                    ->storeFiles(false)
                     ->required()
-                    ->visibleOn('create')
-                    ->helperText('JPEG, PNG hoặc WebP, tối đa 10 MB. Hệ thống tự tạo các bản WebP nhẹ cho điện thoại và máy tính.'),
+                    ->visibleOn('create'),
                 self::altInput(),
             ]);
+    }
+
+    /** Ô tải ảnh lên thư viện: chỉ JPEG/PNG/WebP, giữ file tạm để MediaLibrary xử lý. */
+    public static function uploadInput(string $name): FileUpload
+    {
+        return FileUpload::make($name)
+            ->image()
+            ->acceptedFileTypes(MediaLibrary::ACCEPTED_TYPES)
+            ->maxSize(MediaLibrary::MAX_KB)
+            ->storeFiles(false)
+            ->helperText('JPEG, PNG hoặc WebP, tối đa 10 MB. Hệ thống tự tạo các bản WebP nhẹ cho điện thoại và máy tính.');
     }
 
     public static function altInput(): TextInput

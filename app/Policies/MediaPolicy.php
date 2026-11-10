@@ -5,7 +5,7 @@ namespace App\Policies;
 use App\Models\Media;
 use App\Models\User;
 
-/** Ai viết bài cũng tải ảnh và sửa alt được; xoá ảnh (có thể đang dùng trong bài) chỉ Biên tập/Admin. */
+/** Ai viết bài cũng tải ảnh và sửa alt được; xoá ảnh chỉ Biên tập/Admin. */
 class MediaPolicy
 {
     public function viewAny(User $user): bool
@@ -28,9 +28,10 @@ class MediaPolicy
         return $user->canAccessAdmin();
     }
 
+    /** Ảnh đang dùng trong bài không xoá được, để trang không bị vỡ ảnh. */
     public function delete(User $user, Media $media): bool
     {
-        return $user->isReviewer();
+        return $user->isReviewer() && ! $media->isUsedInPosts();
     }
 
     public function deleteAny(User $user): bool

@@ -9,8 +9,10 @@ use DOMElement;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Hoàn thiện thẻ <img> trong nội dung bài khi hiển thị: ảnh thuộc thư viện của site
- * được gắn đủ alt, width, height, srcset, sizes; mọi ảnh trong bài đều tải lười.
+ * Hoàn thiện thẻ <img> trong nội dung bài khi hiển thị:
+ * - ảnh thuộc thư viện của site được gắn đủ alt, width, height, srcset, sizes;
+ * - ảnh không thuộc thư viện (không biết kích thước) bị bỏ, để trang không xô lệch;
+ * - ảnh đầu tiên tải ngay (thường nằm trong màn hình đầu), các ảnh sau tải lười.
  */
 final class ContentImages
 {
@@ -30,25 +32,33 @@ final class ContentImages
         $images = iterator_to_array($document->getElementsByTagName('img'));
         $library = self::libraryMediaFor($images, $siteId);
 
+        $isFirst = true;
         foreach ($images as $image) {
             assert($image instanceof DOMElement);
             $media = $library[self::directoryOf($image->getAttribute('src')) ?? ''] ?? null;
 
-            if ($media !== null) {
-                $width = $media->largestWidth();
-                $image->setAttribute('src', $media->url($width));
-                $image->setAttribute('width', (string) $width);
-                $image->setAttribute('height', (string) $media->heightAt($width));
-                $image->setAttribute('srcset', $media->srcset());
-                $image->setAttribute('sizes', self::SIZES);
-                if (trim($image->getAttribute('alt')) === '') {
-                    $image->setAttribute('alt', $media->alt);
-                }
-            } elseif (! $image->hasAttribute('alt')) {
-                $image->setAttribute('alt', '');
+            if ($media === null) {
+                $image->parentNode?->removeChild($image);
+
+                continue;
             }
 
-            $image->setAttribute('loading', 'lazy');
+            $width = $media->largestWidth();
+            $image->setAttribute('src', $media->url($width));
+            $image->setAttribute('width', (string) $width);
+            $image->setAttribute('height', (string) $media->heightAt($width));
+            $image->setAttribute('srcset', $media->srcset());
+            $image->setAttribute('sizes', self::SIZES);
+            if (trim($image->getAttribute('alt')) === '') {
+                $image->setAttribute('alt', $media->alt);
+            }
+
+            if ($isFirst) {
+                $image->setAttribute('fetchpriority', 'high');
+                $isFirst = false;
+            } else {
+                $image->setAttribute('loading', 'lazy');
+            }
             $image->setAttribute('decoding', 'async');
         }
 
@@ -87,8 +97,29 @@ final class ContentImages
             ->all();
     }
 
+    /**
+     * Những src trong nội dung không thuộc thư viện của site (dùng để kiểm tra khi lưu bài).
+     *
+     * @return list<string>
+     */
+    public static function foreignSources(string $html, int $siteId): array
+    {
+        if (! preg_match_all('/<img\b[^>]*\bsrc\s*=\s*["\']([^"\']*)["\']/i', $html, $matches)) {
+            return [];
+        }
+
+        $directories = array_values(array_filter(array_map(self::directoryOf(...), $matches[1])));
+        $known = Media::withoutGlobalScope(SiteScope::class)->where('site_id', $siteId)
+            ->whereIn('path', $directories)->pluck('path')->all();
+
+        return array_values(array_filter(
+            $matches[1],
+            fn (string $src): bool => ! in_array(self::directoryOf($src), $known, true),
+        ));
+    }
+
     /** "…/storage/media/3/01J…/960.webp" → "media/3/01J…" */
-    private static function directoryOf(string $src): ?string
+    public static function directoryOf(string $src): ?string
     {
         $base = rtrim(Storage::disk(Media::DISK)->url(''), '/').'/';
         $path = str_starts_with($src, $base) ? substr($src, strlen($base)) : (string) parse_url($src, PHP_URL_PATH);

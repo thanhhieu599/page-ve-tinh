@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Posts\Pages;
 
 use App\Enums\PostStatus;
+use App\Filament\Resources\Posts\Concerns\GuardsContentImages;
 use App\Filament\Resources\Posts\PostResource;
 use App\Models\Post;
 use App\Models\Site;
@@ -12,7 +13,20 @@ use Illuminate\Database\Eloquent\Model;
 
 class CreatePost extends CreateRecord
 {
+    use GuardsContentImages;
+
     protected static string $resource = PostResource::class;
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        $this->ensureImagesComeFromLibrary($data);
+
+        return $data;
+    }
 
     /**
      * Bài mới luôn thuộc site đang chọn và luôn bắt đầu ở trạng thái nháp.

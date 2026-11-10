@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Authors\Schemas;
 
 use App\Models\Author;
+use App\Support\MediaLibrary;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -28,7 +29,7 @@ class AuthorForm
                         Textarea::make('bio')->label('Tiểu sử')->rows(4),
                         Textarea::make('expertise')->label('Chuyên môn')->rows(2),
                         FileUpload::make('avatar')->label('Ảnh đại diện')->image()
-                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])->disk('public')->directory('authors'),
+                            ->acceptedFileTypes(MediaLibrary::ACCEPTED_TYPES)->disk('public')->directory('authors'),
                         TextInput::make('linkedin_url')->label('LinkedIn')->url()->maxLength(255)
                             ->rules(['nullable', 'starts_with:https://']),
                     ]),

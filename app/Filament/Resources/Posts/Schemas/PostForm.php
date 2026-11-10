@@ -6,6 +6,7 @@ use App\Filament\Resources\Posts\Actions\InsertMediaAction;
 use App\Filament\Support\TenantSite;
 use App\Models\Post;
 use App\Models\Tag;
+use App\Support\MediaLibrary;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
@@ -85,7 +86,7 @@ class PostForm
                     RichEditor::make('content')
                         ->label('Nội dung')
                         ->required()
-                        // Ảnh chỉ chèn qua thư viện (bắt buộc alt, gắn với site).
+                        // Ảnh chỉ chèn qua thư viện (bắt buộc alt, gắn với site, biết kích thước).
                         ->fileAttachments(false)
                         ->tools([
                             RichEditorTool::make(InsertMediaAction::NAME)
@@ -173,7 +174,7 @@ class PostForm
                     FileUpload::make('og_image')
                         ->label('Ảnh chia sẻ (OG image)')
                         ->image()
-                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                        ->acceptedFileTypes(MediaLibrary::ACCEPTED_TYPES)
                         ->disk('public')
                         ->directory('og-images'),
                 ]),

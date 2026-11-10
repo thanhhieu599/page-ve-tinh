@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToSite;
+use App\Models\Scopes\SiteScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
@@ -34,6 +35,15 @@ class Media extends Model
         static::deleted(function (Media $media): void {
             Storage::disk(self::DISK)->deleteDirectory($media->path);
         });
+    }
+
+    /** Ảnh đang được dùng trong một bài viết của site (kể cả bài nháp, bài đã xoá mềm). */
+    public function isUsedInPosts(): bool
+    {
+        return Post::withoutGlobalScope(SiteScope::class)->withTrashed()
+            ->where('site_id', $this->site_id)
+            ->where('content', 'like', '%'.$this->path.'/%')
+            ->exists();
     }
 
     /** @return list<int> */
