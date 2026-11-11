@@ -23,6 +23,23 @@ class EditRequiredPage extends EditRecord
      */
     protected function mutateFormDataBeforeSave(array $data): array
     {
+        $page = $this->getRecord();
+        assert($page instanceof RequiredPage);
+
+        // Trang giới thiệu: chỉ được đăng khi đủ câu định vị, đoạn "Về chúng tôi", số cam kết.
+        if ($page->kind === PageKind::About) {
+            if ($data['is_published'] ?? false) {
+                $draft = (new RequiredPage)->forceFill(['extras' => $data['extras'] ?? []]);
+                $missing = $draft->aboutMissing();
+                if ($missing !== []) {
+                    throw ValidationException::withMessages(collect($missing)->mapWithKeys(fn ($message, $field) => ["data.extras.{$field}" => $message])->all());
+                }
+            }
+            $data['content'] = '';
+
+            return $data;
+        }
+
         $content = (string) ($data['content'] ?? '');
 
         if (($data['is_published'] ?? false) && RequiredPage::hasPlaceholders($content)) {
@@ -30,8 +47,6 @@ class EditRequiredPage extends EditRecord
         }
 
         $site = TenantSite::site();
-        $page = $this->getRecord();
-        assert($page instanceof RequiredPage);
         $mentionsStore = $page->kind !== PageKind::Privacy;
         $violations = $site !== null ? ContentLinkRules::violations($content, $site, hasPurchaseContext: $mentionsStore) : [];
 

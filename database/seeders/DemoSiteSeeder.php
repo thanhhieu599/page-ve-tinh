@@ -123,27 +123,27 @@ class DemoSiteSeeder extends Seeder
         }
 
         $about = $site->requiredPages()->withoutGlobalScopes()->where('kind', PageKind::About)->first();
-        if ($about !== null && empty($about->extras)) {
+        if ($about !== null && empty($about->extras['headline'])) {
             $about->forceFill(['extras' => [
-                'hero_image' => $this->showcaseImage(RequiredPage::IMAGE_DIRECTORY.'/demo-hero.png', 1200, 800, '#1f1f1f', '#ffffff'),
+                'headline' => 'Đối tác cung ứng văn phòng phẩm cho nhà máy và doanh nghiệp',
+                'summary' => 'Một đầu mối cho văn phòng và xưởng sản xuất: báo giá theo số lượng, hoá đơn VAT, giao tận KCN. (nội dung mẫu)',
+                'hero_image' => $this->showcaseImage(RequiredPage::IMAGE_DIRECTORY.'/demo-banner.png', 1600, 600, '#3a3a3a', '#3a3a3a'),
                 'stats' => [
                     ['value' => '10+', 'label' => 'năm kinh nghiệm (mẫu)'],
                     ['value' => '3.000+', 'label' => 'mã hàng (mẫu)'],
+                    ['value' => '500+', 'label' => 'khách doanh nghiệp (mẫu)'],
                     ['value' => '24h', 'label' => 'phản hồi báo giá (mẫu)'],
                 ],
-                'milestones' => [
-                    ['year' => '20XX', 'title' => 'Thành lập công ty (mẫu)', 'description' => 'Sửa trong Quản trị → Trang tĩnh → Giới thiệu.'],
-                    ['year' => '20XX', 'title' => 'Mở rộng nhóm hàng PPE và văn phòng phẩm (mẫu)', 'description' => ''],
-                    ['year' => '20XX', 'title' => 'Phục vụ nhà máy FDI tại các KCN (mẫu)', 'description' => ''],
-                ],
+                'intro' => 'Văn phòng phẩm D&T là website chuyên đề thuộc D&T, đơn vị cung cấp văn phòng phẩm, vật tư tiêu hao, thiết bị bảo hộ cá nhân và quà tặng doanh nghiệp cho nhà máy FDI và doanh nghiệp sản xuất tại các khu công nghiệp. '
+                    .'Chúng tôi nhận báo giá theo danh sách và số lượng, giao hàng định kỳ theo lịch của từng nhà máy, xuất hoá đơn VAT và cung cấp chứng từ nguồn gốc đầy đủ cho bộ phận mua hàng và QA. '
+                    .'Mục tiêu của chúng tôi là trở thành một đầu mối tin cậy, giúp doanh nghiệp giảm thời gian tìm nhà cung cấp và kiểm soát chi phí vật tư. (Đoạn mẫu: sửa trong Quản trị → Trang tĩnh → Giới thiệu.)',
+                'intro_image' => $this->showcaseImage(RequiredPage::IMAGE_DIRECTORY.'/demo-doi-ngu.png', 800, 600, '#f5f5f5', '#c1272d'),
+                'category_ids' => Category::query()->where('site_id', $site->id)->whereNull('parent_id')->orderBy('name')->limit(6)->pluck('id')->map(fn ($id) => (string) $id)->all(),
                 'values' => [
-                    ['title' => 'Đúng tiêu chuẩn', 'description' => 'Hàng rõ nguồn gốc, đủ chứng từ cho bộ phận mua hàng và QA.'],
-                    ['title' => 'Giao đúng hẹn', 'description' => 'Lịch giao cố định cho đơn định kỳ của nhà máy.'],
-                    ['title' => 'Một đầu mối', 'description' => 'PPE, vật tư tiêu hao, văn phòng phẩm, quà tặng doanh nghiệp.'],
-                ],
-                'gallery' => [
-                    $this->showcaseImage(RequiredPage::IMAGE_DIRECTORY.'/demo-kho.png', 800, 600, '#e8eef5', '#1f1f1f'),
-                    $this->showcaseImage(RequiredPage::IMAGE_DIRECTORY.'/demo-giao-hang.png', 800, 600, '#fdecec', '#c1272d'),
+                    ['icon' => 'tag', 'title' => 'Giá theo số lượng', 'description' => 'Báo giá riêng theo danh sách và sản lượng của doanh nghiệp.'],
+                    ['icon' => 'invoice', 'title' => 'Hoá đơn VAT đầy đủ', 'description' => 'Chứng từ rõ nguồn gốc cho mua hàng và QA.'],
+                    ['icon' => 'truck', 'title' => 'Giao đúng hẹn', 'description' => 'Giao định kỳ tận văn phòng, nhà máy, KCN.'],
+                    ['icon' => 'headset', 'title' => 'Hỗ trợ nhanh', 'description' => 'Phản hồi báo giá trong giờ làm việc.'],
                 ],
             ]])->save();
         }

@@ -61,9 +61,12 @@ final class IndexReadiness
     {
         $page = $site->requiredPages()->withoutGlobalScope(SiteScope::class)->where('kind', $kind)->first();
 
-        return new ReadinessItem($kind->readinessLabel(), (bool) $page?->is_published, match (true) {
+        $missing = $page !== null && $kind === PageKind::About ? $page->aboutMissing() : [];
+
+        return new ReadinessItem($kind->readinessLabel(), (bool) $page?->is_published && $missing === [], match (true) {
             $page === null => 'Chưa có trang (chạy lệnh php artisan sites:ensure-pages)',
             ! $page->is_published => 'Còn ở dạng nháp: biên tập và bật hiển thị trong mục Trang bắt buộc',
+            $missing !== [] => 'Chưa hoàn thiện: '.implode(' ', $missing),
             default => 'Đã hiển thị tại '.$kind->path(),
         });
     }

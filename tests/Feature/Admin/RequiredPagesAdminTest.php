@@ -31,7 +31,12 @@ class RequiredPagesAdminTest extends TestCase
 
     private function aboutPage(): RequiredPage
     {
-        return RequiredPage::withoutGlobalScopes()->where('site_id', $this->vpp->id)->where('kind', PageKind::About)->firstOrFail();
+        return $this->page(PageKind::About);
+    }
+
+    private function page(PageKind $kind): RequiredPage
+    {
+        return RequiredPage::withoutGlobalScopes()->where('site_id', $this->vpp->id)->where('kind', $kind)->firstOrFail();
     }
 
     public function test_an_editor_sees_only_the_three_pages_of_the_site_and_cannot_add_or_remove_pages(): void
@@ -56,8 +61,16 @@ class RequiredPagesAdminTest extends TestCase
         Livewire::test(EditRequiredPage::class, ['record' => $this->aboutPage()->getRouteKey()])
             ->fillForm([
                 'title' => 'Về Văn phòng phẩm D&T',
-                'content' => '<p>Hơn 10 năm cung cấp vật tư cho nhà máy FDI.</p>',
                 'is_published' => true,
+                'extras' => [
+                    'headline' => 'Hơn 10 năm cung cấp vật tư cho nhà máy FDI.',
+                    'intro' => str_repeat('D&T cung cấp văn phòng phẩm và vật tư cho nhà máy FDI tại các khu công nghiệp. ', 6),
+                    'values' => [
+                        ['icon' => 'truck', 'title' => 'Giao đúng hẹn', 'description' => ''],
+                        ['icon' => 'invoice', 'title' => 'Hoá đơn VAT', 'description' => ''],
+                        ['icon' => 'shield', 'title' => 'Đúng chuẩn', 'description' => ''],
+                    ],
+                ],
             ])
             ->call('save')
             ->assertHasNoFormErrors();
@@ -72,7 +85,7 @@ class RequiredPagesAdminTest extends TestCase
     {
         $this->workOn($this->vpp, User::factory()->editor()->hasAttached($this->vpp)->create());
 
-        Livewire::test(EditRequiredPage::class, ['record' => $this->aboutPage()->getRouteKey()])
+        Livewire::test(EditRequiredPage::class, ['record' => $this->page(PageKind::Contact)->getRouteKey()])
             ->fillForm(['content' => '<p>Xem <a href="https://ppetrangthietbi.vn/gioi-thieu">site PPE</a>, <a href="https://trangthietbi.vn">trang chính</a>.</p>'])
             ->call('save')
             ->assertHasFormErrors(['content'])
@@ -91,12 +104,12 @@ class RequiredPagesAdminTest extends TestCase
     {
         $this->workOn($this->vpp, User::factory()->editor()->hasAttached($this->vpp)->create());
 
-        Livewire::test(EditRequiredPage::class, ['record' => $this->aboutPage()->getRouteKey()])
+        Livewire::test(EditRequiredPage::class, ['record' => $this->page(PageKind::Privacy)->getRouteKey()])
             ->fillForm(['is_published' => true])
             ->call('save')
             ->assertHasFormErrors(['content']);
 
-        $this->assertFalse($this->aboutPage()->is_published);
-        $this->get('https://vpptrangthietbi.com.vn/gioi-thieu')->assertNotFound();
+        $this->assertFalse($this->page(PageKind::Privacy)->is_published);
+        $this->get('https://vpptrangthietbi.com.vn/chinh-sach-quyen-rieng-tu')->assertNotFound();
     }
 }

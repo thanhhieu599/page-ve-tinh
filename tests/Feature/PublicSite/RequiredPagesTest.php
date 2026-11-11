@@ -54,11 +54,12 @@ class RequiredPagesTest extends TestCase
         foreach (PageKind::cases() as $kind) {
             $page = $this->page($this->vpp, $kind);
             $this->assertFalse($page->is_published);
-            $this->assertNotSame('', trim(strip_tags($page->content)), "Trang {$kind->value} phải có nội dung mẫu.");
+            $sample = $kind === PageKind::About ? (string) $page->extraText('intro') : trim(strip_tags($page->content));
+            $this->assertNotSame('', $sample, "Trang {$kind->value} phải có nội dung mẫu.");
             $this->get('https://vpptrangthietbi.com.vn'.$kind->path())->assertNotFound();
         }
 
-        $this->assertStringContainsString('Văn phòng phẩm D&amp;T', $this->page($this->vpp, PageKind::About)->content);
+        $this->assertStringContainsString('Văn phòng phẩm D&T', (string) $this->page($this->vpp, PageKind::About)->extraText('intro'));
         $this->assertStringContainsString('dữ liệu cá nhân', $this->page($this->vpp, PageKind::Privacy)->content);
     }
 

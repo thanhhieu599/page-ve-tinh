@@ -106,6 +106,13 @@ class IndexSwitchTest extends TestCase
     private function publishRequiredPages(): void
     {
         RequiredPage::withoutGlobalScopes()->where('site_id', $this->vpp->id)->update(['is_published' => true]);
+        // Trang giới thiệu chỉ tính là hoàn thiện khi đủ câu định vị, đoạn "Về chúng tôi", 3 cam kết.
+        RequiredPage::withoutGlobalScopes()->where('site_id', $this->vpp->id)->where('kind', PageKind::About)->firstOrFail()
+            ->forceFill(['extras' => [
+                'headline' => 'Đối tác cung ứng văn phòng phẩm cho nhà máy',
+                'intro' => str_repeat('D&T cung cấp văn phòng phẩm và vật tư cho nhà máy FDI tại các khu công nghiệp. ', 6),
+                'values' => [['icon' => 'truck', 'title' => 'Giao đúng hẹn'], ['icon' => 'invoice', 'title' => 'Hoá đơn VAT'], ['icon' => 'shield', 'title' => 'Đúng chuẩn']],
+            ]])->save();
     }
 
     public function test_an_admin_turns_indexing_on_once_every_condition_is_met(): void

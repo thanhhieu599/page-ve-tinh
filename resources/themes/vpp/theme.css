@@ -167,25 +167,40 @@
     .page-aside { @apply mt-0 rounded-md border border-line bg-white p-5 shadow-sm; }
 
     /* Trang giới thiệu */
-    .about-hero { @apply grid items-center gap-8; }
-    .about-hero-image { @apply w-full rounded-md object-cover shadow; }
+    /* Trang giới thiệu kiểu web thương mại */
     main > article.about-page { @apply max-w-none; }
-    .about-stats { @apply mt-10 grid grid-cols-2 gap-4 rounded-md bg-accent p-6 text-center text-white md:grid-cols-4; }
-    .about-stats strong { @apply block text-3xl font-extrabold md:text-4xl; }
-    .about-stats span { @apply mt-1 block text-sm text-white/85; }
-    .about-timeline { @apply relative ml-3 border-l-2 border-line pl-6; }
-    .about-timeline li { @apply relative mt-6 flex flex-col gap-1 md:flex-row md:gap-6; }
-    .about-timeline li::before { content: ''; @apply absolute -left-[33px] top-1.5 h-4 w-4 rounded-full border-4 border-white bg-brand shadow; }
-    .about-timeline-year { @apply w-20 shrink-0 text-xl font-extrabold text-brand; }
-    .about-timeline h3 { @apply text-base; }
-    .about-timeline p { @apply mt-1 text-sm text-muted; }
-    .about-values { @apply grid gap-4 sm:grid-cols-2 lg:grid-cols-3; }
-    .about-values li { @apply rounded-md border-t-4 border-brand bg-white p-5 shadow-sm; }
+    .about-banner { @apply relative isolate flex min-h-[320px] items-center overflow-hidden rounded-md bg-ink md:min-h-[400px]; }
+    .about-banner-image { @apply absolute inset-0 -z-10 h-full w-full object-cover; }
+    .about-banner:not(.about-banner-plain)::before { content: ''; @apply absolute inset-0 -z-10 bg-gradient-to-r from-black/80 via-black/55 to-black/10; }
+    .about-banner-plain { background-image: linear-gradient(135deg, #1f1f1f 0%, #2b2b2b 60%, var(--color-brand-dark) 160%); }
+    .about-banner-text { @apply max-w-2xl p-6 md:p-12; }
+    .about-banner-kicker { @apply text-xs font-bold uppercase tracking-widest text-white/75; }
+    .about-banner h1 { @apply mt-3 text-3xl leading-tight text-white md:text-5xl; }
+    .about-banner-summary { @apply mt-4 text-lg text-white/90; }
+    .about-banner-actions { @apply mt-7 flex flex-wrap gap-3; }
+    .about-stats { @apply relative z-10 mx-4 -mt-8 grid grid-cols-2 gap-4 rounded-md bg-white p-6 text-center shadow-lg md:mx-10 md:grid-cols-4; }
+    .about-stats strong { @apply block text-3xl font-extrabold text-brand md:text-4xl; }
+    .about-stats span { @apply mt-1 block text-sm text-muted; }
+    .about-intro { @apply mt-14 grid items-center gap-8; }
+    .about-intro-with-image { @apply md:grid-cols-[3fr_2fr]; }
+    .about-intro-text { @apply mt-4 text-lg leading-relaxed text-ink; }
+    .about-intro img { @apply w-full rounded-md object-cover shadow-md; }
+    .about-supply { @apply mt-5 grid grid-cols-2 gap-4 md:grid-cols-3; }
+    .about-supply a { @apply flex h-full flex-col items-center rounded-md border border-line bg-white p-5 text-center no-underline transition hover:-translate-y-0.5 hover:border-brand hover:shadow-md; }
+    .about-supply-image { @apply flex h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-surface text-3xl font-bold text-brand; }
+    .about-supply-image img { @apply h-full w-full object-contain p-3; }
+    .about-supply-name { @apply mt-3 font-bold text-ink; }
+    .about-supply a:hover .about-supply-name { @apply text-brand; }
+    .about-supply-count { @apply mt-1 text-xs text-muted; }
+    .about-values { @apply mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4; }
+    .about-values li { @apply rounded-md border border-line bg-white p-6 text-center shadow-sm; }
+    .about-value-icon { @apply mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand/10 text-brand; }
+    .about-values h3 { @apply mt-4 text-base; }
     .about-values p { @apply mt-2 text-sm text-muted; }
-    .about-gallery { @apply grid grid-cols-2 gap-3 md:grid-cols-4; }
-    .about-gallery img { @apply aspect-[4/3] w-full rounded-md object-cover; }
-    .about-clients { @apply flex flex-wrap gap-3; }
-    .about-clients li { @apply rounded-full border border-line bg-white px-4 py-2 text-sm font-semibold text-ink shadow-sm; }
+    .about-clients { @apply mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6; }
+    .about-clients li { @apply flex h-20 items-center justify-center rounded-md border border-line bg-white p-3; }
+    .about-clients img { @apply max-h-12 w-auto object-contain grayscale transition hover:grayscale-0; }
+    .about-client-name { @apply text-sm font-bold text-ink; }
 
     /* Nội dung + cột phải (tin tức, bài viết) */
     .content-with-sidebar { @apply grid gap-8 lg:grid-cols-[1fr_18rem] lg:items-start; }
