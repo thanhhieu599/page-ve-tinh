@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\SiteSettings;
+use App\Filament\Support\InitialsAvatarProvider;
 use App\Http\Middleware\UseTenantAsCurrentSite;
 use App\Models\Site;
 use Filament\Facades\Filament;
@@ -40,9 +41,17 @@ class AdminPanelProvider extends PanelProvider
             ->tenant(Site::class, slugAttribute: 'domain')
             ->tenantProfile(SiteSettings::class)
             ->tenantMiddleware([UseTenantAsCurrentSite::class], isPersistent: true)
+            // Giao diện sáng, màu đỏ thương hiệu D&T (không theo chế độ tối của máy tính).
+            ->darkMode(false)
             ->colors([
-                'primary' => Color::Amber,
+                // Bảng màu đỏ D&T: sắc 600 = đỏ thương hiệu #c1272d để nút chính nền đỏ đậm, chữ trắng.
+                'primary' => [
+                    50 => '#fef2f2', 100 => '#fde3e3', 200 => '#fbcccd', 300 => '#f6a5a7', 400 => '#ec6f73',
+                    500 => '#dc3f44', 600 => '#c1272d', 700 => '#9b1d22', 800 => '#811c20', 900 => '#6b1c1f', 950 => '#3a0a0c',
+                ],
+                'gray' => Color::Zinc,
             ])
+            ->defaultAvatarProvider(InitialsAvatarProvider::class)
             // Vùng quản lý của từng site: chọn site ở góc trái, mọi mục dưới đây là của site đó.
             ->navigationGroups([
                 NavigationGroup::make('Nội dung'),

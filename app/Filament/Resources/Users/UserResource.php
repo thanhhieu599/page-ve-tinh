@@ -16,6 +16,9 @@ use Filament\Tables\Table;
 
 class UserResource extends Resource
 {
+    // Nhãn tiếng Việt viết hoa chữ đầu câu ("Danh mục", không phải "Danh Mục").
+    protected static bool $hasTitleCaseModelLabel = false;
+
     protected static ?string $model = User::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;

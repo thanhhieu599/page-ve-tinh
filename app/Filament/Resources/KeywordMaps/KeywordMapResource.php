@@ -16,6 +16,9 @@ use Filament\Tables\Table;
 
 class KeywordMapResource extends Resource
 {
+    // Nhãn tiếng Việt viết hoa chữ đầu câu ("Danh mục", không phải "Danh Mục").
+    protected static bool $hasTitleCaseModelLabel = false;
+
     protected static string|\UnitEnum|null $navigationGroup = 'SEO & báo cáo';
 
     protected static ?int $navigationSort = 2;

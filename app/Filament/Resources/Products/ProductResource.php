@@ -16,6 +16,9 @@ use Filament\Tables\Table;
 
 class ProductResource extends Resource
 {
+    // Nhãn tiếng Việt viết hoa chữ đầu câu ("Danh mục", không phải "Danh Mục").
+    protected static bool $hasTitleCaseModelLabel = false;
+
     protected static string|\UnitEnum|null $navigationGroup = 'Sản phẩm & bán hàng';
 
     protected static ?int $navigationSort = 1;

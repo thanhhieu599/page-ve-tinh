@@ -55,6 +55,16 @@ Kiểm tra:
 - `node tests/Browser/no-javascript.mjs`: tắt JavaScript, nội dung vẫn phải hiện đủ (cần app đang chạy).
 - `node tests/Browser/core-web-vitals.mjs`: đo LCP/CLS/TBT trên giả lập điện thoại cho mọi loại trang; vượt ngưỡng thì báo lỗi (cần app đang chạy, đã `npm run build`).
 
+### Lỗi "tải lên không thành công" trong trang quản trị
+
+Chạy `php artisan he-thong:kiem-tra`: lệnh liệt kê mục nào trên máy còn thiếu và cách sửa. Hay gặp trên Windows:
+
+- `extension=fileinfo` còn dấu `;` trong `php.ini` (đường dẫn `php.ini` in ở cuối lệnh).
+- Chưa có thư mục tạm upload: tạo `C:\php\tmp`, đặt `upload_tmp_dir="C:\php\tmp"` trong `php.ini`.
+- Giới hạn dung lượng: `upload_max_filesize=20M`, `post_max_size=25M`.
+
+Sửa `php.ini` xong phải tắt (Ctrl+C) và chạy lại `php artisan serve`. Vẫn lỗi thì xem cuối `storage/logs/laravel.log`.
+
 ## Cấu trúc
 
 - `docs/grilling-log.md`: câu hỏi, đề xuất và quyết định qua từng vòng.

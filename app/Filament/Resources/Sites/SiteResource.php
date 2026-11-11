@@ -17,6 +17,9 @@ use Filament\Tables\Table;
 /** Quản lý các domain vệ tinh (chỉ Admin). Thêm site = thêm ở đây + thư mục theme. */
 class SiteResource extends Resource
 {
+    // Nhãn tiếng Việt viết hoa chữ đầu câu ("Danh mục", không phải "Danh Mục").
+    protected static bool $hasTitleCaseModelLabel = false;
+
     protected static ?string $model = Site::class;
 
     protected static bool $isScopedToTenant = false;
