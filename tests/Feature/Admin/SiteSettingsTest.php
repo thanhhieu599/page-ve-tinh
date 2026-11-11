@@ -60,6 +60,36 @@ class SiteSettingsTest extends TestCase
         $this->assertStringContainsString('Văn phòng phẩm cho nhà máy', $html);
     }
 
+    public function test_an_editor_adds_up_to_two_side_banners_shown_beside_the_main_banner(): void
+    {
+        $this->as('editor');
+
+        Livewire::test(SiteSettings::class)
+            ->fillForm([
+                'settings.banners' => [['image' => [UploadedFile::fake()->image('chinh.jpg', 1200, 450)], 'alt' => 'Banner chính', 'url' => '']],
+                'settings.side_banners' => [
+                    ['image' => [UploadedFile::fake()->image('ppe.jpg', 600, 280)], 'alt' => 'PPE cho nhà máy', 'url' => '/danh-muc/ppe'],
+                    ['image' => [UploadedFile::fake()->image('tet.jpg', 600, 280)], 'alt' => 'Quà Tết doanh nghiệp', 'url' => ''],
+                ],
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $html = (string) $this->get('https://vpptrangthietbi.com.vn/')->assertOk()->getContent();
+        $this->assertSame(1, preg_match('#<div class="hero-side">.*?</div>#s', $html, $side));
+        $this->assertMatchesRegularExpression('#<a href="/danh-muc/ppe"[^>]*>\s*<img src="/storage/site-banners/[^"]+" alt="PPE cho nhà máy" width="600" height="280"#', $side[0]);
+        $this->assertStringContainsString('alt="Quà Tết doanh nghiệp"', $side[0]);
+
+        Livewire::test(SiteSettings::class)
+            ->fillForm(['settings.side_banners' => [
+                ['image' => [UploadedFile::fake()->image('a.jpg')], 'alt' => 'a', 'url' => ''],
+                ['image' => [UploadedFile::fake()->image('b.jpg')], 'alt' => 'b', 'url' => ''],
+                ['image' => [UploadedFile::fake()->image('c.jpg')], 'alt' => 'c', 'url' => ''],
+            ]])
+            ->call('save')
+            ->assertHasFormErrors(['settings.side_banners']);
+    }
+
     public function test_a_banner_can_only_link_inside_the_site(): void
     {
         $this->as('editor');

@@ -29,9 +29,11 @@
         @endif
 
         @php($banners = $site->banners())
+        @php($sideBanners = $site->banners('side_banners'))
+        <div class="hero-main @if ($sideBanners !== [] && $banners !== []) hero-main-with-side @endif @if ($categoryTree === []) md:col-span-2 @endif">
         @if ($banners !== [])
             {{-- Banner tải lên trong "Cài đặt site": trượt ngang bằng CSS (vuốt/bấm chấm, chạy khi tắt JavaScript). --}}
-            <section class="banner-slider-wrap @if ($categoryTree === []) md:col-span-2 @endif" aria-label="Banner">
+            <section class="banner-slider-wrap" aria-label="Banner">
                 <h1 class="sr-only">{{ $site->name }}</h1>
                 <div class="banner-slider" data-autoplay>
                     @foreach ($banners as $i => $banner)
@@ -63,7 +65,7 @@
             </section>
         @else
             {{-- Chưa có banner: khối chữ chào hàng (Google/AI đọc được, tải nhanh). --}}
-            <section class="home-banner @if ($categoryTree === []) md:col-span-2 @endif">
+            <section class="home-banner">
                 <p class="text-sm font-semibold uppercase tracking-widest text-white/80">Thuộc {{ $company->value('name') }} · {{ $company->host() }}</p>
                 <h1 class="mt-3 text-3xl text-white md:text-5xl">{{ $site->name }}</h1>
                 <p class="mt-4 max-w-xl text-lg text-white/90">{{ $tagline }}</p>
@@ -72,6 +74,16 @@
                 </div>
             </section>
         @endif
+        @if ($sideBanners !== [] && $banners !== [])
+            <div class="hero-side">
+                @foreach ($sideBanners as $banner)
+                    @if ($banner['href'])<a href="{{ $banner['href'] }}" class="block">@endif
+                    <img src="{{ $banner['url'] }}" alt="{{ $banner['alt'] }}"@if ($banner['width']) width="{{ $banner['width'] }}" height="{{ $banner['height'] }}"@endif decoding="async">
+                    @if ($banner['href'])</a>@endif
+                @endforeach
+            </div>
+        @endif
+        </div>
     </div>
 
     {{-- Dải cam kết (kiểu web thương mại). --}}
@@ -81,6 +93,30 @@
         <li><span class="usp-icon" aria-hidden="true">⛟</span><span><strong>Giao tận nơi</strong><small>Văn phòng, nhà máy, KCN</small></span></li>
         <li><span class="usp-icon" aria-hidden="true">☎</span><span><strong>{{ $company->value('phone') ?? 'Hỗ trợ báo giá' }}</strong><small>Tư vấn và báo giá nhanh</small></span></li>
     </ul>
+
+    @if ($tiles->isNotEmpty())
+        {{-- Mua theo danh mục: ô ảnh + số sản phẩm. --}}
+        <section class="mt-12" aria-labelledby="danh-muc-noi-bat">
+            <h2 id="danh-muc-noi-bat" class="section-label">Mua theo danh mục</h2>
+            <ul class="category-tiles">
+                @foreach ($tiles as $tile)
+                    <li>
+                        <a href="{{ $tile['category']->path() }}">
+                            <span class="category-tile-image">
+                                @if ($tile['image']?->image)
+                                    <img src="{{ $tile['image']->image->url(480) }}" alt="" width="480" height="{{ $tile['image']->image->heightAt(480) }}" loading="lazy" decoding="async">
+                                @else
+                                    <span aria-hidden="true">{{ mb_substr($tile['category']->name, 0, 1) }}</span>
+                                @endif
+                            </span>
+                            <span class="category-tile-name">{{ $tile['category']->name }}</span>
+                            <span class="category-tile-count">{{ $tile['count'] }} sản phẩm</span>
+                        </a>
+                    </li>
+                @endforeach
+            </ul>
+        </section>
+    @endif
 
     @if ($featured->isNotEmpty())
         <section class="mt-12" aria-labelledby="noi-bat">
@@ -104,7 +140,13 @@
             </ul>
             <p class="mt-5 text-center"><a class="button button-primary rounded-full px-6 text-sm" href="{{ $shelf['category']->path() }}">Xem tất cả</a></p>
         </section>
+        @if ($loop->iteration === 2)
+            @include('theme::partials.b2b-banner')
+        @endif
     @endforeach
+    @if ($shelves->count() < 2)
+        @include('theme::partials.b2b-banner')
+    @endif
 
     @if ($posts->isNotEmpty())
         <section class="mt-12" aria-labelledby="kien-thuc">

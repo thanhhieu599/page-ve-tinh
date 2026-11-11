@@ -1,7 +1,8 @@
-{{-- Thẻ sản phẩm dạng lưới: ảnh vuông, danh mục, tên, giá tham khảo (hoặc "Liên hệ báo giá"). --}}
+{{-- Thẻ sản phẩm: ảnh vuông, nhãn nổi bật, danh mục, tên, giá tham khảo (hoặc "Liên hệ báo giá"), nút báo giá riêng. --}}
 <li class="product-card">
     <a href="{{ $product->path() }}" class="product-card-link">
         <span class="product-card-image">
+            @if ($product->is_featured)<span class="product-badge">Nổi bật</span>@endif
             @if ($product->image)
                 <img src="{{ $product->image->url(480) }}" alt="{{ $product->image->alt }}"
                      width="480" height="{{ $product->image->heightAt(480) }}" loading="lazy" decoding="async">
@@ -15,4 +16,5 @@
         <span class="product-card-name">{{ $product->name }}</span>
         <span class="product-card-price">{{ $product->hasFreshPrice() ? $product->formattedPrice() : 'Liên hệ báo giá' }}</span>
     </a>
+    <a class="product-card-quote" href="{{ $product->quoteRequestPath() }}" aria-label="Báo giá {{ $product->name }}">Báo giá số lượng</a>
 </li>

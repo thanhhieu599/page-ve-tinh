@@ -114,6 +114,13 @@ class DemoSiteSeeder extends Seeder
             ];
             $site->forceFill(['settings' => $settings])->save();
         }
+        if (empty($settings['side_banners'])) {
+            $settings['side_banners'] = [
+                ['image' => $this->showcaseImage(Site::BANNER_DIRECTORY.'/demo-phu-1.png', 600, 280, '#1f1f1f', '#c1272d'), 'alt' => 'Vật tư tiêu hao cho nhà máy (banner phụ mẫu)', 'url' => '/yeu-cau-bao-gia'],
+                ['image' => $this->showcaseImage(Site::BANNER_DIRECTORY.'/demo-phu-2.png', 600, 280, '#f5f5f5', '#c1272d'), 'alt' => 'Giấy in văn phòng (banner phụ mẫu)', 'url' => '/danh-muc/'.self::CATEGORY_SLUG],
+            ];
+            $site->forceFill(['settings' => $settings])->save();
+        }
 
         $about = $site->requiredPages()->withoutGlobalScopes()->where('kind', PageKind::About)->first();
         if ($about !== null && empty($about->extras)) {

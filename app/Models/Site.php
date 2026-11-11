@@ -33,6 +33,12 @@ class Site extends Model
 
     public const MAX_BANNERS = 5;
 
+    /** Banner phụ cạnh banner chính (kiểu web bán hàng: 1 lớn + 2 nhỏ). */
+    public const MAX_SIDE_BANNERS = 2;
+
+    /** Nhóm banner trong settings => số ảnh tối đa. */
+    public const BANNER_GROUPS = ['banners' => self::MAX_BANNERS, 'side_banners' => self::MAX_SIDE_BANNERS];
+
     /** Chiều cao hiển thị logo ở header (px). */
     public const LOGO_HEIGHT = 48;
 
@@ -90,13 +96,14 @@ class Site extends Model
 
     /**
      * Banner trang chủ đã tải lên (theo thứ tự), chỉ nhận ảnh trong thư mục banner và link trong site.
+     * $group: 'banners' (banner chính trượt ngang) hoặc 'side_banners' (banner phụ bên cạnh).
      *
      * @return list<array{url: string, alt: string, href: ?string, width: ?int, height: ?int}>
      */
-    public function banners(): array
+    public function banners(string $group = 'banners'): array
     {
         $banners = [];
-        foreach (array_values((array) ($this->settings['banners'] ?? [])) as $banner) {
+        foreach (array_values((array) ($this->settings[$group] ?? [])) as $banner) {
             $image = is_array($banner) ? ($banner['image'] ?? null) : null;
             if (! is_string($image) || ! str_starts_with($image, self::BANNER_DIRECTORY.'/')) {
                 continue;
@@ -111,7 +118,7 @@ class Site extends Model
             ];
         }
 
-        return array_slice($banners, 0, self::MAX_BANNERS);
+        return array_slice($banners, 0, self::BANNER_GROUPS[$group] ?? 0);
     }
 
     /** Câu giới thiệu trang chủ (cũng là meta description trang chủ); trống thì theme dùng câu mặc định. */
@@ -205,8 +212,11 @@ class Site extends Model
 
             // Tính lại khi đổi logo, hoặc khi form quản trị lưu lại settings không kèm kích thước.
             // Banner: ghi kích thước thật cho từng ảnh (width/height trên <img>, tránh xô lệch trang).
-            if (isset($settings['banners']) && is_array($settings['banners'])) {
-                $settings['banners'] = array_values(array_map(function ($banner) {
+            foreach (array_keys(self::BANNER_GROUPS) as $group) {
+                if (! isset($settings[$group]) || ! is_array($settings[$group])) {
+                    continue;
+                }
+                $settings[$group] = array_values(array_map(function ($banner) {
                     $image = is_array($banner) ? ($banner['image'] ?? null) : null;
                     $disk = Storage::disk('public');
                     if (is_string($image) && $disk->exists($image) && ($size = @getimagesize($disk->path($image))) !== false) {
@@ -214,7 +224,7 @@ class Site extends Model
                     }
 
                     return $banner;
-                }, $settings['banners']));
+                }, $settings[$group]));
                 $site->settings = $settings;
             }
 
@@ -239,6 +249,7 @@ class Site extends Model
             $images = fn (array $settings) => array_filter([
                 $settings['logo'] ?? null,
                 ...array_map(fn ($banner) => is_array($banner) ? ($banner['image'] ?? null) : null, (array) ($settings['banners'] ?? [])),
+                ...array_map(fn ($banner) => is_array($banner) ? ($banner['image'] ?? null) : null, (array) ($settings['side_banners'] ?? [])),
             ], 'is_string');
             foreach (array_diff($images($before), $images($after)) as $unused) {
                 Storage::disk('public')->delete($unused);

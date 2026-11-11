@@ -10,7 +10,7 @@ use Illuminate\Support\Collection;
 
 /**
  * Trang chủ: danh mục (cột trái) + lời chào hàng, sản phẩm nổi bật, mỗi danh mục gốc một
- * khối sản phẩm (kèm "Xem tất cả"), bài kiến thức mới, form báo giá.
+ * khối sản phẩm (kèm "Xem tất cả"), tin tức mới, lời mời báo giá.
  */
 class HomeController extends Controller
 {
@@ -25,6 +25,7 @@ class HomeController extends Controller
         return view('theme::home', [
             'featured' => $this->featured(),
             'shelves' => $this->shelves($roots),
+            'tiles' => $this->tiles($roots),
             'posts' => Post::query()->published()->with('categories')->latest('published_at')->limit(self::LATEST_POSTS)->get(),
         ]);
     }
@@ -36,6 +37,25 @@ class HomeController extends Controller
         $featured = $query()->where('is_featured', true)->get();
 
         return $featured->isNotEmpty() ? $featured : $query()->get();
+    }
+
+    /**
+     * Ô danh mục (kiểu "Mua theo danh mục"): ảnh lấy từ một sản phẩm trong danh mục, kèm số sản phẩm đang bán.
+     *
+     * @param  Collection<int, Category>  $roots
+     * @return Collection<int, array{category: Category, count: int, image: ?Product}>
+     */
+    private function tiles(Collection $roots): Collection
+    {
+        return $roots->map(function (Category $root) {
+            $products = fn () => Product::query()->active()->whereIn('category_id', $root->selfAndDescendantIds());
+
+            return [
+                'category' => $root,
+                'count' => $products()->count(),
+                'image' => $products()->whereNotNull('media_id')->with('image')->latest('id')->first(),
+            ];
+        })->filter(fn (array $tile) => $tile['count'] > 0)->values();
     }
 
     /**

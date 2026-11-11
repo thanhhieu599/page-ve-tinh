@@ -73,7 +73,8 @@
 
         <ul class="main-menu">
             @foreach ($pages as $item)
-                <li><a href="{{ $item['href'] }}">{{ $item['label'] }}</a></li>
+                {{-- Điện thoại: bỏ "Trang chủ" (bấm logo để về trang chủ) cho menu vừa một hàng. --}}
+                <li @if ($item['href'] === '/') class="max-md:hidden" @endif><a href="{{ $item['href'] }}">{{ $item['label'] }}</a></li>
             @endforeach
         </ul>
     </nav>

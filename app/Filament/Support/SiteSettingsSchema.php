@@ -46,6 +46,18 @@ final class SiteSettingsSchema
                         ])
                         ->columns(3)->maxItems(Site::MAX_BANNERS)->reorderable()->collapsible()->defaultItems(0)
                         ->addActionLabel('Thêm banner'),
+                    Repeater::make('settings.side_banners')->label('Banner phụ (bên phải banner chính, tối đa 2 – khuyên dùng 600×280 px)')
+                        ->schema([
+                            FileUpload::make('image')->label('Ảnh')->required()->image()
+                                ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])->maxSize(2048)
+                                ->disk('public')->directory(Site::BANNER_DIRECTORY),
+                            TextInput::make('alt')->label('Mô tả ảnh (cho người khiếm thị và Google)')->required()->maxLength(150),
+                            TextInput::make('url')->label('Link khi bấm (trong site, ví dụ /danh-muc/giay)')->maxLength(255)
+                                ->regex('#^/[^/]#')
+                                ->validationMessages(['regex' => 'Chỉ link trong site, bắt đầu bằng "/" (ví dụ /danh-muc/giay).']),
+                        ])
+                        ->columns(3)->maxItems(Site::MAX_SIDE_BANNERS)->reorderable()->collapsible()->defaultItems(0)
+                        ->addActionLabel('Thêm banner phụ'),
                 ]),
 
             Section::make('Đo lường và tích hợp')
