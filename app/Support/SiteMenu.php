@@ -66,7 +66,7 @@ final class SiteMenu
         return array_values(array_filter([
             ['label' => 'Trang chủ', 'href' => '/'],
             $has(PageKind::About) ? ['label' => PageKind::About->getLabel(), 'href' => PageKind::About->path()] : null,
-            ['label' => 'Kiến thức', 'href' => ArticleController::PATH],
+            ['label' => 'Tin tức', 'href' => ArticleController::PATH],
             $has(PageKind::Contact) ? ['label' => PageKind::Contact->getLabel(), 'href' => PageKind::Contact->path()] : null,
         ]));
     }

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\PageKind;
 use App\Models\Author;
 use App\Models\Category;
 use App\Models\Media;
@@ -11,6 +12,7 @@ use App\Models\RequiredPage;
 use App\Models\Site;
 use App\Support\MediaLibrary;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\ImageManager;
@@ -94,6 +96,66 @@ class DemoSiteSeeder extends Seeder
 
         $product->forceFill(['category_id' => $category->id, 'is_featured' => true])->save();
         $this->seedCatalog($site, $category);
+        $this->seedShowcase($site);
+    }
+
+    /**
+     * Banner trang chủ và khối trang giới thiệu MẪU để xem giao diện khi chạy local.
+     * Chỉ điền khi còn trống (không ghi đè dữ liệu đã nhập trong quản trị).
+     * Số liệu/cột mốc ghi rõ "mẫu": thay bằng số liệu thật trước khi mở index.
+     */
+    private function seedShowcase(Site $site): void
+    {
+        $settings = (array) $site->settings;
+        if (empty($settings['banners'])) {
+            $settings['banners'] = [
+                ['image' => $this->showcaseImage(Site::BANNER_DIRECTORY.'/demo-1.png', 1200, 450, '#c1272d', '#1a7065'), 'alt' => 'Văn phòng phẩm cho doanh nghiệp (banner mẫu)', 'url' => '/danh-muc/'.self::CATEGORY_SLUG],
+                ['image' => $this->showcaseImage(Site::BANNER_DIRECTORY.'/demo-2.png', 1200, 450, '#1a7065', '#c1272d'), 'alt' => 'Báo giá theo số lượng (banner mẫu)', 'url' => '/yeu-cau-bao-gia'],
+            ];
+            $site->forceFill(['settings' => $settings])->save();
+        }
+
+        $about = $site->requiredPages()->withoutGlobalScopes()->where('kind', PageKind::About)->first();
+        if ($about !== null && empty($about->extras)) {
+            $about->forceFill(['extras' => [
+                'hero_image' => $this->showcaseImage(RequiredPage::IMAGE_DIRECTORY.'/demo-hero.png', 1200, 800, '#1a7065', '#ffffff'),
+                'stats' => [
+                    ['value' => '10+', 'label' => 'năm kinh nghiệm (mẫu)'],
+                    ['value' => '3.000+', 'label' => 'mã hàng (mẫu)'],
+                    ['value' => '24h', 'label' => 'phản hồi báo giá (mẫu)'],
+                ],
+                'milestones' => [
+                    ['year' => '20XX', 'title' => 'Thành lập công ty (mẫu)', 'description' => 'Sửa trong Quản trị → Trang tĩnh → Giới thiệu.'],
+                    ['year' => '20XX', 'title' => 'Mở rộng nhóm hàng PPE và văn phòng phẩm (mẫu)', 'description' => ''],
+                    ['year' => '20XX', 'title' => 'Phục vụ nhà máy FDI tại các KCN (mẫu)', 'description' => ''],
+                ],
+                'values' => [
+                    ['title' => 'Đúng tiêu chuẩn', 'description' => 'Hàng rõ nguồn gốc, đủ chứng từ cho bộ phận mua hàng và QA.'],
+                    ['title' => 'Giao đúng hẹn', 'description' => 'Lịch giao cố định cho đơn định kỳ của nhà máy.'],
+                    ['title' => 'Một đầu mối', 'description' => 'PPE, vật tư tiêu hao, văn phòng phẩm, quà tặng doanh nghiệp.'],
+                ],
+                'gallery' => [
+                    $this->showcaseImage(RequiredPage::IMAGE_DIRECTORY.'/demo-kho.png', 800, 600, '#e8eef5', '#1a7065'),
+                    $this->showcaseImage(RequiredPage::IMAGE_DIRECTORY.'/demo-giao-hang.png', 800, 600, '#fdecec', '#c1272d'),
+                ],
+            ]])->save();
+        }
+    }
+
+    private function showcaseImage(string $path, int $width, int $height, string $background, string $accent): string
+    {
+        $disk = Storage::disk('public');
+        if (! $disk->exists($path)) {
+            $tmp = tempnam(sys_get_temp_dir(), 'demo').'.png';
+            (new ImageManager(new Driver))->create($width, $height)->fill($background)
+                ->drawRectangle((int) ($width * 0.08), (int) ($height * 0.3), fn ($r) => $r->size((int) ($width * 0.4), (int) ($height * 0.12))->background($accent))
+                ->drawRectangle((int) ($width * 0.08), (int) ($height * 0.5), fn ($r) => $r->size((int) ($width * 0.25), (int) ($height * 0.06))->background($accent))
+                ->save($tmp);
+            $disk->put($path, (string) file_get_contents($tmp));
+            @unlink($tmp);
+        }
+
+        return $path;
     }
 
     /**

@@ -15,12 +15,17 @@
         [$post->title, null],
     ]])
 
+    <div class="content-with-sidebar">
+    <div>
     <article>
         <h1>{{ $post->title }}</h1>
 
-        @if ($post->author)
-            <p class="byline">Tác giả: <a href="{{ $post->author->path() }}" rel="author">{{ $post->author->name }}</a></p>
-        @endif
+        <p class="byline">
+            <time datetime="{{ $post->published_at?->toIso8601String() }}">{{ $post->published_at?->timezone(config('app.display_timezone'))->format('d/m/Y') }}</time>
+            @if ($post->author)
+                · Tác giả: <a href="{{ $post->author->path() }}" rel="author">{{ $post->author->name }}</a>
+            @endif
+        </p>
 
         {{-- Nội dung đã được lọc HTML khi lưu (mews/purifier). --}}
         {{-- Ảnh trong bài được gắn alt/kích thước/srcset/tải lười khi hiển thị (ContentImages). --}}
@@ -52,9 +57,24 @@
         @endif
     </article>
 
+    @if (($related = $post->related())->isNotEmpty())
+        <section class="mt-12" aria-labelledby="tin-lien-quan">
+            <h2 id="tin-lien-quan" class="section-label">Tin liên quan</h2>
+            <ul class="news-grid md:grid-cols-3">
+                @foreach ($related as $item)
+                    @include('theme::partials.news-card', ['post' => $item])
+                @endforeach
+            </ul>
+        </section>
+    @endif
+
     <section class="quote-request">
         <h2>Yêu cầu báo giá</h2>
         <p>Cần báo giá theo số lượng cho nhà máy, văn phòng? Để lại thông tin, bộ phận kinh doanh sẽ liên hệ.</p>
         @include('theme::partials.quote-form', ['product' => null])
     </section>
+    </div>
+
+    @include('theme::partials.sidebar')
+    </div>
 @endsection

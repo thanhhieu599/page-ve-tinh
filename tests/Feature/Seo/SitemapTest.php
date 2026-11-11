@@ -71,17 +71,17 @@ class SitemapTest extends TestCase
             'https://vpptrangthietbi.com.vn/',
             'https://vpptrangthietbi.com.vn/danh-muc/giay-a4',
             'https://vpptrangthietbi.com.vn/danh-muc/giay-van-phong',
-            'https://vpptrangthietbi.com.vn/kien-thuc',
             'https://vpptrangthietbi.com.vn/kien-thuc/cach-chon-giay-in-a4',
             'https://vpptrangthietbi.com.vn/san-pham/giay-double-a-a4-80gsm',
             'https://vpptrangthietbi.com.vn/tac-gia/bien-tap-dt',
+            'https://vpptrangthietbi.com.vn/tin-tuc',
         ], $this->locs($response));
 
         $this->assertSame([
             'https://ppetrangthietbi.vn/',
-            'https://ppetrangthietbi.vn/kien-thuc',
             'https://ppetrangthietbi.vn/kien-thuc/gang-tay-towa',
             'https://ppetrangthietbi.vn/san-pham/gang-tay-towa-370',
+            'https://ppetrangthietbi.vn/tin-tuc',
         ], $this->locs($this->get('https://ppetrangthietbi.vn/sitemap.xml')));
     }
 

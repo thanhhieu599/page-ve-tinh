@@ -26,7 +26,7 @@ php artisan serve
 ```
 
 Site được nhận diện theo tên miền: mở bằng `http://127.0.0.1:8000` sẽ chỉ thấy trang hướng dẫn (khi `APP_ENV=local`), không phải site. Để mở site mẫu trên máy, trỏ `vpptrangthietbi.com.vn`
-về `127.0.0.1` trong file hosts rồi vào `http://vpptrangthietbi.com.vn:8000/kien-thuc/cach-chon-giay-in-a4`.
+về `127.0.0.1` trong file hosts rồi vào `http://vpptrangthietbi.com.vn:8000/`.
 
 Trang quản trị chạy trên domain riêng (`ADMIN_DOMAIN` trong `.env`, ví dụ `admin.trangthietbi.test`
 khi chạy local, trỏ về `127.0.0.1` trong file hosts giống site). Tạo tài khoản Admin đầu tiên:

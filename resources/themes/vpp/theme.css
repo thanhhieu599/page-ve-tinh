@@ -182,6 +182,51 @@
     .about-clients { @apply flex flex-wrap gap-3; }
     .about-clients li { @apply rounded-full border border-line bg-white px-4 py-2 text-sm font-semibold text-ink shadow-sm; }
 
+    /* Nội dung + cột phải (tin tức, bài viết) */
+    .content-with-sidebar { @apply grid gap-8 lg:grid-cols-[1fr_18rem] lg:items-start; }
+    main .content-with-sidebar > div > article { @apply max-w-none; }
+    .sidebar { @apply space-y-6 lg:sticky lg:top-4; }
+    .sidebar-box { @apply rounded-md border border-line bg-white p-4 shadow-sm; }
+    .sidebar-box > h2 { @apply mb-3 border-l-4 border-brand pl-2 text-base; }
+    .sidebar-cta { @apply border-0 bg-accent text-white; }
+    .sidebar-cta > h2 { @apply border-white text-white; }
+    .sidebar-cta p { @apply mb-3 text-sm text-white/90; }
+    .sidebar-links li { @apply border-b border-line last:border-0; }
+    .sidebar-links a { @apply block py-2 text-sm text-ink no-underline hover:text-brand; }
+    .sidebar-products li + li { @apply mt-3; }
+    .sidebar-products a { @apply flex items-center gap-3 no-underline; }
+    .sidebar-products img { @apply h-14 w-14 shrink-0 rounded border border-line object-contain; }
+    .sidebar-product-name { @apply line-clamp-2 block text-sm text-ink; }
+    .sidebar-product-price { @apply block text-sm font-bold text-brand; }
+
+    /* Lưới tin tức */
+    .news-grid { @apply mt-5 grid gap-5 sm:grid-cols-2; }
+    .news-card { @apply flex flex-col overflow-hidden rounded-md border border-line bg-white shadow-sm transition hover:shadow-md; }
+    .news-card-image { @apply block aspect-[16/9] overflow-hidden bg-surface; }
+    .news-card-image img { @apply h-full w-full object-cover transition duration-300; }
+    .news-card:hover .news-card-image img { @apply scale-105; }
+    .news-card-noimage { @apply flex h-full items-center justify-center bg-accent text-lg font-bold text-white; }
+    .news-card-body { @apply flex flex-1 flex-col p-4; }
+    .news-card-meta { @apply text-xs font-semibold uppercase tracking-wide text-muted; }
+    .news-card h3 { @apply mt-2 text-base leading-snug; }
+    .news-card h3 a { @apply text-ink no-underline hover:text-brand; }
+    .news-card-excerpt { @apply mt-2 text-sm text-muted; }
+
+    /* Trang danh mục: cột danh mục trái */
+    .category-layout { @apply grid gap-8 md:grid-cols-[15rem_1fr] md:items-start; }
+    .sidebar-title { @apply rounded-t-md bg-brand-dark px-4 py-2.5 text-sm font-bold uppercase text-white; }
+    .category-sidebar a[aria-current] { @apply bg-brand-dark; }
+    .category-sidebar-sub { @apply bg-brand-dark/60; }
+    .category-sidebar-sub a { @apply block px-6 py-2 text-sm text-white no-underline hover:bg-black/20 hover:text-white; }
+
+    /* Trang sản phẩm 2 cột */
+    .product-detail { @apply grid gap-8 md:grid-cols-2; }
+    main > article.product-detail { @apply max-w-none; }
+    .product-detail-image { @apply flex aspect-square items-center justify-center rounded-md border border-line bg-white p-4; }
+    .product-detail-image img { @apply max-h-full w-full object-contain; }
+    .product-promises { @apply mt-4 space-y-1.5 rounded-md border border-dashed border-accent/40 bg-accent/5 p-4 text-sm text-ink; }
+    .product-detail-body { @apply mt-12 max-w-4xl; }
+
     /* Footer 4 cột */
     .site-footer { @apply mt-16 border-t-4 border-accent bg-surface text-sm text-muted; }
     .footer-columns { @apply mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4; }

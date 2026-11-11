@@ -20,6 +20,6 @@ class ProductController extends Controller
             return redirect()->to($replacement->path(), 301);
         }
 
-        return view('theme::products.show', ['product' => $product]);
+        return view('theme::products.show', ['product' => $product->loadMissing('category'), 'related' => $product->related()]);
     }
 }

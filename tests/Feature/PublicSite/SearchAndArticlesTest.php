@@ -64,9 +64,9 @@ class SearchAndArticlesTest extends TestCase
         Post::factory()->for($this->vpp)->published()->create(['title' => 'Bài mới', 'published_at' => now()->subDay()]);
         Post::factory()->for($this->vpp)->create(['title' => 'Bài nháp']);
 
-        $this->get('https://vpptrangthietbi.com.vn/kien-thuc')
+        $this->get('https://vpptrangthietbi.com.vn/tin-tuc')
             ->assertOk()
-            ->assertSee('<link rel="canonical" href="https://vpptrangthietbi.com.vn/kien-thuc">', escape: false)
+            ->assertSee('<link rel="canonical" href="https://vpptrangthietbi.com.vn/tin-tuc">', escape: false)
             ->assertSeeTextInOrder(['Bài mới', 'Bài cũ'])
             ->assertDontSeeText('Bài nháp');
     }

@@ -8,6 +8,7 @@ use App\Models\Concerns\BelongsToSite;
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -176,6 +177,17 @@ class Product extends Model
     protected function active(Builder $query): void
     {
         $query->where('is_active', true);
+    }
+
+    /** Sản phẩm đang bán cùng danh mục (không gồm sản phẩm này). @return \Illuminate\Database\Eloquent\Collection<int, Product> */
+    public function related(int $limit = 5): Collection
+    {
+        if ($this->category_id === null) {
+            return new Collection;
+        }
+
+        return static::query()->active()->where('category_id', $this->category_id)->whereKeyNot($this->id)
+            ->with(['image', 'category'])->orderBy('name')->limit($limit)->get();
     }
 
     /** @return BelongsTo<Category, $this> */

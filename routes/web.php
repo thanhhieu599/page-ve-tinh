@@ -23,6 +23,7 @@ Route::get('/sitemap.xml', SitemapController::class)->middleware(IdentifySite::c
 Route::middleware([IdentifySite::class, CaptureAttribution::class, CacheResponse::class])->group(function () {
     Route::get('/', HomeController::class)->name('home');
     Route::get(ArticleController::PATH, ArticleController::class)->name('articles');
+    Route::permanentRedirect(ArticleController::OLD_PATH, ArticleController::PATH);
     Route::get('/tim-kiem', SearchController::class)->name('search');
     Route::get('/kien-thuc/{slug}', [PostController::class, 'show'])->name('posts.show');
     Route::get('/danh-muc/{slug}', [CategoryController::class, 'show'])->name('categories.show');

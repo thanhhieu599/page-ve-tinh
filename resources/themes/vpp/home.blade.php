@@ -108,7 +108,7 @@
 
     @if ($posts->isNotEmpty())
         <section class="mt-12" aria-labelledby="kien-thuc">
-            <h2 id="kien-thuc" class="section-label">Kiến thức chọn mua</h2>
+            <h2 id="kien-thuc" class="section-label">Tin tức</h2>
             <ul class="mt-4 grid gap-4 md:grid-cols-3">
                 @foreach ($posts as $post)
                     <li class="rounded-md border border-line bg-white p-4 shadow-sm">
@@ -122,7 +122,7 @@
                     </li>
                 @endforeach
             </ul>
-            <p class="mt-5 text-center"><a class="button rounded-full px-6 text-sm" href="{{ \App\Http\Controllers\ArticleController::PATH }}">Xem tất cả bài viết</a></p>
+            <p class="mt-5 text-center"><a class="button rounded-full px-6 text-sm" href="{{ \App\Http\Controllers\ArticleController::PATH }}">Xem tất cả tin tức</a></p>
         </section>
     @endif
 
@@ -133,6 +133,7 @@
             <li><strong class="block text-white">Chứng từ đầy đủ</strong><span class="text-white/80">Hoá đơn VAT, hồ sơ sản phẩm rõ nguồn gốc cho bộ phận mua hàng, QA.</span></li>
             <li><strong class="block text-white">Một đầu mối cho nhà máy</strong><span class="text-white/80">PPE, vật tư tiêu hao, văn phòng phẩm, quà tặng doanh nghiệp.</span></li>
         </ul>
+        <p class="mt-6"><a class="button rounded-full border-white bg-white px-6 py-3 text-brand hover:bg-white/90 hover:text-brand-dark" href="{{ \App\Http\Controllers\QuoteRequestController::PATH }}">Yêu cầu báo giá theo số lượng</a></p>
     </section>
 
     <section class="quote-request" aria-labelledby="bao-gia">

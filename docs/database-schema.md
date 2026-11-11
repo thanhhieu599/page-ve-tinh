@@ -166,5 +166,13 @@ Database CMS tách riêng khỏi database Mautic (Q13).
 - Cache toàn trang (spatie/laravel-responsecache) cho route công khai: khoá theo tên miền + đường dẫn (bỏ qua UTM/gclid); không cache khi phiên có lỗi form/dữ liệu vừa nhập, không cache trang cảm ơn; hết hạn lúc 0 giờ VN và tối đa 1 giờ; lưu nội dung trong trang quản trị thì xoá cache; bài hẹn giờ tới giờ đăng thì lịch mỗi phút xoá cache; dùng kho riêng `pages` (`App\Support\PageCache`).
 - Sao lưu (spatie/laravel-backup): database + `storage/app/public`, mã hoá, ra disk `backup` (S3); giữ 30 ngày + 12 tháng. Vận hành: `docs/van-hanh.md`.
 - Giao diện kiểu cửa hàng (theo mẫu Deli): `products.category_id` (danh mục hiển thị, dùng chung cây danh mục với bài; CMS quản lý, CSV/Sapo không ghi đè), `products.is_featured` (khối "Sản phẩm nổi bật"; chưa chọn thì lấy sản phẩm mới nhất). Trang danh mục hiện sản phẩm của danh mục và danh mục con. Danh mục "đang sống" = có bài đã đăng hoặc sản phẩm đang bán.
-- `/tim-kiem?q=`: tìm sản phẩm đang bán (tên, mã) và bài đã đăng (tiêu đề, tóm tắt), không phân biệt hoa/thường, có/không dấu; luôn noindex, không vào cache toàn trang. `/kien-thuc`: danh sách bài, có trong sitemap.
+- `/tim-kiem?q=`: tìm sản phẩm đang bán (tên, mã) và bài đã đăng (tiêu đề, tóm tắt), không phân biệt hoa/thường, có/không dấu; luôn noindex, không vào cache toàn trang. `/tin-tuc`: trang Tin tức (danh sách bài, có trong sitemap); `/kien-thuc` cũ chuyển 301 về `/tin-tuc`, URL từng bài giữ nguyên `/kien-thuc/{slug}`.
 
+
+## Giao diện thương mại: banner, footer, trang giới thiệu, tin tức
+
+- `sites.settings.banners`: tối đa 5 banner trang chủ `{image (đĩa public, thư mục site-banners/), alt, url (chỉ link nội bộ /...)}`; kích thước ảnh tính khi lưu. Sửa trong **Cài đặt site** (mỗi site một vùng quản lý).
+- `company_profile`: thêm các trường cho footer (địa chỉ phụ, người liên hệ, mạng xã hội https, hình thức thanh toán, logo Bộ Công Thương chỉ link tới online.gov.vn).
+- `pages.extras` (JSON, chỉ trang Giới thiệu): `hero_image`, `stats[{value,label}]`, `milestones[{year,title,description}]`, `values[{title,description}]`, `gallery[]`, `clients[]` (chỉ ghi khách hàng đã đồng ý nêu tên).
+- Loại trang tĩnh: Giới thiệu, Quyền riêng tư, Liên hệ (bắt buộc trước khi mở index); Vận chuyển, Đổi trả, Hình thức thanh toán (tuỳ chọn, hiện ở footer khi đã đăng).
+- Trang sản phẩm: 2 cột (ảnh | giá, nút báo giá) + "Sản phẩm cùng danh mục". Bài viết: cột phải (báo giá, danh mục, sản phẩm nổi bật) + "Tin liên quan".

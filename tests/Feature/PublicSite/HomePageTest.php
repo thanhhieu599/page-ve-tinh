@@ -126,6 +126,6 @@ class HomePageTest extends TestCase
             ->assertSee('name="q"', escape: false)
             ->assertSeeText('Danh mục sản phẩm')
             ->assertSee('href="/danh-muc/giay-in"', escape: false)
-            ->assertSee('href="/kien-thuc"', escape: false);
+            ->assertSee('href="/tin-tuc"', escape: false);
     }
 }

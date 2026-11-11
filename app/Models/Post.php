@@ -4,17 +4,20 @@ namespace App\Models;
 
 use App\Enums\PostStatus;
 use App\Models\Concerns\BelongsToSite;
+use App\Support\ContentImages;
 use Carbon\CarbonInterface;
 use Database\Factories\PostFactory;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Mews\Purifier\Facades\Purifier;
 
@@ -175,6 +178,42 @@ class Post extends Model
     public function isScheduled(): bool
     {
         return $this->status === PostStatus::Published && $this->published_at?->isFuture() === true;
+    }
+
+    /**
+     * Ảnh đại diện cho thẻ tin: ảnh chia sẻ (OG) nếu có, không thì ảnh thư viện đầu tiên trong bài.
+     *
+     * @return array{url: string, width: ?int, height: ?int}|null
+     */
+    public function cover(int $width = 480): ?array
+    {
+        if (is_string($this->og_image) && $this->og_image !== '') {
+            $disk = Storage::disk('public');
+            $size = $disk->exists($this->og_image) ? @getimagesize($disk->path($this->og_image)) : false;
+
+            return ['url' => $disk->url($this->og_image), 'width' => $size[0] ?? null, 'height' => $size[1] ?? null];
+        }
+
+        $media = ContentImages::firstLibraryImage((string) $this->content, (int) $this->site_id);
+        if ($media === null) {
+            return null;
+        }
+        $width = min($width, $media->largestWidth());
+
+        return ['url' => $media->url($width), 'width' => $width, 'height' => $media->heightAt($width)];
+    }
+
+    /** Bài đã đăng cùng danh mục, mới nhất trước (không gồm bài này). @return Collection<int, Post> */
+    public function related(int $limit = 3): Collection
+    {
+        $categoryIds = $this->categories->pluck('id');
+        if ($categoryIds->isEmpty()) {
+            return new Collection;
+        }
+
+        return static::query()->published()->whereKeyNot($this->id)
+            ->whereHas('categories', fn (Builder $query) => $query->whereKey($categoryIds))
+            ->with('categories')->latest('published_at')->limit($limit)->get();
     }
 
     public function path(): string
