@@ -149,19 +149,11 @@
     @endif
 
     @if ($posts->isNotEmpty())
-        <section class="mt-12" aria-labelledby="kien-thuc">
-            <h2 id="kien-thuc" class="section-label">Tin tức</h2>
-            <ul class="mt-4 grid gap-4 md:grid-cols-3">
+        <section class="mt-12" aria-labelledby="tin-tuc">
+            <h2 id="tin-tuc" class="section-label">Tin tức</h2>
+            <ul class="news-grid md:grid-cols-3">
                 @foreach ($posts as $post)
-                    <li class="rounded-md border border-line bg-white p-4 shadow-sm">
-                        @if ($category = $post->primaryCategory())
-                            <p class="text-xs font-semibold uppercase tracking-wide text-brand">{{ $category->name }}</p>
-                        @endif
-                        <h3 class="mt-1"><a class="text-ink no-underline hover:text-brand" href="{{ $post->path() }}">{{ $post->title }}</a></h3>
-                        @if ($post->excerpt)
-                            <p class="mt-2 text-sm text-muted">{{ \Illuminate\Support\Str::limit($post->excerpt, 140) }}</p>
-                        @endif
-                    </li>
+                    @include('theme::partials.news-card', ['post' => $post])
                 @endforeach
             </ul>
             <p class="mt-5 text-center"><a class="button rounded-full px-6 text-sm" href="{{ \App\Http\Controllers\ArticleController::PATH }}">Xem tất cả tin tức</a></p>

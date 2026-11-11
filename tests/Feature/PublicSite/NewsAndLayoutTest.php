@@ -49,6 +49,22 @@ class NewsAndLayoutTest extends TestCase
             ->assertSee('src="'.$media->url(480).'"', escape: false);
     }
 
+    public function test_the_home_page_news_block_shows_each_post_picture(): void
+    {
+        $file = UploadedFile::fake()->image('a.jpg', 1200, 800);
+        $media = MediaLibrary::store($file->getRealPath(), 'Kho giấy', $this->vpp->id);
+        Post::factory()->for($this->vpp)->published()->create([
+            'title' => 'Giá giấy A4 tháng 11 tăng nhẹ',
+            'content' => '<p>Tin.</p><p><img src="'.$media->url().'" alt=""></p>',
+        ]);
+
+        $html = (string) $this->get('https://vpptrangthietbi.com.vn/')->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('#<section[^>]*aria-labelledby="tin-tuc".*?</section>#s', $html, $news));
+        $this->assertStringContainsString('src="'.$media->url(480).'"', $news[0]);
+        $this->assertStringContainsString('Giá giấy A4 tháng 11 tăng nhẹ', $news[0]);
+    }
+
     public function test_the_old_articles_address_moves_permanently_to_the_news_page(): void
     {
         $this->get('https://vpptrangthietbi.com.vn/kien-thuc')->assertRedirect('/tin-tuc')->assertStatus(301);
