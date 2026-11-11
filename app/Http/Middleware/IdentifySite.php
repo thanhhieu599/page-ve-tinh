@@ -23,7 +23,12 @@ class IdentifySite
         // RedirectToCanonicalUrl (chạy trước) thường đã xác định site.
         $site = $this->currentSite->get() ?? Site::findActiveByHost($request->getHost());
 
-        abort_if($site === null, 404);
+        if ($site === null) {
+            // Chạy thử trên máy mà mở bằng IP/localhost: chỉ đường tới đúng tên miền thay vì 404 khó hiểu.
+            abort_unless(app()->environment('local'), 404);
+
+            return $this->localSiteList($request);
+        }
 
         $this->currentSite->set($site);
 
@@ -31,5 +36,19 @@ class IdentifySite
         View::share('site', $site);
 
         return $next($request);
+    }
+
+    /** Danh sách site và đường dẫn đúng khi chạy thử trên máy (không bao giờ hiện trên máy chủ thật). */
+    private function localSiteList(Request $request): Response
+    {
+        $port = in_array($request->getPort(), [80, 443], true) ? '' : ':'.$request->getPort();
+        $origin = fn (string $host) => $request->getScheme().'://'.$host.$port;
+
+        return response()->view('local-sites', [
+            'sites' => Site::query()->where('is_active', true)->orderBy('name')->get(),
+            'origin' => $origin,
+            'adminUrl' => $origin((string) config('sites.admin_domain')).'/admin',
+            'adminDomain' => (string) config('sites.admin_domain'),
+        ])->header('X-Robots-Tag', Site::NOINDEX);
     }
 }
