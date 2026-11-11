@@ -4,7 +4,9 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
@@ -47,11 +49,27 @@ class RecordUploadFailure
             }
         });
 
+        // Từng tệp PHP nhận được: cỡ, mã lỗi, PHP có coi là tệp tải lên hợp lệ không (is_uploaded_file).
+        $files = [];
+        foreach (Arr::flatten($request->allFiles()) as $file) {
+            if ($file instanceof UploadedFile) {
+                $files[] = [
+                    'name' => $file->getClientOriginalName(),
+                    'size' => (int) @filesize($file->getPathname()),
+                    'error' => $file->getError(),
+                    'is_uploaded_file' => is_uploaded_file($file->getPathname()),
+                    'tmp' => $file->getPathname(),
+                ];
+            }
+        }
+
         $entry = [
             'at' => now()->toIso8601String(),
             'status' => $status,
             'detail' => trim($detail),
             'php_upload_errors' => $phpErrors,
+            'files' => $files,
+            'server' => PHP_SAPI.' '.PHP_VERSION,
             'content_length' => (int) $request->header('Content-Length'),
         ];
 

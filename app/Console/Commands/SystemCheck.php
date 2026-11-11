@@ -20,6 +20,18 @@ class SystemCheck extends Command
 
     protected $description = 'Kiểm tra PHP extension, thư mục tạm upload, giới hạn dung lượng, storage:link';
 
+    /** Mã lỗi tải tệp của PHP. */
+    private const UPLOAD_ERRORS = [
+        UPLOAD_ERR_OK => 'không lỗi',
+        UPLOAD_ERR_INI_SIZE => 'vượt upload_max_filesize',
+        UPLOAD_ERR_FORM_SIZE => 'vượt giới hạn form',
+        UPLOAD_ERR_PARTIAL => 'chỉ nhận được một phần tệp',
+        UPLOAD_ERR_NO_FILE => 'không có tệp',
+        UPLOAD_ERR_NO_TMP_DIR => 'thiếu thư mục tạm',
+        UPLOAD_ERR_CANT_WRITE => 'không ghi được thư mục tạm',
+        UPLOAD_ERR_EXTENSION => 'bị extension PHP chặn',
+    ];
+
     /** Extension cần có => để làm gì. */
     private const EXTENSIONS = [
         'fileinfo' => 'nhận dạng loại tệp khi tải ảnh lên (thiếu: lỗi "tải lên không thành công")',
@@ -110,7 +122,15 @@ class SystemCheck extends Command
         $this->newLine();
         $this->warn("Lần tải lên lỗi gần nhất ({$entry['at']}): HTTP {$entry['status']}");
         $this->line('  Chi tiết: '.($entry['detail'] ?: '(không có)'));
+        $this->line('  Máy chủ web: '.($entry['server'] ?? '?'));
+        $notRecognised = false;
+        foreach ($entry['files'] ?? [] as $file) {
+            $notRecognised = $notRecognised || ($file['error'] === UPLOAD_ERR_OK && ! $file['is_uploaded_file']);
+            $this->line(sprintf('  Tệp %s: %d byte, mã lỗi PHP %d (%s), PHP nhận là tệp tải lên: %s',
+                $file['name'], $file['size'], $file['error'], self::UPLOAD_ERRORS[$file['error']] ?? '?', $file['is_uploaded_file'] ? 'có' : 'KHÔNG'));
+        }
         $this->line('  Gợi ý: '.match (true) {
+            $notRecognised && $entry['status'] === 422 => 'PHP nhận được tệp nhưng không công nhận là tệp tải lên (is_uploaded_file = KHÔNG). Đây là lỗi của máy chủ web PHP đang chạy (php artisan serve), không phải của ứng dụng: chạy bằng Herd hoặc PHP 8.4 theo hướng dẫn README',
             in_array(UPLOAD_ERR_INI_SIZE, $entry['php_upload_errors'] ?? [], true) => 'tệp vượt upload_max_filesize trong php.ini',
             in_array(UPLOAD_ERR_NO_TMP_DIR, $entry['php_upload_errors'] ?? [], true) => 'PHP không có thư mục tạm: đặt upload_tmp_dir trong php.ini',
             in_array(UPLOAD_ERR_CANT_WRITE, $entry['php_upload_errors'] ?? [], true) => 'PHP không ghi được thư mục tạm: kiểm tra quyền thư mục upload_tmp_dir',

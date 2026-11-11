@@ -3,6 +3,7 @@
 namespace Tests\Feature\Ops;
 
 use App\Http\Middleware\RecordUploadFailure;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 /** Cài đặt máy chạy: thông báo lỗi tiếng Việt và lệnh tự kiểm tra môi trường (upload ảnh, PHP extension). */
@@ -28,10 +29,11 @@ class LocalSetupTest extends TestCase
     public function test_a_failed_admin_upload_is_recorded_and_shown_by_the_system_check(): void
     {
         // Link tải lên hết hạn/sai chữ ký: Livewire trả 401, giao diện chỉ báo "không thành công".
-        $this->post(route('livewire.upload-file'), [])->assertStatus(401);
+        $this->post(route('livewire.upload-file'), ['files' => [UploadedFile::fake()->image('banner.jpg')]])->assertStatus(401);
 
         $this->artisan('he-thong:kiem-tra')
             ->expectsOutputToContain('Lần tải lên lỗi gần nhất')
+            ->expectsOutputToContain('Tệp banner.jpg:')
             ->expectsOutputToContain('Gợi ý: link tải lên hết hạn hoặc sai chữ ký')
             ->assertSuccessful();
     }
