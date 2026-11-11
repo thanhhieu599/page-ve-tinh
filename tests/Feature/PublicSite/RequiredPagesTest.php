@@ -123,7 +123,7 @@ class RequiredPagesTest extends TestCase
 
         $this->assertFalse($this->page($this->vpp, PageKind::Contact)->is_published);
         $this->assertTrue($about->fresh()->is_published, 'Trang đã có không bị ghi đè.');
-        $this->assertSame(6, RequiredPage::withoutGlobalScopes()->count());
+        $this->assertSame(2 * count(PageKind::cases()), RequiredPage::withoutGlobalScopes()->count());
     }
 
     public function test_the_footer_of_every_page_shows_the_full_company_details(): void

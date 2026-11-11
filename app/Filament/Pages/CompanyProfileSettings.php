@@ -6,6 +6,9 @@ use App\Models\CompanyProfile;
 use App\Models\User;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -46,7 +49,8 @@ class CompanyProfileSettings extends Page
 
     public function mount(): void
     {
-        $this->form->fill(CompanyProfile::stored()->values());
+        $profile = CompanyProfile::stored();
+        $this->form->fill([...$profile->values(), ...$profile->only(CompanyProfile::LIST_FIELDS)]);
     }
 
     public function form(Schema $schema): Schema
@@ -65,9 +69,34 @@ class CompanyProfileSettings extends Page
                 TextInput::make('logo_url')->label('Link logo (https, dùng cho Google)')->url()->startsWith(['https://'])->maxLength(255),
             ]),
             Section::make('Địa chỉ')->columns(3)->schema([
-                TextInput::make('street_address')->label('Số nhà, đường')->maxLength(255)->columnSpanFull(),
+                TextInput::make('street_address')->label('Trụ sở: số nhà, đường')->maxLength(255)->columnSpanFull(),
                 TextInput::make('locality')->label('Phường/xã, quận/huyện')->maxLength(255),
                 TextInput::make('region')->label('Tỉnh/thành phố')->maxLength(255),
+                Repeater::make('addresses')->label('Địa chỉ khác (văn phòng giao dịch, kho…)')->columnSpanFull()
+                    ->schema([
+                        TextInput::make('label')->label('Tên (vd. VPGD, Kho)')->maxLength(50),
+                        TextInput::make('address')->label('Địa chỉ')->required()->maxLength(255)->columnSpan(2),
+                    ])->columns(3)->defaultItems(0)->maxItems(5)->addActionLabel('Thêm địa chỉ'),
+            ]),
+            Section::make('Người liên hệ và mạng xã hội (hiện ở footer mọi site)')->columns(2)->schema([
+                Repeater::make('contacts')->label('Người liên hệ')->columnSpanFull()
+                    ->schema([
+                        TextInput::make('name')->label('Tên (vd. Mr Thụy – Kinh doanh)')->maxLength(100),
+                        TextInput::make('phone')->label('Điện thoại')->required()->maxLength(50)->regex('/^[0-9+().\s-]+$/'),
+                    ])->columns(2)->defaultItems(0)->maxItems(6)->addActionLabel('Thêm người liên hệ'),
+                ...array_map(fn (string $key, string $label) => TextInput::make("socials.{$key}")->label($label)
+                    ->url()->startsWith(['https://'])->maxLength(255)->placeholder('https://…'),
+                    array_keys(CompanyProfile::SOCIALS), CompanyProfile::SOCIALS),
+            ]),
+            Section::make('Thanh toán và Bộ Công Thương')->columns(2)->schema([
+                TagsInput::make('payment_methods')->label('Hình thức thanh toán')->columnSpanFull()
+                    ->placeholder('Gõ rồi bấm Enter')->helperText('Trống: dùng danh sách mặc định (chuyển khoản, tiền mặt, công nợ theo hợp đồng).'),
+                FileUpload::make('bct_badge')->label('Logo "Đã thông báo Bộ Công Thương"')
+                    ->helperText('Chỉ tải lên khi website đã thông báo/đăng ký với Bộ Công Thương. Chưa có thì để trống.')
+                    ->image()->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp'])->maxSize(512)
+                    ->disk('public')->directory(CompanyProfile::BADGE_DIRECTORY),
+                TextInput::make('bct_url')->label('Link xác minh trên online.gov.vn')->url()
+                    ->regex('#^https?://(www\.)?online\.gov\.vn/#')->maxLength(255),
             ]),
         ]);
     }

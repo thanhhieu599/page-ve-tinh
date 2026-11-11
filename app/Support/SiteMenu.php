@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Enums\PageKind;
 use App\Http\Controllers\ArticleController;
 use App\Models\Category;
+use App\Models\KeywordMap;
 use App\Models\Site;
 
 /**
@@ -32,6 +33,28 @@ final class SiteMenu
                 'children' => $children->get($root->id, collect())
                     ->map(fn (Category $child) => ['label' => $child->name, 'href' => $child->path()])->values()->all(),
             ])->values()->all();
+    }
+
+    /**
+     * Danh mục ở footer: danh mục gốc đang có nội dung, bỏ danh mục có tên trùng từ khoá chính trong
+     * bản đồ từ khoá (footer lặp trên mọi trang không được thành anchor từ khoá – chính sách #14).
+     *
+     * @return list<array{label: string, href: string}>
+     */
+    public static function footerCategories(): array
+    {
+        return array_values(array_filter(
+            array_map(fn (array $root) => ['label' => $root['label'], 'href' => $root['href']], self::categoryTree()),
+            fn (array $item) => KeywordMap::ownerOf($item['label']) === null,
+        ));
+    }
+
+    /** @return list<array{label: string, href: string}> trang chính sách/giới thiệu đã bật, theo thứ tự */
+    public static function policyPages(Site $site): array
+    {
+        return $site->requiredPages()->published()->get()
+            ->sortBy(fn ($page) => $page->kind->menuOrder())
+            ->map(fn ($page) => ['label' => $page->kind->getLabel(), 'href' => $page->path()])->values()->all();
     }
 
     /** @return list<array{label: string, href: string}> */

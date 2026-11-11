@@ -24,7 +24,7 @@ final class IndexReadiness
         return new self([
             self::publishedPosts($site),
             self::authorProfiles($site),
-            ...array_map(fn (PageKind $kind) => self::requiredPage($site, $kind), PageKind::cases()),
+            ...array_map(fn (PageKind $kind) => self::requiredPage($site, $kind), PageKind::required()),
         ]);
     }
 

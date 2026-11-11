@@ -26,9 +26,9 @@ class RequiredPageResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
 
-    protected static ?string $modelLabel = 'trang bắt buộc';
+    protected static ?string $modelLabel = 'trang tĩnh';
 
-    protected static ?string $pluralModelLabel = 'Trang bắt buộc';
+    protected static ?string $pluralModelLabel = 'Trang tĩnh (giới thiệu, chính sách)';
 
     public static function form(Schema $schema): Schema
     {

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Thông tin D&T dùng chung cho mọi site (footer, trang giới thiệu, liên hệ, schema).
@@ -18,7 +19,21 @@ class CompanyProfile extends Model
     /** Cột trong bảng → khoá trong config/company.php (khi tên khác nhau). */
     private const CONFIG_KEYS = ['logo_url' => 'logo'];
 
-    protected $fillable = self::FIELDS;
+    /** Danh sách hiện ở footer (JSON). */
+    public const LIST_FIELDS = ['addresses', 'contacts', 'socials', 'payment_methods', 'bct_badge', 'bct_url'];
+
+    /** Mạng xã hội được hiện ở footer (khoá → tên hiển thị). */
+    public const SOCIALS = ['facebook' => 'Facebook', 'youtube' => 'YouTube', 'zalo' => 'Zalo', 'tiktok' => 'TikTok', 'linkedin' => 'LinkedIn'];
+
+    public const BADGE_DIRECTORY = 'company';
+
+    protected $fillable = [...self::FIELDS, ...self::LIST_FIELDS];
+
+    /** @return array<string, string> */
+    protected function casts(): array
+    {
+        return ['addresses' => 'array', 'contacts' => 'array', 'socials' => 'array', 'payment_methods' => 'array'];
+    }
 
     /** Tên trong container: đọc một lần mỗi request (scoped), không giữ sang request sau. */
     public const CURRENT = 'company-profile.current';
@@ -69,6 +84,59 @@ class CompanyProfile extends Model
         $phone = $this->value('phone');
 
         return $phone !== null ? 'tel:'.preg_replace('/[^0-9+]/', '', $phone) : null;
+    }
+
+    /** @return list<array{label: string, address: string}> địa chỉ khác (văn phòng giao dịch, kho…) */
+    public function otherAddresses(): array
+    {
+        return array_values(array_filter(array_map(fn ($row) => is_array($row) && filled($row['address'] ?? null)
+            ? ['label' => trim((string) ($row['label'] ?? '')), 'address' => trim((string) $row['address'])] : null,
+            (array) $this->addresses)));
+    }
+
+    /** @return list<array{name: string, phone: string, tel: string}> người liên hệ kèm số điện thoại */
+    public function contactPeople(): array
+    {
+        return array_values(array_filter(array_map(fn ($row) => is_array($row) && filled($row['phone'] ?? null)
+            ? ['name' => trim((string) ($row['name'] ?? '')), 'phone' => trim((string) $row['phone']), 'tel' => 'tel:'.preg_replace('/[^0-9+]/', '', (string) $row['phone'])] : null,
+            (array) $this->contacts)));
+    }
+
+    /** @return list<array{key: string, label: string, url: string}> chỉ link https */
+    public function socialLinks(): array
+    {
+        $links = [];
+        foreach (self::SOCIALS as $key => $label) {
+            $url = $this->socials[$key] ?? null;
+            if (is_string($url) && str_starts_with($url, 'https://')) {
+                $links[] = ['key' => $key, 'label' => $label, 'url' => $url];
+            }
+        }
+
+        return $links;
+    }
+
+    /** @return list<string> hình thức thanh toán; chưa nhập thì dùng mặc định cấu hình */
+    public function paymentMethodList(): array
+    {
+        $methods = array_values(array_filter(array_map('trim', array_map('strval', (array) $this->payment_methods))));
+
+        return $methods !== [] ? $methods : (array) config('company.payment_methods', []);
+    }
+
+    /** Logo "Đã thông báo Bộ Công Thương": chỉ khi Admin đã tải ảnh lên. @return array{url: string, href: ?string, width: int, height: int}|null */
+    public function bctBadge(int $displayWidth = 150): ?array
+    {
+        $path = $this->bct_badge;
+        $disk = Storage::disk('public');
+        if (! is_string($path) || ! str_starts_with($path, self::BADGE_DIRECTORY.'/') || ! $disk->exists($path)) {
+            return null;
+        }
+        $size = @getimagesize($disk->path($path));
+        $height = $size !== false && $size[0] > 0 ? (int) round($size[1] * $displayWidth / $size[0]) : (int) round($displayWidth * 0.38);
+        $href = is_string($this->bct_url) && preg_match('#^https?://(www\.)?online\.gov\.vn/#', $this->bct_url) ? $this->bct_url : null;
+
+        return ['url' => $disk->url($path), 'href' => $href, 'width' => $displayWidth, 'height' => $height];
     }
 
     public function host(): string

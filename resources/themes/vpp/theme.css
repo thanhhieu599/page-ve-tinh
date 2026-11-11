@@ -156,11 +156,16 @@
     .product-card-link:hover .product-card-name { @apply underline; }
     .product-card-price { @apply mt-auto pt-2 font-bold text-ink; }
 
-    /* Footer */
-    .site-footer { @apply mt-16 bg-ink py-10 text-sm text-gray-300; }
-    .site-footer > * { @apply mx-auto max-w-6xl px-4; }
-    .site-footer > * + * { @apply mt-3; }
-    .site-footer .company-details span { @apply whitespace-nowrap; }
-    .site-footer nav { @apply flex flex-wrap gap-x-5 gap-y-2 pt-3; }
-    .site-footer a { @apply text-white no-underline hover:text-brand; }
+    /* Footer 4 cột */
+    .site-footer { @apply mt-16 border-t-4 border-accent bg-surface text-sm text-muted; }
+    .footer-columns { @apply mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4; }
+    .footer-heading { @apply mb-3 text-sm font-bold uppercase tracking-wide text-ink; }
+    .footer-contact li, .footer-links li { @apply mt-1.5 leading-snug; }
+    .footer-links a, .footer-contact a { @apply text-brand no-underline hover:text-brand-dark hover:underline; }
+    .footer-socials { @apply mt-4 flex gap-2; }
+    .footer-socials a { @apply flex h-9 w-9 items-center justify-center rounded-full bg-accent text-sm font-bold text-white no-underline hover:bg-accent-light hover:text-white; }
+    .footer-payments { @apply flex flex-wrap gap-2; }
+    .footer-payments li { @apply rounded border border-line bg-white px-2.5 py-1.5 text-xs font-semibold text-ink; }
+    .footer-bottom { @apply bg-ink py-4 text-center text-xs text-gray-300; }
+    .footer-bottom p { @apply mx-auto max-w-6xl px-4; }
 }

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Enums\PageKind;
 use App\Filament\Resources\Sites\Pages\CreateSite;
 use App\Filament\Resources\Sites\Pages\EditSite;
 use App\Models\CompanyProfile;
@@ -81,7 +82,7 @@ class SiteAdminTest extends TestCase
         $this->assertSame(12, $site->mauticCampaignId());
         $this->assertSame('dung-cu', $site->industryTag());
         $this->assertSame('sc-domain:dungcutrangthietbi.vn', $site->searchConsoleProperty());
-        $this->assertSame(3, RequiredPage::withoutGlobalScopes()->where('site_id', $site->id)->where('is_published', false)->count());
+        $this->assertSame(count(PageKind::cases()), RequiredPage::withoutGlobalScopes()->where('site_id', $site->id)->where('is_published', false)->count());
 
         $html = (string) $this->get('https://dungcutrangthietbi.vn/yeu-cau-bao-gia')->assertOk()->getContent();
         $this->assertStringContainsString('data-theme="congcu"', $html);
