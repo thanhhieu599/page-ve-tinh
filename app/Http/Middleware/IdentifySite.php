@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Xác định site từ HTTP Host và nạp thư mục theme của site đó.
- * Host không thuộc site nào đang hoạt động thì trả 404.
+ * Host không thuộc site nào đang hoạt động thì trả 404 (chạy thử trên máy: trang hướng dẫn).
  */
 class IdentifySite
 {
@@ -45,7 +45,8 @@ class IdentifySite
         $origin = fn (string $host) => $request->getScheme().'://'.$host.$port;
 
         return response()->view('local-sites', [
-            'sites' => Site::query()->where('is_active', true)->orderBy('name')->get(),
+            'sites' => Site::query()->orderByDesc('is_active')->orderBy('name')->get(),
+            'requestedHost' => $request->getHost(),
             'origin' => $origin,
             'adminUrl' => $origin((string) config('sites.admin_domain')).'/admin',
             'adminDomain' => (string) config('sites.admin_domain'),
