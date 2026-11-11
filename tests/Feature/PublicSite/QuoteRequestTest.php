@@ -175,13 +175,41 @@ class QuoteRequestTest extends TestCase
             ->assertSee(Consent::text());
     }
 
-    public function test_every_post_ends_with_a_quote_form(): void
+    public function test_pages_link_to_the_separate_quote_page_instead_of_carrying_the_form(): void
     {
         Post::factory()->for($this->vpp)->published()->create(['slug' => 'chon-giay-in']);
 
-        $this->get('https://vpptrangthietbi.com.vn/kien-thuc/chon-giay-in')
-            ->assertSee('action="/yeu-cau-bao-gia"', escape: false)
+        foreach (['/', '/kien-thuc/chon-giay-in'] as $path) {
+            $this->get('https://vpptrangthietbi.com.vn'.$path)
+                ->assertOk()
+                ->assertDontSee('class="quote-form"', escape: false)
+                ->assertSee('href="/yeu-cau-bao-gia?tu='.$path.'"', escape: false);
+        }
+    }
+
+    public function test_a_lead_sent_from_the_quote_page_remembers_the_article_it_came_from(): void
+    {
+        $this->get('https://vpptrangthietbi.com.vn/yeu-cau-bao-gia?tu=/kien-thuc/chon-giay-in')
+            ->assertOk()
             ->assertSee('name="page_url" value="/kien-thuc/chon-giay-in"', escape: false);
+
+        foreach (['//evil.example/x', 'https://evil.example', 'kien-thuc', '/a"><script>'] as $bad) {
+            $this->get('https://vpptrangthietbi.com.vn/yeu-cau-bao-gia?tu='.rawurlencode($bad))
+                ->assertOk()
+                ->assertSee('name="page_url" value="/yeu-cau-bao-gia"', escape: false);
+        }
+    }
+
+    public function test_the_quote_page_is_its_own_section_in_the_main_menu(): void
+    {
+        $html = (string) $this->get('https://vpptrangthietbi.com.vn/tim-kiem?q=giay')->getContent();
+        $this->assertSame(1, preg_match('#<nav aria-label="Menu chính".*?</nav>#s', $html, $nav));
+        $this->assertStringContainsString('<a href="/yeu-cau-bao-gia">Báo giá</a>', $nav[0]);
+
+        $this->get('https://vpptrangthietbi.com.vn/yeu-cau-bao-gia')
+            ->assertSee('<h1>Yêu cầu báo giá theo số lượng</h1>', escape: false)
+            ->assertSee('class="quote-form"', escape: false)
+            ->assertSeeText('Quy trình báo giá');
     }
 
     public function test_a_real_submission_reports_one_ga4_conversion(): void

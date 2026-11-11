@@ -25,7 +25,19 @@ class QuoteRequestController extends Controller
         $sku = $request->query('san-pham');
         $product = is_string($sku) ? Product::query()->active()->where('sku', $sku)->first() : null;
 
-        return view('theme::quote-request.create', ['product' => $product]);
+        return view('theme::quote-request.create', ['product' => $product, 'source' => self::sourceFrom($request->query('tu'))]);
+    }
+
+    /** Link tới trang báo giá, ghi nhớ trang khách đang xem để biết bài nào mang lại lead. */
+    public static function pathFrom(string $page): string
+    {
+        return self::sourceFrom($page) !== null ? self::PATH.'?tu='.$page : self::PATH;
+    }
+
+    /** Chỉ nhận đường dẫn nội bộ đơn giản (không tên miền, không ký tự lạ). */
+    private static function sourceFrom(mixed $page): ?string
+    {
+        return is_string($page) && strlen($page) <= 300 && preg_match('#^/(?!/)[A-Za-z0-9/_.-]*$#', $page) && $page !== self::PATH ? $page : null;
     }
 
     public function store(Request $request, CurrentSite $currentSite): RedirectResponse

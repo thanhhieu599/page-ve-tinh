@@ -86,8 +86,4 @@
     @include('theme::partials.company-info')
 </article>
 
-<section class="quote-request" aria-labelledby="bao-gia">
-    <h2 id="bao-gia">Hợp tác cùng chúng tôi</h2>
-    <p class="mb-4 text-muted">Gửi nhu cầu vật tư, văn phòng phẩm cho nhà máy, bộ phận kinh doanh sẽ liên hệ báo giá.</p>
-    @include('theme::partials.quote-form', ['product' => null])
-</section>
+@include('theme::partials.quote-cta', ['heading' => 'Hợp tác cùng chúng tôi'])

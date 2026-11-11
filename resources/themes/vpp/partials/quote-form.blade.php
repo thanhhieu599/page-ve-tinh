@@ -3,7 +3,7 @@
     {{-- Không có token CSRF: form công khai, chống spam bằng honeypot, giới hạn tần suất, Turnstile.
          Nhờ vậy trang có form vẫn được cache toàn trang mà không lỗi 419. --}}
     {{-- Chỉ đường dẫn (không query): trang được cache dùng chung cho mọi tham số UTM. --}}
-    <input type="hidden" name="page_url" value="{{ request()->getPathInfo() }}">
+    <input type="hidden" name="page_url" value="{{ $source ?? request()->getPathInfo() }}">
     @if ($product ?? null)
         <input type="hidden" name="product_sku" value="{{ $product->sku }}">
     @endif

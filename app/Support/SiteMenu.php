@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Enums\PageKind;
 use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\QuoteRequestController;
 use App\Models\Category;
 use App\Models\KeywordMap;
 use App\Models\Site;
@@ -67,6 +68,7 @@ final class SiteMenu
             ['label' => 'Trang chủ', 'href' => '/'],
             $has(PageKind::About) ? ['label' => PageKind::About->getLabel(), 'href' => PageKind::About->path()] : null,
             ['label' => 'Tin tức', 'href' => ArticleController::PATH],
+            ['label' => 'Báo giá', 'href' => QuoteRequestController::PATH],
             $has(PageKind::Contact) ? ['label' => PageKind::Contact->getLabel(), 'href' => PageKind::Contact->path()] : null,
         ]));
     }

@@ -67,7 +67,8 @@ class AboutPageTest extends TestCase
         $this->assertStringContainsString('Đúng chuẩn', $html);
         $this->assertSame(2, preg_match_all('#<img src="/storage/page-images/[^"]+" alt="Hình ảnh hoạt động – Về D&amp;T" width="800" height="600" loading="lazy"#', $html));
         $this->assertMatchesRegularExpression('#Samsung.*Intel#s', $html);
-        $this->assertStringContainsString('class="quote-form"', $html, 'Cuối trang giới thiệu có lời mời báo giá.');
+        $this->assertStringNotContainsString('class="quote-form"', $html);
+        $this->assertStringContainsString('href="/yeu-cau-bao-gia?tu=/gioi-thieu"', $html, 'Cuối trang giới thiệu có lời mời báo giá.');
     }
 
     public function test_a_plain_about_page_still_reads_well_without_the_extra_blocks(): void

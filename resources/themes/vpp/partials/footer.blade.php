@@ -13,7 +13,7 @@
         <section>
             <h2 class="footer-heading">Liên hệ</h2>
             <ul class="footer-contact">
-                <li class="font-semibold text-ink">{{ $company->value('legal_name') }}</li>
+                <li class="font-semibold text-white">{{ $company->value('legal_name') }}</li>
                 @if ($company->value('tax_id'))
                     <li>MST: {{ $company->value('tax_id') }}</li>
                 @endif

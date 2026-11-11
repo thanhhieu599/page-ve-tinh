@@ -133,12 +133,7 @@
             <li><strong class="block text-white">Chứng từ đầy đủ</strong><span class="text-white/80">Hoá đơn VAT, hồ sơ sản phẩm rõ nguồn gốc cho bộ phận mua hàng, QA.</span></li>
             <li><strong class="block text-white">Một đầu mối cho nhà máy</strong><span class="text-white/80">PPE, vật tư tiêu hao, văn phòng phẩm, quà tặng doanh nghiệp.</span></li>
         </ul>
-        <p class="mt-6"><a class="button rounded-full border-white bg-white px-6 py-3 text-brand hover:bg-white/90 hover:text-brand-dark" href="{{ \App\Http\Controllers\QuoteRequestController::PATH }}">Yêu cầu báo giá theo số lượng</a></p>
     </section>
 
-    <section class="quote-request" aria-labelledby="bao-gia">
-        <h2 id="bao-gia">Yêu cầu báo giá</h2>
-        <p class="mb-4 text-muted">Để lại thông tin, bộ phận kinh doanh sẽ liên hệ trong giờ làm việc.</p>
-        @include('theme::partials.quote-form', ['product' => null])
-    </section>
+    @include('theme::partials.quote-cta')
 @endsection
