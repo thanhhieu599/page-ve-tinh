@@ -63,7 +63,11 @@ Chạy `php artisan he-thong:kiem-tra`: lệnh liệt kê mục nào trên máy 
 - Chưa có thư mục tạm upload: tạo `C:\php\tmp`, đặt `upload_tmp_dir="C:\php\tmp"` trong `php.ini`.
 - Giới hạn dung lượng: `upload_max_filesize=20M`, `post_max_size=25M`.
 
-Sửa `php.ini` xong phải tắt (Ctrl+C) và chạy lại `php artisan serve`. Vẫn lỗi thì xem cuối `storage/logs/laravel.log`.
+Sửa `php.ini` xong phải tắt (Ctrl+C) và chạy lại `php artisan serve`.
+
+Lệnh còn thử lưu một ảnh tạm đúng như khi tải lên, và in **lý do của lần tải lên lỗi gần nhất**
+(ứng dụng tự ghi vào `storage/logs/last-upload-failure.json` mỗi khi tải tệp lên thất bại).
+Cách nhanh nhất: tải ảnh trong quản trị cho tới khi báo lỗi, rồi chạy `php artisan he-thong:kiem-tra`.
 
 ## Cấu trúc
 
