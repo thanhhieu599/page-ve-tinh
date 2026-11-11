@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Products\Schemas;
 
 use App\Filament\Resources\Posts\Actions\InsertMediaAction;
 use App\Filament\Support\TenantSite;
+use App\Models\Category;
 use App\Models\Media;
 use App\Models\Product;
 use Filament\Forms\Components\KeyValue;
@@ -61,6 +62,11 @@ class ProductForm
                             ->required()->maxLength(255)
                             ->rules(['regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/'])
                             ->unique(ignoreRecord: true, modifyRuleUsing: fn (Unique $rule) => TenantSite::unique($rule)),
+                        Select::make('category_id')->label('Danh mục')
+                            ->helperText('Sản phẩm hiện trên trang danh mục này và khối danh mục ở trang chủ.')
+                            ->options(fn (): array => TenantSite::scope(Category::query())->orderBy('name')->pluck('name', 'id')->all())
+                            ->searchable()
+                            ->exists('categories', 'id', fn (Exists $rule) => $rule->where('site_id', TenantSite::id())),
                         Select::make('media_id')->label('Ảnh sản phẩm (từ thư viện)')
                             ->options(fn (): array => InsertMediaAction::search(null))
                             ->getSearchResultsUsing(fn (string $search): array => InsertMediaAction::search($search))
@@ -69,6 +75,7 @@ class ProductForm
                             ->exists('media', 'id', fn (Exists $rule) => $rule->where('site_id', TenantSite::id())),
                         Textarea::make('description')->label('Mô tả')->rows(5),
                         Toggle::make('is_active')->label('Hiện trên site')->default(true)->live(),
+                        Toggle::make('is_featured')->label('Sản phẩm nổi bật (trang chủ)')->default(false),
                         Select::make('replacement_product_id')->label('Sản phẩm thay thế')
                             ->helperText('Khi sản phẩm bị ẩn: khách vào link cũ được chuyển sang sản phẩm này. Để trống thì link cũ báo "đã gỡ" (410).')
                             ->relationship('replacement', 'name', modifyQueryUsing: fn ($query, ?Product $record) => TenantSite::scope($query)

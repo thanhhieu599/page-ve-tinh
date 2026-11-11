@@ -56,8 +56,8 @@ class Category extends Model
     }
 
     /**
-     * Danh mục "đang sống" của site hiện tại: có bài đã đăng, kèm mọi danh mục cha
-     * (trang danh mục cha liệt kê cả bài của con). Dùng cho sitemap, menu, trang chủ.
+     * Danh mục "đang sống" của site hiện tại: có bài đã đăng hoặc sản phẩm đang bán, kèm mọi
+     * danh mục cha (trang danh mục cha liệt kê cả nội dung của con). Dùng cho sitemap, menu, trang chủ.
      *
      * @param  list<string>  $columns
      * @return Collection<int, Category>
@@ -68,7 +68,13 @@ class Category extends Model
         $byId = static::query()->get($columns)->keyBy('id');
         $included = [];
 
-        foreach (static::query()->whereHas('posts', fn (Builder $query) => $query->published())->pluck('id') as $id) {
+        $withContent = static::query()
+            ->where(fn (Builder $query) => $query
+                ->whereHas('posts', fn (Builder $posts) => $posts->published())
+                ->orWhereHas('products', fn (Builder $products) => $products->active()))
+            ->pluck('id');
+
+        foreach ($withContent as $id) {
             // Giới hạn độ sâu để dữ liệu lỗi (vòng cha–con) không làm treo.
             for ($depth = 0; $id !== null && isset($byId[$id]) && ! isset($included[$id]) && $depth < self::MAX_DEPTH; $depth++) {
                 $included[$id] = $byId[$id];
@@ -88,6 +94,12 @@ class Category extends Model
     public static function liveRoots(array $columns = ['*']): Collection
     {
         return static::live($columns)->whereNull('parent_id')->sortBy('name')->values();
+    }
+
+    /** @return HasMany<Product, $this> */
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class);
     }
 
     /** @return BelongsTo<Category, $this> */

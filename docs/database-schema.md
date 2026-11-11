@@ -165,4 +165,6 @@ Database CMS tách riêng khỏi database Mautic (Q13).
 - Không thêm bảng. `sites.settings.tagline`: câu giới thiệu trang chủ (cũng là meta description trang chủ).
 - Cache toàn trang (spatie/laravel-responsecache) cho route công khai: khoá theo tên miền + đường dẫn (bỏ qua UTM/gclid); không cache khi phiên có lỗi form/dữ liệu vừa nhập, không cache trang cảm ơn; hết hạn lúc 0 giờ VN và tối đa 1 giờ; lưu nội dung trong trang quản trị thì xoá cache; bài hẹn giờ tới giờ đăng thì lịch mỗi phút xoá cache; dùng kho riêng `pages` (`App\Support\PageCache`).
 - Sao lưu (spatie/laravel-backup): database + `storage/app/public`, mã hoá, ra disk `backup` (S3); giữ 30 ngày + 12 tháng. Vận hành: `docs/van-hanh.md`.
+- Giao diện kiểu cửa hàng (theo mẫu Deli): `products.category_id` (danh mục hiển thị, dùng chung cây danh mục với bài; CMS quản lý, CSV/Sapo không ghi đè), `products.is_featured` (khối "Sản phẩm nổi bật"; chưa chọn thì lấy sản phẩm mới nhất). Trang danh mục hiện sản phẩm của danh mục và danh mục con. Danh mục "đang sống" = có bài đã đăng hoặc sản phẩm đang bán.
+- `/tim-kiem?q=`: tìm sản phẩm đang bán (tên, mã) và bài đã đăng (tiêu đề, tóm tắt), không phân biệt hoa/thường, có/không dấu; luôn noindex, không vào cache toàn trang. `/kien-thuc`: danh sách bài, có trong sitemap.
 

@@ -17,6 +17,16 @@
             <p>{{ $category->description }}</p>
         @endif
 
+        @if ($products->isNotEmpty())
+            <h2 class="section-label mt-6">Sản phẩm</h2>
+            <ul class="product-grid">
+                @foreach ($products as $product)
+                    @include('theme::partials.product-card', ['product' => $product])
+                @endforeach
+            </ul>
+        @endif
+
+        <h2 class="section-label mt-10">Kiến thức chọn mua</h2>
         @include('theme::partials.post-list', ['posts' => $posts])
     </section>
 @endsection

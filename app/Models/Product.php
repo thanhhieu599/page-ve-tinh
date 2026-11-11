@@ -45,12 +45,13 @@ class Product extends Model
     public const BUY_URL_PATTERN = '#^https://(www\.)?trangthietbi\.vn(/|$)#i';
 
     // price/price_updated_at chỉ đổi qua setPrice()/confirmPrice().
-    protected $fillable = ['name', 'sku', 'specs', 'buy_url', 'slug', 'description', 'media_id', 'is_active', 'replacement_product_id'];
+    protected $fillable = ['name', 'sku', 'specs', 'buy_url', 'slug', 'description', 'media_id', 'is_active', 'replacement_product_id', 'category_id', 'is_featured'];
 
     /** @return array<string, string> */
     protected function casts(): array
     {
         return [
+            'is_featured' => 'boolean',
             'specs' => 'array',
             'price' => 'integer',
             'price_updated_at' => 'datetime',
@@ -175,6 +176,12 @@ class Product extends Model
     protected function active(Builder $query): void
     {
         $query->where('is_active', true);
+    }
+
+    /** @return BelongsTo<Category, $this> */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
     }
 
     /** @return BelongsTo<Media, $this> */

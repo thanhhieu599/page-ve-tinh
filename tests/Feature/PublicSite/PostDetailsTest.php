@@ -75,9 +75,12 @@ class PostDetailsTest extends TestCase
         $post->categories()->attach($first);
         $post->categories()->attach($second);
 
-        $this->get('https://vpptrangthietbi.com.vn/kien-thuc/but-ky-khac-ten')
-            ->assertSee('<a href="/danh-muc/but">Bút viết</a>', escape: false)
-            ->assertDontSee('<a href="/danh-muc/qua-tang">', escape: false);
+        $html = (string) $this->get('https://vpptrangthietbi.com.vn/kien-thuc/but-ky-khac-ten')->getContent();
+
+        // Chỉ xét breadcrumb: menu "Danh mục sản phẩm" ở header liệt kê mọi danh mục.
+        $this->assertSame(1, preg_match('#<nav aria-label="Breadcrumb".*?</nav>#s', $html, $breadcrumb));
+        $this->assertStringContainsString('<a href="/danh-muc/but">Bút viết</a>', $breadcrumb[0]);
+        $this->assertStringNotContainsString('/danh-muc/qua-tang', $breadcrumb[0]);
     }
 
     public function test_author_page_has_a_breadcrumb(): void

@@ -100,6 +100,46 @@
     .form-errors { @apply rounded-md border border-brand bg-red-50 p-4 text-brand-dark; }
     .form-errors ul { @apply list-disc pl-5; }
 
+    /* Ô tìm kiếm (header) */
+    .search-box { @apply flex items-center overflow-hidden rounded-full border border-gray-300 bg-surface focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/20; }
+    .search-box input { @apply min-w-0 flex-1 bg-transparent px-4 py-2.5 text-base outline-none; }
+    .search-box button { @apply flex cursor-pointer items-center px-4 text-ink hover:text-brand; }
+
+    /* Thanh đỏ: Danh mục sản phẩm + menu trang */
+    .category-menu { @apply relative z-30 w-full md:w-64 md:shrink-0; }
+    .category-menu summary { @apply flex cursor-pointer list-none items-center gap-3 bg-white px-4 py-3 text-sm font-bold uppercase text-brand md:shadow; }
+    .category-menu summary::-webkit-details-marker { display: none; }
+    .category-menu-list { @apply absolute left-0 right-0 top-full bg-brand shadow-lg md:right-auto md:w-64; }
+    .category-sidebar { @apply h-full bg-brand shadow; }
+    .category-menu-item { @apply relative border-b border-white/15; }
+    .category-menu-item > a { @apply flex items-center justify-between px-4 py-2.5 text-sm font-semibold uppercase text-white no-underline hover:bg-brand-dark hover:text-white; }
+    /* Danh mục con: hiện khi rê chuột/tab tới (máy tính); điện thoại hiện ngay bên dưới. */
+    .category-menu-sub { @apply bg-brand-dark md:absolute md:left-full md:top-0 md:hidden md:min-w-56 md:shadow-lg; }
+    .category-menu-item:hover > .category-menu-sub, .category-menu-item:focus-within > .category-menu-sub { @apply md:block; }
+    .category-menu-sub a { @apply block px-6 py-2 text-sm text-white no-underline hover:bg-black/20 hover:text-white md:px-4; }
+    /* Điện thoại: một hàng vuốt ngang dưới "Danh mục sản phẩm"; máy tính: bên phải thanh đỏ. */
+    .main-menu { @apply flex w-full items-center overflow-x-auto whitespace-nowrap border-t border-white/20 md:ml-auto md:w-auto md:border-t-0; }
+    .main-menu a { @apply block px-3 py-2.5 text-xs font-bold uppercase text-white no-underline hover:bg-brand-dark hover:text-white md:px-4 md:py-3 md:text-sm; }
+    .main-menu li + li { @apply border-l border-white/25; }
+
+    /* Banner trang chủ */
+    .home-banner { @apply relative overflow-hidden rounded-md bg-brand p-8 text-white md:p-12; background-image: linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-dark) 60%, var(--color-navy) 140%); }
+    .home-banner::after { content: ''; @apply pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full border-[40px] border-white/10; }
+
+    /* Nhãn khối (Sản phẩm nổi bật, tên danh mục…) */
+    .section-label { @apply mb-4 inline-block rounded-sm bg-brand px-4 py-2 text-sm font-bold uppercase tracking-wide text-white; }
+
+    /* Lưới thẻ sản phẩm */
+    .product-grid { @apply grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5; }
+    .product-card-link { @apply flex h-full flex-col rounded-md border border-line bg-white p-3 text-center no-underline shadow-sm transition hover:shadow-md; }
+    .product-card-image { @apply flex aspect-square items-center justify-center overflow-hidden bg-white; }
+    .product-card-image img { @apply max-h-full w-full object-contain; }
+    .product-card-noimage { @apply flex h-full w-full items-center justify-center rounded bg-surface text-xs font-semibold text-muted; }
+    .product-card-category { @apply mt-2 text-[11px] uppercase tracking-wide text-muted; }
+    .product-card-name { @apply mt-1 line-clamp-2 min-h-10 text-sm text-brand; }
+    .product-card-link:hover .product-card-name { @apply underline; }
+    .product-card-price { @apply mt-auto pt-2 font-bold text-ink; }
+
     /* Footer */
     .site-footer { @apply mt-16 bg-ink py-10 text-sm text-gray-300; }
     .site-footer > * { @apply mx-auto max-w-6xl px-4; }

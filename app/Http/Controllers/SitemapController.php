@@ -31,7 +31,7 @@ class SitemapController extends Controller
         $site = $currentSite->get();
         abort_if($site === null, 404);
 
-        $sitemap = Sitemap::create()->add(Url::create($site->url('/')));
+        $sitemap = Sitemap::create()->add(Url::create($site->url('/')))->add(Url::create($site->url(ArticleController::PATH)));
         $add = function (Post|Category|Author|Product|RequiredPage $model) use ($sitemap, $site): void {
             $sitemap->add(Url::create($site->url($model->path()))->setLastModificationDate($model->updated_at));
         };

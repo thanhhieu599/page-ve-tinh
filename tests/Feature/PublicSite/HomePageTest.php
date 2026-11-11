@@ -84,4 +84,48 @@ class HomePageTest extends TestCase
             (string) $this->get('https://vpptrangthietbi.com.vn/sitemap.xml')->getContent(),
         );
     }
+
+    public function test_home_page_shows_featured_products_then_one_shelf_per_category_with_a_see_all_link(): void
+    {
+        $office = Category::factory()->for($this->vpp)->create(['name' => 'Dụng cụ văn phòng', 'slug' => 'dung-cu-van-phong']);
+        $staplers = Category::factory()->for($this->vpp)->childOf($office)->create(['name' => 'Bấm kim', 'slug' => 'bam-kim']);
+        Category::factory()->for($this->vpp)->create(['name' => 'Máy tính', 'slug' => 'may-tinh']);
+        Product::factory()->for($this->vpp)->create(['name' => 'Máy đục lỗ E0130', 'is_featured' => true, 'category_id' => $office->id]);
+        Product::factory()->for($this->vpp)->create(['name' => 'Máy bấm kim E0395', 'category_id' => $staplers->id]);
+
+        $html = (string) $this->get('https://vpptrangthietbi.com.vn/')->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('#<section[^>]*aria-labelledby="noi-bat".*?</section>#s', $html, $featured));
+        $this->assertStringContainsString('Máy đục lỗ E0130', $featured[0]);
+        $this->assertStringNotContainsString('Máy bấm kim E0395', $featured[0]);
+
+        $this->assertSame(1, preg_match('#<section[^>]*aria-labelledby="danh-muc-dung-cu-van-phong".*?</section>#s', $html, $shelf));
+        $this->assertStringContainsString('Dụng cụ văn phòng', $shelf[0]);
+        $this->assertStringContainsString('Máy bấm kim E0395', $shelf[0]);
+        $this->assertStringContainsString('href="/danh-muc/dung-cu-van-phong">Xem tất cả', $shelf[0]);
+        $this->assertStringNotContainsString('aria-labelledby="danh-muc-may-tinh"', $html);
+    }
+
+    public function test_without_featured_products_the_newest_products_are_featured(): void
+    {
+        Product::factory()->for($this->vpp)->create(['name' => 'Sản phẩm mới nhất']);
+
+        $html = (string) $this->get('https://vpptrangthietbi.com.vn/')->getContent();
+
+        $this->assertSame(1, preg_match('#<section[^>]*aria-labelledby="noi-bat".*?</section>#s', $html, $featured));
+        $this->assertStringContainsString('Sản phẩm mới nhất', $featured[0]);
+    }
+
+    public function test_every_page_header_has_a_product_search_box_and_a_category_menu(): void
+    {
+        $paper = Category::factory()->for($this->vpp)->create(['name' => 'Giấy in văn phòng', 'slug' => 'giay-in']);
+        Product::factory()->for($this->vpp)->create(['category_id' => $paper->id]);
+
+        $this->get('https://vpptrangthietbi.com.vn/yeu-cau-bao-gia')
+            ->assertSee('action="/tim-kiem"', escape: false)
+            ->assertSee('name="q"', escape: false)
+            ->assertSeeText('Danh mục sản phẩm')
+            ->assertSee('href="/danh-muc/giay-in"', escape: false)
+            ->assertSee('href="/kien-thuc"', escape: false);
+    }
 }
