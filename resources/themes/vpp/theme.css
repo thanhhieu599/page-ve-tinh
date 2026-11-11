@@ -1,5 +1,5 @@
 /*
- * Theme VPP – tông màu: đỏ (thương hiệu), xanh lá #1A7065 (màu phối), đen, trắng.
+ * Theme VPP – tông màu: đỏ (thương hiệu, nút, giá, link), đen (màu phối: dải trên, khối nhấn, footer), trắng và xám trung tính (nền).
  * Màu đỏ đổi được theo site (trang quản trị → Site vệ tinh → Màu thương hiệu): layout ghi đè --color-brand.
  * Không dùng web font: chữ hệ thống, trang hiện ngay (tốt cho LCP/CLS).
  */
@@ -11,18 +11,18 @@
     --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
     --color-brand: #c1272d;
     --color-brand-dark: #9b1d22;
-    --color-accent: #1a7065;
-    --color-accent-light: #145a51;
-    --color-ink: #111827;
-    --color-muted: #4b5563;
-    --color-line: #e5e7eb;
-    --color-surface: #f5f6f8;
+    --color-accent: #1f1f1f;
+    --color-accent-light: #3a3a3a;
+    --color-ink: #1a1a1a;
+    --color-muted: #555555;
+    --color-line: #e5e5e5;
+    --color-surface: #f5f5f5;
 }
 
 @layer base {
     html { -webkit-text-size-adjust: 100%; }
     body { @apply bg-white font-sans text-ink antialiased; }
-    a { @apply text-accent-light underline-offset-2 hover:text-brand; }
+    a { @apply text-brand underline-offset-2 hover:text-brand-dark; }
     h1 { @apply text-2xl font-bold leading-tight text-ink md:text-3xl; }
     h2 { @apply text-xl font-bold leading-snug text-ink; }
     h3 { @apply text-lg font-semibold text-ink; }
@@ -138,7 +138,7 @@
     /* Dải cam kết dưới banner */
     .usp-bar { @apply mt-6 grid grid-cols-2 gap-3 rounded-md border border-line bg-white p-4 md:grid-cols-4; }
     .usp-bar li { @apply flex items-center gap-3; }
-    .usp-icon { @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-lg font-bold text-white; }
+    .usp-icon { @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand/10 text-lg font-bold text-brand; }
     .usp-bar strong { @apply block text-sm text-ink; }
     .usp-bar small { @apply block text-xs text-muted; }
 
@@ -168,14 +168,14 @@
     .about-stats { @apply mt-10 grid grid-cols-2 gap-4 rounded-md bg-accent p-6 text-center text-white md:grid-cols-4; }
     .about-stats strong { @apply block text-3xl font-extrabold md:text-4xl; }
     .about-stats span { @apply mt-1 block text-sm text-white/85; }
-    .about-timeline { @apply relative ml-3 border-l-2 border-accent/30 pl-6; }
+    .about-timeline { @apply relative ml-3 border-l-2 border-line pl-6; }
     .about-timeline li { @apply relative mt-6 flex flex-col gap-1 md:flex-row md:gap-6; }
-    .about-timeline li::before { content: ''; @apply absolute -left-[33px] top-1.5 h-4 w-4 rounded-full border-4 border-white bg-accent shadow; }
+    .about-timeline li::before { content: ''; @apply absolute -left-[33px] top-1.5 h-4 w-4 rounded-full border-4 border-white bg-brand shadow; }
     .about-timeline-year { @apply w-20 shrink-0 text-xl font-extrabold text-brand; }
     .about-timeline h3 { @apply text-base; }
     .about-timeline p { @apply mt-1 text-sm text-muted; }
     .about-values { @apply grid gap-4 sm:grid-cols-2 lg:grid-cols-3; }
-    .about-values li { @apply rounded-md border-t-4 border-accent bg-white p-5 shadow-sm; }
+    .about-values li { @apply rounded-md border-t-4 border-brand bg-white p-5 shadow-sm; }
     .about-values p { @apply mt-2 text-sm text-muted; }
     .about-gallery { @apply grid grid-cols-2 gap-3 md:grid-cols-4; }
     .about-gallery img { @apply aspect-[4/3] w-full rounded-md object-cover; }
@@ -224,7 +224,7 @@
     main > article.product-detail { @apply max-w-none; }
     .product-detail-image { @apply flex aspect-square items-center justify-center rounded-md border border-line bg-white p-4; }
     .product-detail-image img { @apply max-h-full w-full object-contain; }
-    .product-promises { @apply mt-4 space-y-1.5 rounded-md border border-dashed border-accent/40 bg-accent/5 p-4 text-sm text-ink; }
+    .product-promises { @apply mt-4 space-y-1.5 rounded-md border border-dashed border-line bg-surface p-4 text-sm text-ink; }
     .product-detail-body { @apply mt-12 max-w-4xl; }
 
     /* Lời mời báo giá cuối trang + trang báo giá riêng */
@@ -238,7 +238,7 @@
     .quote-page-aside { @apply space-y-6; }
     .quote-steps { @apply list-none space-y-4 p-0; counter-reset: step; }
     .quote-steps li { @apply relative pl-10 text-sm; counter-increment: step; }
-    .quote-steps li::before { @apply absolute left-0 top-0 flex h-7 w-7 items-center justify-center rounded-full bg-accent text-sm font-bold text-white; content: counter(step); }
+    .quote-steps li::before { @apply absolute left-0 top-0 flex h-7 w-7 items-center justify-center rounded-full bg-brand text-sm font-bold text-white; content: counter(step); }
     .quote-steps strong { @apply block text-ink; }
     .quote-steps span { @apply text-muted; }
 

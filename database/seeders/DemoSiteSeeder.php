@@ -109,8 +109,8 @@ class DemoSiteSeeder extends Seeder
         $settings = (array) $site->settings;
         if (empty($settings['banners'])) {
             $settings['banners'] = [
-                ['image' => $this->showcaseImage(Site::BANNER_DIRECTORY.'/demo-1.png', 1200, 450, '#c1272d', '#1a7065'), 'alt' => 'Văn phòng phẩm cho doanh nghiệp (banner mẫu)', 'url' => '/danh-muc/'.self::CATEGORY_SLUG],
-                ['image' => $this->showcaseImage(Site::BANNER_DIRECTORY.'/demo-2.png', 1200, 450, '#1a7065', '#c1272d'), 'alt' => 'Báo giá theo số lượng (banner mẫu)', 'url' => '/yeu-cau-bao-gia'],
+                ['image' => $this->showcaseImage(Site::BANNER_DIRECTORY.'/demo-1.png', 1200, 450, '#c1272d', '#1f1f1f'), 'alt' => 'Văn phòng phẩm cho doanh nghiệp (banner mẫu)', 'url' => '/danh-muc/'.self::CATEGORY_SLUG],
+                ['image' => $this->showcaseImage(Site::BANNER_DIRECTORY.'/demo-2.png', 1200, 450, '#1f1f1f', '#c1272d'), 'alt' => 'Báo giá theo số lượng (banner mẫu)', 'url' => '/yeu-cau-bao-gia'],
             ];
             $site->forceFill(['settings' => $settings])->save();
         }
@@ -118,7 +118,7 @@ class DemoSiteSeeder extends Seeder
         $about = $site->requiredPages()->withoutGlobalScopes()->where('kind', PageKind::About)->first();
         if ($about !== null && empty($about->extras)) {
             $about->forceFill(['extras' => [
-                'hero_image' => $this->showcaseImage(RequiredPage::IMAGE_DIRECTORY.'/demo-hero.png', 1200, 800, '#1a7065', '#ffffff'),
+                'hero_image' => $this->showcaseImage(RequiredPage::IMAGE_DIRECTORY.'/demo-hero.png', 1200, 800, '#1f1f1f', '#ffffff'),
                 'stats' => [
                     ['value' => '10+', 'label' => 'năm kinh nghiệm (mẫu)'],
                     ['value' => '3.000+', 'label' => 'mã hàng (mẫu)'],
@@ -135,7 +135,7 @@ class DemoSiteSeeder extends Seeder
                     ['title' => 'Một đầu mối', 'description' => 'PPE, vật tư tiêu hao, văn phòng phẩm, quà tặng doanh nghiệp.'],
                 ],
                 'gallery' => [
-                    $this->showcaseImage(RequiredPage::IMAGE_DIRECTORY.'/demo-kho.png', 800, 600, '#e8eef5', '#1a7065'),
+                    $this->showcaseImage(RequiredPage::IMAGE_DIRECTORY.'/demo-kho.png', 800, 600, '#e8eef5', '#1f1f1f'),
                     $this->showcaseImage(RequiredPage::IMAGE_DIRECTORY.'/demo-giao-hang.png', 800, 600, '#fdecec', '#c1272d'),
                 ],
             ]])->save();

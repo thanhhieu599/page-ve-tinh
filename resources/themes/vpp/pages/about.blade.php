@@ -9,7 +9,7 @@
 <article class="about-page">
     <header class="about-hero @if ($hero) md:grid-cols-2 @endif">
         <div>
-            <p class="text-sm font-bold uppercase tracking-widest text-accent">Giới thiệu</p>
+            <p class="text-sm font-bold uppercase tracking-widest text-brand">Giới thiệu</p>
             <h1 class="mt-2 text-3xl md:text-4xl">{{ $page->title }}</h1>
             <div class="page-content">{!! $page->content !!}</div>
         </div>

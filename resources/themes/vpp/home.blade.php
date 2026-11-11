@@ -126,12 +126,12 @@
         </section>
     @endif
 
-    <section class="mt-12 rounded-md bg-accent p-6 text-white md:p-8" aria-labelledby="vi-sao">
-        <h2 id="vi-sao" class="text-white">Vì sao doanh nghiệp chọn {{ $company->value('name') }}</h2>
+    <section class="mt-12 rounded-md border-t-4 border-brand bg-surface p-6 md:p-8" aria-labelledby="vi-sao">
+        <h2 id="vi-sao">Vì sao doanh nghiệp chọn {{ $company->value('name') }}</h2>
         <ul class="mt-4 grid gap-4 md:grid-cols-3">
-            <li><strong class="block text-white">Báo giá nhanh theo số lượng</strong><span class="text-white/80">Gửi nhu cầu một lần, nhận báo giá phù hợp số lượng và lịch giao.</span></li>
-            <li><strong class="block text-white">Chứng từ đầy đủ</strong><span class="text-white/80">Hoá đơn VAT, hồ sơ sản phẩm rõ nguồn gốc cho bộ phận mua hàng, QA.</span></li>
-            <li><strong class="block text-white">Một đầu mối cho nhà máy</strong><span class="text-white/80">PPE, vật tư tiêu hao, văn phòng phẩm, quà tặng doanh nghiệp.</span></li>
+            <li><strong class="block text-ink">Báo giá nhanh theo số lượng</strong><span class="text-muted">Gửi nhu cầu một lần, nhận báo giá phù hợp số lượng và lịch giao.</span></li>
+            <li><strong class="block text-ink">Chứng từ đầy đủ</strong><span class="text-muted">Hoá đơn VAT, hồ sơ sản phẩm rõ nguồn gốc cho bộ phận mua hàng, QA.</span></li>
+            <li><strong class="block text-ink">Một đầu mối cho nhà máy</strong><span class="text-muted">PPE, vật tư tiêu hao, văn phòng phẩm, quà tặng doanh nghiệp.</span></li>
         </ul>
     </section>
 
