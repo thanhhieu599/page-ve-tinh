@@ -15,9 +15,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
-use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Exists;
 use Illuminate\Validation\Rules\Unique;
 
@@ -32,20 +30,15 @@ class ProductForm
                     ->description('Khi nhập CSV/Sapo, các trường này sẽ được cập nhật theo Sapo.')
                     ->columns(2)
                     ->schema([
-                        TextInput::make('name')->label('Tên sản phẩm')->required()->maxLength(255)
-                            ->live(onBlur: true)
-                            ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state): void {
-                                if (blank($get('slug')) || $get('slug') === Str::slug((string) $old)) {
-                                    $set('slug', Str::slug((string) $state));
-                                }
-                            }),
+                        TextInput::make('name')->label('Tên sản phẩm')->required()->maxLength(255),
                         TextInput::make('sku')->label('Mã SKU')->required()->maxLength(100)
                             ->unique(ignoreRecord: true, modifyRuleUsing: fn (Unique $rule) => TenantSite::unique($rule)),
                         TextInput::make('price')->label('Giá tham khảo (VNĐ, chưa VAT)')
                             ->integer()->minValue(0)->maxValue(Product::MAX_PRICE)->suffix('đ')
                             ->helperText('Đổi giá sẽ tự cập nhật ngày giá. Giá hiện trên site đến hết ngày thứ '.Product::PRICE_VALID_DAYS.' kể từ ngày cập nhật. Để trống hoặc 0 = chưa có giá.'),
-                        TextInput::make('buy_url')->label('Link mua trên trangthietbi.vn')->maxLength(255)
+                        TextInput::make('buy_url')->label('Link sản phẩm trên trangthietbi.vn')->required()->maxLength(255)
                             ->placeholder('https://trangthietbi.vn/...')
+                            ->helperText('Khách bấm vào sản phẩm trên site sẽ mở trang này (tab mới).')
                             ->rule(fn (): \Closure => function (string $attribute, mixed $value, \Closure $fail): void {
                                 if (! Product::isAllowedBuyUrl(is_string($value) ? $value : null)) {
                                     $fail('Link mua phải là trang trên https://trangthietbi.vn.');
@@ -58,10 +51,6 @@ class ProductForm
                 Section::make('Nội dung trên site')
                     ->description('Do người nhập quản lý, không bị CSV/Sapo ghi đè.')
                     ->schema([
-                        TextInput::make('slug')->label('Slug (đường dẫn)')->prefix(Product::PATH_PREFIX)
-                            ->required()->maxLength(255)
-                            ->rules(['regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/'])
-                            ->unique(ignoreRecord: true, modifyRuleUsing: fn (Unique $rule) => TenantSite::unique($rule)),
                         Select::make('category_id')->label('Danh mục')
                             ->helperText('Sản phẩm hiện trên trang danh mục này và khối danh mục ở trang chủ.')
                             ->options(fn (): array => TenantSite::scope(Category::query())->orderBy('name')->pluck('name', 'id')->all())
@@ -77,7 +66,7 @@ class ProductForm
                         Toggle::make('is_active')->label('Hiện trên site')->default(true)->live(),
                         Toggle::make('is_featured')->label('Sản phẩm nổi bật (trang chủ)')->default(false),
                         Select::make('replacement_product_id')->label('Sản phẩm thay thế')
-                            ->helperText('Khi sản phẩm bị ẩn: khách vào link cũ được chuyển sang sản phẩm này. Để trống thì link cũ báo "đã gỡ" (410).')
+                            ->helperText('Khi sản phẩm bị ẩn: khách vào link cũ được chuyển sang sản phẩm này. Để trống thì link cũ chuyển về trang danh mục.')
                             ->relationship('replacement', 'name', modifyQueryUsing: fn ($query, ?Product $record) => TenantSite::scope($query)
                                 ->where('is_active', true)
                                 ->when($record, fn ($q) => $q->whereKeyNot($record->getKey())))

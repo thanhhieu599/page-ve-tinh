@@ -19,15 +19,16 @@ const pages = [
             'Nên chọn giấy 70gsm hay 80gsm?',
             'Ban biên tập D&T',
             'Giấy văn phòng',
+            // Sản phẩm gắn trong bài: giá tham khảo + báo giá (sản phẩm mở trên web chính).
+            'Giấy Double A A4 80gsm',
+            '89.000 đ',
+            'Giá tham khảo, chưa gồm VAT',
+            'Yêu cầu báo giá theo số lượng',
         ],
     },
     {
         path: '/tin-tuc',
         mustContain: ['Tin tức', 'Cách chọn giấy in A4 cho văn phòng nhà máy'],
-    },
-    {
-        path: '/san-pham/giay-double-a-a4-80gsm',
-        mustContain: ['Giấy Double A A4 80gsm', '89.000 đ', 'Giá tham khảo, chưa gồm VAT', 'Yêu cầu báo giá theo số lượng'],
     },
     {
         path: '/danh-muc/giay-van-phong',

@@ -114,10 +114,10 @@ class PageCacheTest extends TestCase
         Product::factory()->for($this->vpp)->create(['slug' => 'giay-double-a'])->setPrice(89000);
 
         $this->travelTo(Carbon::parse('2026-11-15 16:00:00', 'UTC')); // 23:00 ngày 15/11 VN: ngày thứ 14, giá còn hạn
-        $this->get('https://vpptrangthietbi.com.vn/san-pham/giay-double-a')->assertSee('89.000 đ');
+        $this->get('https://vpptrangthietbi.com.vn/')->assertSee('89.000 đ');
 
         $this->travelTo(Carbon::parse('2026-11-15 17:05:00', 'UTC')); // 00:05 ngày 16/11 VN: giá hết hạn
-        $this->get('https://vpptrangthietbi.com.vn/san-pham/giay-double-a')->assertSee('Liên hệ báo giá')->assertDontSee('89.000');
+        $this->get('https://vpptrangthietbi.com.vn/')->assertSee('Liên hệ báo giá')->assertDontSee('89.000');
     }
 
     public function test_a_visit_served_from_the_cache_still_keeps_the_traffic_source_for_the_lead(): void

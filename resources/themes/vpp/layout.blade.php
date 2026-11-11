@@ -31,6 +31,11 @@
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
             gtag('config', @json($ga4Id));
+            // Bấm sản phẩm sang web chính trangthietbi.vn (link có data-outbound).
+            document.addEventListener('click', function (e) {
+                var a = e.target.closest && e.target.closest('a[data-outbound]');
+                if (a) gtag('event', 'click_web_chinh', { placement: a.dataset.outbound, link_url: a.href, transport_type: 'beacon' });
+            });
         </script>
     @endif
     {!! \App\Support\StructuredData::organization()->toScript() !!}

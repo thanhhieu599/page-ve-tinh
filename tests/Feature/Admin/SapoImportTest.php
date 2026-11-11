@@ -50,6 +50,31 @@ class SapoImportTest extends TestCase
             ->assertHasNoActionErrors();
     }
 
+    /**
+     * Sản phẩm đang bán hiện trên site (thẻ sản phẩm trong trang tìm kiếm theo mã); trả về HTML thẻ.
+     * Site vệ tinh không còn trang chi tiết sản phẩm (sản phẩm nằm trên web chính).
+     */
+    private function shown(string $slug): string
+    {
+        $product = Product::query()->where('slug', $slug)->firstOrFail();
+        $this->assertTrue($product->is_active, "{$slug} phải đang bán.");
+        $html = (string) $this->get('https://vpptrangthietbi.com.vn/tim-kiem?q='.rawurlencode($product->sku))->assertOk()->getContent();
+        $found = preg_match('#<li class="product-card">(?:(?!</li>).)*san-pham='.preg_quote(rawurlencode($product->sku), '#').'".*?</li>#s', $html, $card);
+        $this->assertSame(1, $found, "{$slug} phải hiện trên site.");
+
+        return $card[0];
+    }
+
+    private function assertHidden(string $slug): void
+    {
+        $product = Product::query()->where('slug', $slug)->firstOrFail();
+        $this->assertFalse($product->is_active, "{$slug} phải bị ẩn.");
+        $html = (string) $this->get('https://vpptrangthietbi.com.vn/tim-kiem?q='.rawurlencode($product->sku))->getContent();
+        $this->assertStringNotContainsString('san-pham='.rawurlencode($product->sku).'"', $html);
+        // Link /san-pham/ cũ không dẫn tới lỗi: chuyển về danh mục/trang chủ.
+        $this->get('https://vpptrangthietbi.com.vn/san-pham/'.$slug)->assertStatus(301);
+    }
+
     private const HEADER = ['Tên sản phẩm', 'Mã SKU', 'Giá bán lẻ', 'Link mua', 'Thông số: Định lượng', 'Thông số: Quy cách', 'Trạng thái'];
 
     public function test_importing_a_sapo_csv_creates_products_shown_on_the_site(): void
@@ -60,14 +85,14 @@ class SapoImportTest extends TestCase
             ['Bút bi Thiên Long TL-027', 'TL-027', '4500', '', '', 'Hộp 20 cây', 'Đang bán'],
         ]))->assertNotified('Nhập CSV xong: 2 tạo mới, 0 cập nhật, 0 ẩn, 0 dòng lỗi');
 
-        $this->get('https://vpptrangthietbi.com.vn/san-pham/giay-double-a-a4-80gsm')
-            ->assertOk()
-            ->assertSee('DA-A4-80')
-            ->assertSee('89.000 đ')
-            ->assertSee('Định lượng')->assertSee('80gsm')
-            ->assertSee('href="https://trangthietbi.vn/giay-double-a"', escape: false);
-        $this->get('https://vpptrangthietbi.com.vn/san-pham/but-bi-thien-long-tl-027')
-            ->assertOk()->assertSee('4.500 đ')->assertSee('Hộp 20 cây');
+        $this->assertStringContainsString('89.000 đ', $this->shown('giay-double-a-a4-80gsm'));
+        $this->assertStringContainsString('4.500 đ', $this->shown('but-bi-thien-long-tl-027'));
+        // Link web chính và thông số được nhập đúng (thông số hiện trên trang sản phẩm của web chính).
+        $paper = Product::query()->where('sku', 'DA-A4-80')->firstOrFail();
+        $this->assertSame('https://trangthietbi.vn/giay-double-a', $paper->buy_url);
+        $this->assertSame(['Định lượng' => '80gsm', 'Quy cách' => '500 tờ/ram'], $paper->specs);
+        $this->get('https://vpptrangthietbi.com.vn/san-pham/giay-double-a-a4-80gsm')->assertRedirect('https://trangthietbi.vn/giay-double-a');
+        $this->assertSame(['Quy cách' => 'Hộp 20 cây'], Product::query()->where('sku', 'TL-027')->value('specs'));
     }
 
     public function test_reimporting_updates_sapo_fields_without_duplicating_or_touching_site_content(): void
@@ -82,22 +107,21 @@ class SapoImportTest extends TestCase
             ->assertNotified('Nhập CSV xong: 0 tạo mới, 1 cập nhật, 0 ẩn, 0 dòng lỗi');
 
         $this->assertSame(1, Product::query()->where('sku', 'DA-A4-80')->count());
-        $this->get('https://vpptrangthietbi.com.vn/san-pham/giay-double-a-a4-80gsm')
-            ->assertOk()
-            ->assertSee('Giấy Double A A4 80gsm (thùng 5 ram)')
-            ->assertSee('91.000 đ')
-            ->assertSee('Mô tả riêng của site VPP.');
+        $card = $this->shown('giay-double-a-a4-80gsm');
+        $this->assertStringContainsString('Giấy Double A A4 80gsm (thùng 5 ram)', $card);
+        $this->assertStringContainsString('91.000 đ', $card);
+        $this->assertSame('Mô tả riêng của site VPP.', $product->fresh()->description);
         $this->get('https://vpptrangthietbi.com.vn/kien-thuc/chon-giay')->assertSee('Giấy Double A A4 80gsm (thùng 5 ram)');
     }
 
-    public function test_discontinued_product_is_hidden_and_its_url_returns_410(): void
+    public function test_discontinued_product_is_hidden_from_the_site(): void
     {
         $this->import($this->csv([self::HEADER, ['Bìa còng 7cm', 'BC-7', '25000', '', '', '', 'Đang bán']]));
 
         $this->import($this->csv([self::HEADER, ['Bìa còng 7cm', 'BC-7', '25000', '', '', '', 'Ngừng kinh doanh']]))
             ->assertNotified('Nhập CSV xong: 0 tạo mới, 1 cập nhật, 1 ẩn, 0 dòng lỗi');
 
-        $this->get('https://vpptrangthietbi.com.vn/san-pham/bia-cong-7cm')->assertStatus(410);
+        $this->assertHidden('bia-cong-7cm');
     }
 
     public function test_hidden_product_redirects_to_its_replacement_when_one_is_chosen(): void
@@ -109,11 +133,13 @@ class SapoImportTest extends TestCase
         $old = Product::query()->where('sku', 'BC-7')->firstOrFail();
         $new = Product::query()->where('sku', 'BC-7N')->firstOrFail();
 
+        $new->update(['buy_url' => 'https://trangthietbi.vn/bia-cong-7cm-mau-moi']);
+
         Livewire::test(EditProduct::class, ['record' => $old->getRouteKey()])
-            ->fillForm(['replacement_product_id' => $new->id])->call('save')->assertHasNoFormErrors();
+            ->fillForm(['replacement_product_id' => $new->id, 'buy_url' => 'https://trangthietbi.vn/bia-cong-7cm'])->call('save')->assertHasNoFormErrors();
 
         $this->get('https://vpptrangthietbi.com.vn/san-pham/bia-cong-7cm')
-            ->assertStatus(301)->assertRedirect('https://vpptrangthietbi.com.vn/san-pham/bia-cong-7cm-mau-moi');
+            ->assertStatus(301)->assertRedirect('https://trangthietbi.vn/bia-cong-7cm-mau-moi');
     }
 
     public function test_product_back_on_sale_in_sapo_reappears_but_a_manually_hidden_one_stays_hidden(): void
@@ -129,8 +155,8 @@ class SapoImportTest extends TestCase
             ['Kẹp giấy', 'KG-1', '5000', '', '', '', 'Đang bán'],
         ]));
 
-        $this->get('https://vpptrangthietbi.com.vn/san-pham/bia-cong-7cm')->assertOk();
-        $this->get('https://vpptrangthietbi.com.vn/san-pham/kep-giay')->assertStatus(410);
+        $this->shown('bia-cong-7cm');
+        $this->assertHidden('kep-giay');
     }
 
     public function test_full_file_mode_hides_products_missing_from_the_file_but_not_hand_made_ones(): void
@@ -144,8 +170,8 @@ class SapoImportTest extends TestCase
         $this->import($this->csv([self::HEADER, ['Bìa còng 7cm', 'BC-7', '25000', '', '', '', 'Đang bán']]), fullFile: true)
             ->assertNotified('Nhập CSV xong: 0 tạo mới, 1 cập nhật, 1 ẩn, 0 dòng lỗi');
 
-        $this->get('https://vpptrangthietbi.com.vn/san-pham/kep-giay')->assertStatus(410);
-        $this->get('https://vpptrangthietbi.com.vn/san-pham/qua-tang-khac-logo')->assertOk();
+        $this->assertHidden('kep-giay');
+        $this->shown('qua-tang-khac-logo');
     }
 
     public function test_bad_rows_are_reported_with_their_line_number_and_good_rows_still_import(): void
@@ -157,8 +183,8 @@ class SapoImportTest extends TestCase
             ['Thước kẻ 30cm', 'TK-30', '7000', '', '', '', 'Đang bán'],
         ]))->assertNotified('Nhập CSV xong: 1 tạo mới, 0 cập nhật, 0 ẩn, 3 dòng lỗi');
 
-        $this->get('https://vpptrangthietbi.com.vn/san-pham/thuoc-ke-30cm')->assertOk();
-        $this->get('https://vpptrangthietbi.com.vn/san-pham/but-da')->assertNotFound();
+        $this->shown('thuoc-ke-30cm');
+        $this->assertNull(Product::query()->where('sku', 'BD-1')->first(), 'Dòng có link không phải trangthietbi.vn bị bỏ.');
     }
 
     public function test_comma_separated_file_without_bom_is_read_too(): void
@@ -166,7 +192,7 @@ class SapoImportTest extends TestCase
         $file = UploadedFile::fake()->createWithContent('sapo.csv', "Ten san pham,SKU,Gia ban le\nThuoc ke 20cm,TK-20,\"6,000\"\n");
 
         $this->import($file)->assertNotified('Nhập CSV xong: 1 tạo mới, 0 cập nhật, 0 ẩn, 0 dòng lỗi');
-        $this->get('https://vpptrangthietbi.com.vn/san-pham/thuoc-ke-20cm')->assertSee('6.000 đ');
+        $this->assertStringContainsString('6.000 đ', $this->shown('thuoc-ke-20cm'));
     }
 
     public function test_the_same_sync_rules_serve_a_future_sapo_api_source(): void
@@ -176,7 +202,7 @@ class SapoImportTest extends TestCase
         ], ProductSource::Api);
 
         $this->assertSame(1, $report->created);
-        $this->get('https://vpptrangthietbi.com.vn/san-pham/so-tay-a5-tu-api')->assertOk()->assertSee('32.000 đ');
+        $this->assertStringContainsString('32.000 đ', $this->shown('so-tay-a5-tu-api'));
     }
 
     public function test_the_downloadable_template_imports_cleanly(): void
@@ -187,7 +213,8 @@ class SapoImportTest extends TestCase
 
         $this->import(UploadedFile::fake()->createWithContent('mau.csv', $content))
             ->assertNotified('Nhập CSV xong: 1 tạo mới, 0 cập nhật, 0 ẩn, 0 dòng lỗi');
-        $this->get('https://vpptrangthietbi.com.vn/san-pham/giay-double-a-a4-80gsm')->assertOk()->assertSee('500 tờ/ram');
+        $this->shown('giay-double-a-a4-80gsm');
+        $this->assertContains('500 tờ/ram', Product::query()->where('slug', 'giay-double-a-a4-80gsm')->firstOrFail()->specs);
     }
 
     public function test_full_file_mode_never_hides_anything_when_the_file_is_unreadable_or_empty(): void
@@ -197,7 +224,7 @@ class SapoImportTest extends TestCase
         $this->import(UploadedFile::fake()->createWithContent('sai.csv', "Ten,Gia\nBia cong,25000\n"), fullFile: true);
         $this->import($this->csv([self::HEADER]), fullFile: true);
 
-        $this->get('https://vpptrangthietbi.com.vn/san-pham/bia-cong-7cm')->assertOk();
+        $this->shown('bia-cong-7cm');
     }
 
     public function test_full_file_mode_keeps_a_product_whose_row_has_an_error(): void
@@ -207,7 +234,7 @@ class SapoImportTest extends TestCase
         $this->import($this->csv([self::HEADER, ['Bìa còng 7cm', 'BC-7', 'liên hệ', '', '', '', 'Đang bán']]), fullFile: true)
             ->assertNotified('Nhập CSV xong: 0 tạo mới, 0 cập nhật, 0 ẩn, 1 dòng lỗi');
 
-        $this->get('https://vpptrangthietbi.com.vn/san-pham/bia-cong-7cm')->assertOk();
+        $this->shown('bia-cong-7cm');
     }
 
     public function test_prices_with_decimals_or_separators_are_read_correctly(): void
@@ -219,10 +246,10 @@ class SapoImportTest extends TestCase
             ['D', 'P-4', '89.000 đ', '', '', '', ''],
         ]));
 
-        $this->get('https://vpptrangthietbi.com.vn/san-pham/a')->assertSee('89.000 đ');
-        $this->get('https://vpptrangthietbi.com.vn/san-pham/b')->assertSee('89.000 đ');
-        $this->get('https://vpptrangthietbi.com.vn/san-pham/c')->assertSee('1.250.000 đ');
-        $this->get('https://vpptrangthietbi.com.vn/san-pham/d')->assertSee('89.000 đ');
+        $this->assertStringContainsString('89.000 đ', $this->shown('a'));
+        $this->assertStringContainsString('89.000 đ', $this->shown('b'));
+        $this->assertStringContainsString('1.250.000 đ', $this->shown('c'));
+        $this->assertStringContainsString('89.000 đ', $this->shown('d'));
     }
 
     public function test_duplicate_sku_in_one_file_is_reported_and_the_first_row_wins(): void
@@ -232,7 +259,9 @@ class SapoImportTest extends TestCase
             ['Bìa còng 7cm (dòng lặp)', 'BC-7', '99000', '', '', '', ''],
         ]))->assertNotified('Nhập CSV xong: 1 tạo mới, 0 cập nhật, 0 ẩn, 1 dòng lỗi');
 
-        $this->get('https://vpptrangthietbi.com.vn/san-pham/bia-cong-7cm')->assertSee('25.000 đ')->assertDontSee('99.000');
+        $card = $this->shown('bia-cong-7cm');
+        $this->assertStringContainsString('25.000 đ', $card);
+        $this->assertStringNotContainsString('99.000', $card);
     }
 
     public function test_new_product_already_discontinued_counts_as_created_only(): void
@@ -240,7 +269,7 @@ class SapoImportTest extends TestCase
         $this->import($this->csv([self::HEADER, ['Bìa cũ', 'BC-OLD', '25000', '', '', '', 'Ngừng giao dịch']]))
             ->assertNotified('Nhập CSV xong: 1 tạo mới, 0 cập nhật, 0 ẩn, 0 dòng lỗi');
 
-        $this->get('https://vpptrangthietbi.com.vn/san-pham/bia-cu')->assertStatus(410);
+        $this->assertHidden('bia-cu');
     }
 
     public function test_sync_refuses_to_run_without_a_site(): void

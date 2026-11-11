@@ -176,3 +176,13 @@ Database CMS tách riêng khỏi database Mautic (Q13).
 - `pages.extras` (JSON, chỉ trang Giới thiệu): `hero_image`, `stats[{value,label}]`, `milestones[{year,title,description}]`, `values[{title,description}]`, `gallery[]`, `clients[]` (chỉ ghi khách hàng đã đồng ý nêu tên).
 - Loại trang tĩnh: Giới thiệu, Quyền riêng tư, Liên hệ (bắt buộc trước khi mở index); Vận chuyển, Đổi trả, Hình thức thanh toán (tuỳ chọn, hiện ở footer khi đã đăng).
 - Trang sản phẩm: 2 cột (ảnh | giá, nút báo giá) + "Sản phẩm cùng danh mục". Bài viết: cột phải (báo giá, danh mục, sản phẩm nổi bật) + "Tin liên quan".
+
+## Sản phẩm dẫn về web chính trangthietbi.vn
+
+Chốt 11/11/2026: site vệ tinh **không có trang chi tiết sản phẩm**; sản phẩm nằm trên web chính.
+
+- `products.buy_url` bắt buộc khi tạo/sửa trong quản trị (chỉ `https://trangthietbi.vn/...`). Sản phẩm cũ còn thiếu: thẻ sản phẩm mở form báo giá; tab **Thiếu link web chính** trong danh sách sản phẩm.
+- `products.slug` tự tạo từ tên (không trùng trong site), không còn trong form; chỉ dùng để chuyển hướng link cũ.
+- Bấm sản phẩm (thẻ sản phẩm, cột phải, khối sản phẩm trong bài) → `/mua/{sku}?vt=<vị trí>&tu=<trang nguồn>` (tab mới) → ghi `outbound_clicks` → 302 sang `buy_url` kèm `utm_source=<domain site>&utm_medium=site-ve-tinh&utm_campaign=san-pham&utm_content=<vị trí>`. Không cache, không đếm bot. GA4 nhận sự kiện `click_web_chinh`.
+- `/san-pham/{slug}` cũ: 301 sang `buy_url`; sản phẩm ẩn → sản phẩm thay thế (nếu có link) hoặc trang danh mục; sản phẩm xoá → bảng redirect tự ghi về trang danh mục. Sản phẩm không còn trong sitemap, không còn JSON-LD Product trên site vệ tinh.
+- `outbound_clicks`: site_id, product_id (null khi sản phẩm bị xoá), source_path, placement (`the-sp`, `cot-phai`, `bai-viet`, `khac`), clicked_at. Quản trị → **Báo cáo**: cột "Bấm sang web chính", top sản phẩm và top trang theo kỳ.

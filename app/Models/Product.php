@@ -4,11 +4,11 @@ namespace App\Models;
 
 use App\Enums\PriceStatus;
 use App\Enums\ProductSource;
+use App\Http\Controllers\ProductVisitController;
 use App\Models\Concerns\BelongsToSite;
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -65,9 +65,20 @@ class Product extends Model
     protected static function booted(): void
     {
         static::saving(function (Product $product): void {
+            // Đường dẫn (chỉ dùng để chuyển hướng link /san-pham/ cũ): tự tạo từ tên, không trùng trong site.
             if (blank($product->slug)) {
-                $product->slug = Str::slug($product->name);
+                $base = Str::slug($product->name) ?: 'san-pham';
+                $slug = $base;
+                for ($i = 2; static::withoutGlobalScopes()->where('site_id', $product->site_id)->where('slug', $slug)->whereKeyNot($product->getKey())->exists(); $i++) {
+                    $slug = $base.'-'.$i;
+                }
+                $product->slug = $slug;
             }
+        });
+
+        // Xoá sản phẩm: link /san-pham/ cũ chuyển về trang danh mục (không để khách gặp lỗi).
+        static::deleted(function (Product $product): void {
+            Redirect::recordMove($product->site_id, $product->path(), $product->category?->path() ?? '/');
         });
 
         // Đổi slug: URL sản phẩm cũ chuyển 301 sang URL mới.
@@ -159,6 +170,13 @@ class Product extends Model
      *
      * @param  Builder<self>  $query
      */
+    /** @param  Builder<self>  $query */
+    #[Scope]
+    protected function missingBuyUrl(Builder $query): void
+    {
+        $query->where(fn (Builder $q) => $q->whereNull('buy_url')->orWhere('buy_url', ''));
+    }
+
     #[Scope]
     protected function priceExpired(Builder $query): void
     {
@@ -177,17 +195,6 @@ class Product extends Model
     protected function active(Builder $query): void
     {
         $query->where('is_active', true);
-    }
-
-    /** Sản phẩm đang bán cùng danh mục (không gồm sản phẩm này). @return \Illuminate\Database\Eloquent\Collection<int, Product> */
-    public function related(int $limit = 5): Collection
-    {
-        if ($this->category_id === null) {
-            return new Collection;
-        }
-
-        return static::query()->active()->where('category_id', $this->category_id)->whereKeyNot($this->id)
-            ->with(['image', 'category'])->orderBy('name')->limit($limit)->get();
     }
 
     /** @return BelongsTo<Category, $this> */
@@ -217,6 +224,39 @@ class Product extends Model
     public function path(): string
     {
         return self::PATH_PREFIX.$this->slug;
+    }
+
+    public function hasBuyUrl(): bool
+    {
+        return filled($this->buy_url) && self::isAllowedBuyUrl($this->buy_url);
+    }
+
+    /**
+     * Link khi khách bấm vào sản phẩm trên site vệ tinh: qua /mua/ (đếm lượt) rồi sang web chính.
+     * Chưa có link web chính thì mở form báo giá.
+     */
+    public function visitUrl(string $placement, string $sourcePath): string
+    {
+        if (! $this->hasBuyUrl()) {
+            return $this->quoteRequestPath();
+        }
+
+        // Mã viết thường: URL chuẩn của site luôn chữ thường (tránh thêm một bước chuyển 301). SKU không phân biệt hoa/thường.
+        return ProductVisitController::PREFIX.rawurlencode(mb_strtolower($this->sku)).'?vt='.rawurlencode($placement).'&tu='.str_replace('%2F', '/', rawurlencode($sourcePath));
+    }
+
+    /** Link sản phẩm trên web chính kèm UTM (site nguồn, vị trí bấm). */
+    public function mainSiteUrl(Site $site, string $placement): string
+    {
+        $utm = http_build_query([
+            'utm_source' => $site->domain,
+            'utm_medium' => 'site-ve-tinh',
+            'utm_campaign' => 'san-pham',
+            'utm_content' => $placement,
+        ]);
+        [$url, $fragment] = array_pad(explode('#', (string) $this->buy_url, 2), 2, null);
+
+        return $url.(str_contains($url, '?') ? '&' : '?').$utm.($fragment !== null ? '#'.$fragment : '');
     }
 
     /** Trang yêu cầu báo giá kèm sẵn sản phẩm (form RFQ: issue #10). */

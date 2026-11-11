@@ -96,22 +96,4 @@ class NewsAndLayoutTest extends TestCase
         $this->assertStringContainsString('Giấy Double A nổi bật', $aside[0]);
         $this->assertStringContainsString('href="/yeu-cau-bao-gia"', $aside[0]);
     }
-
-    public function test_a_product_page_suggests_other_live_products_of_the_same_category(): void
-    {
-        $paper = Category::factory()->for($this->vpp)->create(['name' => 'Giấy', 'slug' => 'giay']);
-        Product::factory()->for($this->vpp)->create(['slug' => 'giay-double-a', 'name' => 'Giấy Double A', 'category_id' => $paper->id]);
-        Product::factory()->for($this->vpp)->create(['name' => 'Giấy IK Plus', 'category_id' => $paper->id]);
-        Product::factory()->for($this->vpp)->create(['name' => 'Giấy ngừng bán', 'category_id' => $paper->id, 'is_active' => false]);
-        Product::factory()->for($this->vpp)->create(['name' => 'Bút bi khác danh mục']);
-
-        $html = (string) $this->get('https://vpptrangthietbi.com.vn/san-pham/giay-double-a')->assertOk()->getContent();
-
-        $this->assertSame(1, preg_match('#<section[^>]*aria-labelledby="san-pham-lien-quan".*?</section>#s', $html, $related));
-        $this->assertStringContainsString('Giấy IK Plus', $related[0]);
-        $this->assertStringNotContainsString('Giấy ngừng bán', $related[0]);
-        $this->assertStringNotContainsString('Bút bi khác danh mục', $related[0]);
-        $this->assertStringNotContainsString('>Giấy Double A<', $related[0]);
-        $this->assertStringContainsString('href="/danh-muc/giay"', $html, 'Trang sản phẩm ghi rõ danh mục.');
-    }
 }

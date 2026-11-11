@@ -15,7 +15,6 @@ const pages = [
     '/',
     '/kien-thuc/cach-chon-giay-in-a4',
     '/danh-muc/giay-van-phong',
-    '/san-pham/giay-double-a-a4-80gsm',
     '/tac-gia/bien-tap-dt',
     '/lien-he',
     '/yeu-cau-bao-gia',

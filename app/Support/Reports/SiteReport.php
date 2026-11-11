@@ -6,6 +6,7 @@ use App\Enums\LeadStatus;
 use App\Models\GscPageDaily;
 use App\Models\GscSiteDaily;
 use App\Models\Lead;
+use App\Models\OutboundClick;
 use App\Models\Scopes\SiteScope;
 use App\Models\Site;
 use App\Support\SearchConsole\SearchConsoleClient;
@@ -78,6 +79,46 @@ final class SiteReport
             ->orderByDesc('clicks')->orderBy('page_url')
             ->limit(self::TOP_PAGES)
             ->get();
+    }
+
+    /**
+     * Lượt bấm sang web chính theo site trong kỳ (giờ Việt Nam).
+     *
+     * @param  iterable<Site>  $sites
+     * @return array<int, int> site_id => lượt
+     */
+    public function outboundTotals(iterable $sites): array
+    {
+        $ids = collect($sites)->pluck('id')->all();
+
+        return $this->outbound()->whereIn('site_id', $ids)->groupBy('site_id')
+            ->selectRaw('site_id, COUNT(*) AS total')->pluck('total', 'site_id')->map(fn ($n) => (int) $n)->all();
+    }
+
+    /** @return Collection<int, object{name: ?string, clicks: int}> sản phẩm được bấm sang web chính nhiều nhất */
+    public function topOutboundProducts(Site $site): Collection
+    {
+        return $this->outbound()->where('outbound_clicks.site_id', $site->id)
+            ->leftJoin('products', 'products.id', '=', 'outbound_clicks.product_id')
+            ->groupBy('outbound_clicks.product_id', 'products.name')
+            ->selectRaw('products.name AS name, COUNT(*) AS clicks')
+            ->orderByDesc('clicks')->orderBy('name')->limit(self::TOP_PAGES)->toBase()->get();
+    }
+
+    /** @return Collection<int, object{source_path: ?string, clicks: int}> trang (bài viết, danh mục…) đưa khách sang web chính nhiều nhất */
+    public function topOutboundSources(Site $site): Collection
+    {
+        return $this->outbound()->where('site_id', $site->id)
+            ->groupBy('source_path')->selectRaw('source_path, COUNT(*) AS clicks')
+            ->orderByDesc('clicks')->orderBy('source_path')->limit(self::TOP_PAGES)->toBase()->get();
+    }
+
+    /** @return Builder<OutboundClick> */
+    private function outbound(): Builder
+    {
+        [$start, $end] = $this->utcBounds();
+
+        return OutboundClick::withoutGlobalScope(SiteScope::class)->whereBetween('outbound_clicks.clicked_at', [$start, $end]);
     }
 
     /**

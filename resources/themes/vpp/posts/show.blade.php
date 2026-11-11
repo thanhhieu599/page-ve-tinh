@@ -37,7 +37,7 @@
                 <ul>
                     @foreach ($post->products as $product)
                         <li>
-                            <h3><a href="{{ $product->path() }}">{{ $product->name }}</a></h3>
+                            <h3><a href="{{ $product->visitUrl('bai-viet', request()->getPathInfo()) }}"@if ($product->hasBuyUrl()) target="_blank" rel="noopener" data-outbound="bai-viet"@endif>{{ $product->name }}</a></h3>
                             @include('theme::partials.product-price', ['product' => $product])
                             <a href="{{ $product->quoteRequestPath() }}">Yêu cầu báo giá theo số lượng</a>
                         </li>

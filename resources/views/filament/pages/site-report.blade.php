@@ -26,9 +26,11 @@
                         <th>Lead</th>
                         <th>Lead thắng</th>
                         <th>Doanh thu đã chốt</th>
+                        <th>Bấm sang web chính</th>
                     </tr>
                 </thead>
                 <tbody>
+                    @php($outbound = $report->outboundTotals($sites))
                     @forelse ($report->rows($sites) as $row)
                         <tr style="text-align: right; border-top: 1px solid rgb(229 231 235);">
                             <td style="text-align: left;"><strong>{{ $row->site->name }}</strong><br><small>{{ $row->site->domain }}</small></td>
@@ -40,9 +42,10 @@
                             <td>{{ $number($row->leads) }}</td>
                             <td>{{ $number($row->wonLeads) }}</td>
                             <td>{{ $number($row->revenue) }} đ</td>
+                            <td>{{ $number($outbound[$row->site->id] ?? 0) }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="8">Bạn chưa được gán site nào.</td></tr>
+                        <tr><td colspan="9">Bạn chưa được gán site nào.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -68,6 +71,33 @@
                         @endforeach
                     </tbody>
                 </table>
+            @endif
+        </x-filament::section>
+
+        <x-filament::section>
+            <x-slot name="heading">Bấm sang web chính: {{ $site->name }}</x-slot>
+            @php([$products, $sources] = [$report->topOutboundProducts($site), $report->topOutboundSources($site)])
+            @if ($products->isEmpty())
+                <p>Chưa có lượt bấm sản phẩm sang trangthietbi.vn trong kỳ.</p>
+            @else
+                <div style="display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead><tr><th style="text-align: left;">Sản phẩm</th><th style="text-align: right;">Lượt bấm</th></tr></thead>
+                        <tbody>
+                            @foreach ($products as $item)
+                                <tr style="border-top: 1px solid rgb(229 231 235);"><td>{{ $item->name ?? '(sản phẩm đã xoá)' }}</td><td style="text-align: right;">{{ $number((int) $item->clicks) }}</td></tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead><tr><th style="text-align: left;">Trang khách bấm</th><th style="text-align: right;">Lượt bấm</th></tr></thead>
+                        <tbody>
+                            @foreach ($sources as $item)
+                                <tr style="border-top: 1px solid rgb(229 231 235);"><td style="word-break: break-all;">{{ $item->source_path ?? '(không rõ)' }}</td><td style="text-align: right;">{{ $number((int) $item->clicks) }}</td></tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             @endif
         </x-filament::section>
     @endforeach

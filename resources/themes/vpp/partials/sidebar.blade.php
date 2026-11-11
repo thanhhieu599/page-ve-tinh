@@ -28,7 +28,7 @@
             <ul class="sidebar-products">
                 @foreach ($sidebarProducts as $product)
                     <li>
-                        <a href="{{ $product->path() }}">
+                        <a href="{{ $product->visitUrl('cot-phai', request()->getPathInfo()) }}"@if ($product->hasBuyUrl()) target="_blank" rel="noopener" data-outbound="cot-phai"@endif>
                             @if ($product->image)
                                 <img src="{{ $product->image->url(480) }}" alt="" width="56" height="56" loading="lazy" decoding="async">
                             @endif

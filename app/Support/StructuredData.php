@@ -5,7 +5,6 @@ namespace App\Support;
 use App\Models\CompanyProfile;
 use App\Models\Faq;
 use App\Models\Post;
-use App\Models\Product;
 use App\Models\Site;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Storage;
@@ -14,7 +13,6 @@ use Spatie\SchemaOrg\BreadcrumbList;
 use Spatie\SchemaOrg\FAQPage;
 use Spatie\SchemaOrg\Organization;
 use Spatie\SchemaOrg\Person;
-use Spatie\SchemaOrg\Product as ProductSchema;
 use Spatie\SchemaOrg\Schema;
 
 /**
@@ -92,37 +90,6 @@ final class StructuredData
         }
 
         return $article;
-    }
-
-    /**
-     * Sản phẩm. Chỉ khai giá (offers) khi giá còn hạn 14 ngày, giống điều kiện hiện giá trên
-     * trang, để dữ liệu có cấu trúc không bao giờ chứa giá cũ. Không khai tồn kho.
-     */
-    public static function product(Product $product, Site $site): ProductSchema
-    {
-        $url = $site->url($product->path());
-        $schema = Schema::product()
-            ->name($product->name)
-            ->sku($product->sku)
-            ->url($url);
-
-        if (filled($product->description)) {
-            $schema->description((string) $product->description);
-        }
-
-        if ($product->image) {
-            $schema->image([$site->absoluteUrl($product->image->url())]);
-        }
-
-        if ($product->hasFreshPrice()) {
-            $schema->offers(Schema::offer()
-                ->price($product->price)
-                ->priceCurrency('VND')
-                ->priceValidUntil((string) $product->priceShownUntil()?->toDateString()) // luôn có khi giá còn hạn
-                ->url($url));
-        }
-
-        return $schema;
     }
 
     /**

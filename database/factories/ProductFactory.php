@@ -22,6 +22,7 @@ class ProductFactory extends Factory
             'name' => $name,
             'slug' => Str::slug($name),
             'sku' => strtoupper(fake()->unique()->bothify('SP-####')),
+            'buy_url' => 'https://trangthietbi.vn/'.Str::slug($name),
             'is_active' => true,
         ];
     }

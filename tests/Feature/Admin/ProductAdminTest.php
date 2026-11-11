@@ -5,6 +5,7 @@ namespace Tests\Feature\Admin;
 use App\Filament\Resources\Posts\Pages\CreatePost;
 use App\Filament\Resources\Products\Pages\CreateProduct;
 use App\Filament\Resources\Products\Pages\EditProduct;
+use App\Models\Post;
 use App\Models\Product;
 use App\Models\Site;
 use App\Models\User;
@@ -29,9 +30,15 @@ class ProductAdminTest extends TestCase
         $this->vpp = Site::factory()->create(['domain' => 'vpptrangthietbi.com.vn']);
     }
 
+    /** Giá tham khảo và ngày giá hiện ở khối sản phẩm trong bài viết (site vệ tinh không còn trang sản phẩm). */
     private function page(string $slug): TestResponse
     {
-        return $this->get('https://vpptrangthietbi.com.vn/san-pham/'.$slug);
+        $product = Product::withoutGlobalScopes()->where('site_id', $this->vpp->id)->where('slug', $slug)->firstOrFail();
+        $post = Post::withoutGlobalScopes()->where('site_id', $this->vpp->id)->where('slug', 'kiem-tra-gia')->first()
+            ?? Post::factory()->for($this->vpp)->published()->create(['slug' => 'kiem-tra-gia', 'published_at' => now()->subYear()]);
+        $post->products()->syncWithoutDetaching([$product->id]);
+
+        return $this->get('https://vpptrangthietbi.com.vn/kien-thuc/kiem-tra-gia');
     }
 
     public function test_writer_adds_a_product_with_a_price_dated_today(): void
@@ -52,8 +59,8 @@ class ProductAdminTest extends TestCase
 
         $this->page('but-bi-thien-long-tl-027')
             ->assertSee('4.500 đ')
-            ->assertSee('Cập nhật ngày 10/11/2026.')
-            ->assertSee('Ngòi');
+            ->assertSee('Cập nhật ngày 10/11/2026.');
+        $this->assertSame(['Màu mực' => 'Xanh', 'Ngòi' => '0.5mm'], Product::query()->where('sku', 'TL-027')->value('specs'));
     }
 
     public function test_changing_the_price_refreshes_its_date_but_editing_other_fields_does_not(): void

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Author;
 use App\Models\Category;
 use App\Models\Post;
-use App\Models\Product;
 use App\Models\RequiredPage;
 use App\Support\CurrentSite;
 use Illuminate\Database\Eloquent\Builder;
@@ -32,7 +31,7 @@ class SitemapController extends Controller
         abort_if($site === null, 404);
 
         $sitemap = Sitemap::create()->add(Url::create($site->url('/')))->add(Url::create($site->url(ArticleController::PATH)));
-        $add = function (Post|Category|Author|Product|RequiredPage $model) use ($sitemap, $site): void {
+        $add = function (Post|Category|Author|RequiredPage $model) use ($sitemap, $site): void {
             $sitemap->add(Url::create($site->url($model->path()))->setLastModificationDate($model->updated_at));
         };
 
@@ -44,7 +43,7 @@ class SitemapController extends Controller
 
         Author::query()->whereHas('posts', $hasPublishedPost)->get(self::COLUMNS)->each($add);
 
-        Product::query()->active()->get(self::COLUMNS)->each($add);
+        // Sản phẩm không có trang trên site vệ tinh (nằm trên web chính trangthietbi.vn): không vào sitemap.
 
         RequiredPage::query()->published()->get(['id', 'kind', 'updated_at'])->each($add);
 

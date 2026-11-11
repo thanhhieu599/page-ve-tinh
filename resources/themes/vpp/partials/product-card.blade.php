@@ -1,6 +1,9 @@
-{{-- Thẻ sản phẩm: ảnh vuông, nhãn nổi bật, danh mục, tên, giá tham khảo (hoặc "Liên hệ báo giá"), nút báo giá riêng. --}}
+{{--
+    Thẻ sản phẩm: ảnh vuông, nhãn nổi bật, danh mục, tên, giá tham khảo (hoặc "Liên hệ báo giá"), nút báo giá riêng.
+    Bấm ảnh/tên: mở sản phẩm trên web chính trangthietbi.vn ở tab mới (qua /mua/ để đếm lượt); chưa có link thì mở form báo giá.
+--}}
 <li class="product-card">
-    <a href="{{ $product->path() }}" class="product-card-link">
+    <a href="{{ $product->visitUrl('the-sp', request()->getPathInfo()) }}" class="product-card-link"@if ($product->hasBuyUrl()) target="_blank" rel="noopener" data-outbound="the-sp"@endif>
         <span class="product-card-image">
             @if ($product->is_featured)<span class="product-badge">Nổi bật</span>@endif
             @if ($product->image)

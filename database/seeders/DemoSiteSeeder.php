@@ -207,7 +207,8 @@ class DemoSiteSeeder extends Seeder
             $target = $childName !== null ? $category($childName, $root) : $root;
 
             $product = Product::query()->firstOrNew(['site_id' => $site->id, 'sku' => $sku]);
-            $product->fill(['name' => $name, 'slug' => Str::slug($name), 'is_active' => true, 'media_id' => $this->productImage($site->id, $name, $color)->id]);
+            // Link web chính mẫu (khi dùng thật: dán link sản phẩm thật trên trangthietbi.vn).
+            $product->fill(['name' => $name, 'slug' => Str::slug($name), 'buy_url' => 'https://trangthietbi.vn/'.Str::slug($name), 'is_active' => true, 'media_id' => $this->productImage($site->id, $name, $color)->id]);
             $product->site_id = $site->id;
             $product->forceFill(['category_id' => $target->id, 'is_featured' => $featured])->save();
             $product->setPrice($price);

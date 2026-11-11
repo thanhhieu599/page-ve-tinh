@@ -198,32 +198,6 @@ class StructuredDataTest extends TestCase
         ]);
     }
 
-    public function test_a_product_declares_its_price_in_vnd_only_while_the_price_is_fresh(): void
-    {
-        $this->travelTo(Carbon::parse('2026-11-01 08:00:00', 'UTC'));
-        $this->product()->setPrice(89000);
-
-        $this->travelTo(Carbon::parse('2026-11-15 08:00:00', 'UTC')); // ngày thứ 14: giá còn hạn
-        $product = $this->one($this->get('https://vpptrangthietbi.com.vn/san-pham/giay-double-a-a4-80gsm'), 'Product');
-
-        $this->assertSame('Giấy Double A A4 80gsm', $product['name']);
-        $this->assertSame('DA-A4-80', $product['sku']);
-        $this->assertSame('Giấy in hai mặt, 500 tờ/ram, phù hợp máy in laser tốc độ cao.', $product['description']);
-        $this->assertStringStartsWith('https://vpptrangthietbi.com.vn/storage/', $product['image'][0]);
-        $this->assertSame('https://vpptrangthietbi.com.vn/san-pham/giay-double-a-a4-80gsm', $product['url']);
-        $this->assertSame('Offer', $product['offers']['@type']);
-        $this->assertSame(89000, $product['offers']['price']);
-        $this->assertSame('VND', $product['offers']['priceCurrency']);
-        $this->assertSame('https://vpptrangthietbi.com.vn/san-pham/giay-double-a-a4-80gsm', $product['offers']['url']);
-
-        $this->travelTo(Carbon::parse('2026-11-16 08:00:00', 'UTC')); // ngày 15: giá hết hạn
-        $product = $this->one($this->get('https://vpptrangthietbi.com.vn/san-pham/giay-double-a-a4-80gsm'), 'Product');
-
-        $this->assertSame('DA-A4-80', $product['sku']);
-        $this->assertArrayNotHasKey('offers', $product);
-        $this->assertStringNotContainsString('89000', json_encode($product));
-    }
-
     /** Breadcrumb hiển thị: [nhãn, href|null] theo thứ tự trên trang. */
     private function visibleBreadcrumb(TestResponse $response): array
     {
@@ -269,16 +243,6 @@ class StructuredDataTest extends TestCase
             ['Giấy A4', 'https://vpptrangthietbi.com.vn/danh-muc/giay-a4'],
             ['Cách chọn giấy in A4 & 80gsm', 'https://vpptrangthietbi.com.vn/kien-thuc/cach-chon-giay-in-a4'],
         ], $this->breadcrumbSchema($response));
-    }
-
-    public function test_breadcrumb_schema_on_a_product_page_ends_at_the_product(): void
-    {
-        Product::factory()->for($this->vpp)->create(['slug' => 'giay-double-a-a4-80gsm', 'name' => 'Giấy Double A A4 80gsm']);
-
-        $this->assertSame([
-            ['Trang chủ', 'https://vpptrangthietbi.com.vn/'],
-            ['Giấy Double A A4 80gsm', 'https://vpptrangthietbi.com.vn/san-pham/giay-double-a-a4-80gsm'],
-        ], $this->breadcrumbSchema($this->get('https://vpptrangthietbi.com.vn/san-pham/giay-double-a-a4-80gsm')));
     }
 
     public function test_without_a_share_image_the_article_uses_the_first_library_image_of_the_post(): void

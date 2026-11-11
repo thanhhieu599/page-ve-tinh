@@ -20,7 +20,7 @@ class CacheSitePages extends CacheAllSuccessfulGetRequests
     public const MAX_LIFETIME = 3600;
 
     /** Route không bao giờ cache (trang cảm ơn; tìm kiếm: vô số từ khoá, tránh lấp đầy cache). */
-    public const EXCLUDED_ROUTES = ['quote.thanks', 'search'];
+    public const EXCLUDED_ROUTES = ['quote.thanks', 'search', 'products.visit', 'products.show'];
 
     public function enabled(Request $request): bool
     {

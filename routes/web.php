@@ -7,6 +7,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductVisitController;
 use App\Http\Controllers\QuoteRequestController;
 use App\Http\Controllers\RequiredPageController;
 use App\Http\Controllers\RobotsController;
@@ -29,6 +30,7 @@ Route::middleware([IdentifySite::class, CaptureAttribution::class, CacheResponse
     Route::get('/danh-muc/{slug}', [CategoryController::class, 'show'])->name('categories.show');
     Route::get('/tac-gia/{slug}', [AuthorController::class, 'show'])->name('authors.show');
     Route::get('/san-pham/{slug}', [ProductController::class, 'show'])->name('products.show');
+    Route::get(ProductVisitController::PREFIX.'{sku}', ProductVisitController::class)->where('sku', '[^/]+')->name('products.visit');
 
     foreach (PageKind::cases() as $kind) {
         Route::get($kind->path(), [RequiredPageController::class, 'show'])->defaults('kind', $kind->value)->name('pages.'.$kind->value);

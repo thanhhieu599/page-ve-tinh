@@ -95,6 +95,11 @@ class ListProducts extends ListRecords
                 ->modifyQueryUsing(fn (Builder $query) => $query->priceExpired())
                 ->badge(Product::query()->priceExpired()->count())
                 ->badgeColor('danger'),
+            // Sản phẩm chưa có link web chính: khách bấm vào chỉ mở được form báo giá.
+            'missing-link' => Tab::make('Thiếu link web chính')
+                ->modifyQueryUsing(fn (Builder $query) => $query->missingBuyUrl())
+                ->badge(Product::query()->missingBuyUrl()->count())
+                ->badgeColor('danger'),
         ];
     }
 }
