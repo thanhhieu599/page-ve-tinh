@@ -16,6 +16,10 @@ use Filament\Tables\Table;
 
 class MediaResource extends Resource
 {
+    protected static string|\UnitEnum|null $navigationGroup = 'Nội dung';
+
+    protected static ?int $navigationSort = 5;
+
     protected static ?string $model = Media::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedPhoto;

@@ -18,6 +18,10 @@ use Filament\Support\Icons\Heroicon;
  */
 class SearchIndexing extends Page
 {
+    protected static string|\UnitEnum|null $navigationGroup = 'SEO & báo cáo';
+
+    protected static ?int $navigationSort = 3;
+
     protected static ?string $slug = 'mo-index';
 
     protected static ?string $title = 'Mở index cho Google';
@@ -25,8 +29,6 @@ class SearchIndexing extends Page
     protected static ?string $navigationLabel = 'Mở index (SEO)';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedGlobeAlt;
-
-    protected static ?int $navigationSort = 90;
 
     protected string $view = 'filament.pages.search-indexing';
 

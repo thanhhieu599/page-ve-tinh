@@ -19,6 +19,10 @@ use Throwable;
  */
 class SiteReports extends Page
 {
+    protected static string|\UnitEnum|null $navigationGroup = 'SEO & báo cáo';
+
+    protected static ?int $navigationSort = 1;
+
     protected static ?string $slug = 'bao-cao';
 
     protected static ?string $title = 'Báo cáo theo site';
@@ -26,8 +30,6 @@ class SiteReports extends Page
     protected static ?string $navigationLabel = 'Báo cáo';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChartBar;
-
-    protected static ?int $navigationSort = -1;
 
     protected string $view = 'filament.pages.site-report';
 

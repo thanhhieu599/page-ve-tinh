@@ -2,10 +2,9 @@
 
 namespace App\Filament\Resources\Sites\Schemas;
 
+use App\Filament\Support\SiteSettingsSchema;
 use App\Models\Site;
 use App\Support\Theme;
-use Filament\Forms\Components\ColorPicker;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -34,10 +33,6 @@ class SiteForm
                     ->unique(ignoreRecord: true)
                     // Tên miền là địa chỉ của site và của trang quản trị site: cố định sau khi tạo.
                     ->disabledOn('edit'),
-                TextInput::make('name')->label('Tên site')->required()->maxLength(255),
-                TextInput::make('settings.tagline')->label('Câu giới thiệu trang chủ')->maxLength(200)->columnSpanFull()
-                    ->placeholder('Văn phòng phẩm cho nhà máy: báo giá theo số lượng, xuất VAT, giao tận KCN.')
-                    ->helperText('Hiện dưới tên site ở trang chủ và làm mô tả trang chủ trên Google.'),
                 Select::make('theme')
                     ->label('Theme')
                     ->options(fn (): array => array_combine(Theme::available(), Theme::available()))
@@ -48,32 +43,7 @@ class SiteForm
                     ->helperText('Bật khi đã hoàn thiện và bật hiển thị 3 trang bắt buộc (form báo giá trỏ tới trang chính sách).'),
                 Toggle::make('requires_expert_review')->label('Mọi bài cần duyệt chuyên môn (PPE)')->inline(false),
             ]),
-            Section::make('Giao diện')->columns(2)->schema([
-                FileUpload::make('settings.logo')
-                    ->label('Logo')
-                    ->image()
-                    ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp'])
-                    ->maxSize(1024)
-                    ->disk('public')
-                    ->directory(Site::LOGO_DIRECTORY),
-                ColorPicker::make('settings.primary_color')
-                    ->label('Màu thương hiệu')
-                    ->regex(Site::COLOR_PATTERN),
-            ]),
-            Section::make('Đo lường và Mautic')->columns(2)->schema([
-                TextInput::make('settings.ga4_id')->label('GA4 Measurement ID')->placeholder('G-XXXXXXXXXX')
-                    ->regex(Site::GA4_PATTERN),
-                TextInput::make('settings.gsc_verification')->label('Mã xác minh Search Console')
-                    ->helperText('Phần content của thẻ meta google-site-verification.')
-                    ->regex(Site::GSC_TOKEN_PATTERN),
-                TextInput::make('settings.gsc_property')->label('Property Search Console (kéo số liệu)')
-                    ->placeholder('sc-domain:vpptrangthietbi.com.vn')
-                    ->helperText('Dạng sc-domain:ten-mien hoặc https://ten-mien/. Thêm email service account làm người dùng (quyền Đọc) của property này.')
-                    ->regex(Site::GSC_PROPERTY_PATTERN),
-                TextInput::make('settings.mautic_campaign_id')->label('Mautic campaign ID')->integer()->minValue(1),
-                TextInput::make('settings.industry_tag')->label('Mã ngành (tag Mautic nganh-…)')->placeholder('van-phong-pham')
-                    ->regex(Site::INDUSTRY_TAG_PATTERN),
-            ]),
+            ...SiteSettingsSchema::sections(canEditIntegrations: true),
         ]);
     }
 }

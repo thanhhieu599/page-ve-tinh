@@ -15,6 +15,10 @@ use Filament\Tables\Table;
 
 class LeadResource extends Resource
 {
+    protected static string|\UnitEnum|null $navigationGroup = 'Sản phẩm & bán hàng';
+
+    protected static ?int $navigationSort = 2;
+
     protected static ?string $model = Lead::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedInboxArrowDown;
@@ -22,8 +26,6 @@ class LeadResource extends Resource
     protected static ?string $modelLabel = 'lead';
 
     protected static ?string $pluralModelLabel = 'Lead (yêu cầu báo giá)';
-
-    protected static ?int $navigationSort = -1;
 
     public static function form(Schema $schema): Schema
     {

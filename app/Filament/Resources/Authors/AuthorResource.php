@@ -17,6 +17,10 @@ use Filament\Tables\Table;
 
 class AuthorResource extends Resource
 {
+    protected static string|\UnitEnum|null $navigationGroup = 'Nội dung';
+
+    protected static ?int $navigationSort = 4;
+
     protected static ?string $model = Author::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserCircle;

@@ -16,6 +16,10 @@ use Filament\Tables\Table;
 /** Ba trang bắt buộc của site: chỉ sửa và bật hiển thị, không thêm/xoá (tạo sẵn khi tạo site). */
 class RequiredPageResource extends Resource
 {
+    protected static string|\UnitEnum|null $navigationGroup = 'Nội dung';
+
+    protected static ?int $navigationSort = 6;
+
     protected static ?string $model = RequiredPage::class;
 
     protected static ?string $slug = 'required-pages';

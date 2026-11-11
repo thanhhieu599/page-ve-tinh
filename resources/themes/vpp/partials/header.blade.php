@@ -6,7 +6,7 @@
 @php([$phone, $tel] = [$company->value('phone'), $company->telHref()])
 @php($categoryTree = \App\Support\SiteMenu::categoryTree())
 @php($pages = \App\Support\SiteMenu::pages($site))
-<div class="bg-navy text-xs text-white/90">
+<div class="bg-accent text-xs text-white/90">
     <div class="container-site flex items-center justify-between gap-4 py-1.5">
         <p>Website chuyên đề thuộc {{ $company->value('name') }} · {{ $company->host() }}</p>
         @if ($phone)

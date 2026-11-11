@@ -29,6 +29,10 @@ class Site extends Model
 
     public const LOGO_DIRECTORY = 'site-logos';
 
+    public const BANNER_DIRECTORY = 'site-banners';
+
+    public const MAX_BANNERS = 5;
+
     /** Chiều cao hiển thị logo ở header (px). */
     public const LOGO_HEIGHT = 48;
 
@@ -82,6 +86,32 @@ class Site extends Model
         $color = $this->settings['primary_color'] ?? null;
 
         return is_string($color) && preg_match(self::COLOR_PATTERN, $color) ? strtolower($color) : null;
+    }
+
+    /**
+     * Banner trang chủ đã tải lên (theo thứ tự), chỉ nhận ảnh trong thư mục banner và link trong site.
+     *
+     * @return list<array{url: string, alt: string, href: ?string, width: ?int, height: ?int}>
+     */
+    public function banners(): array
+    {
+        $banners = [];
+        foreach (array_values((array) ($this->settings['banners'] ?? [])) as $banner) {
+            $image = is_array($banner) ? ($banner['image'] ?? null) : null;
+            if (! is_string($image) || ! str_starts_with($image, self::BANNER_DIRECTORY.'/')) {
+                continue;
+            }
+            $href = is_string($banner['url'] ?? null) && preg_match('#^/[^/]#', $banner['url']) ? $banner['url'] : null;
+            $banners[] = [
+                'url' => Storage::disk('public')->url($image),
+                'alt' => is_string($banner['alt'] ?? null) ? $banner['alt'] : $this->name,
+                'href' => $href,
+                'width' => is_int($banner['width'] ?? null) ? $banner['width'] : null,
+                'height' => is_int($banner['height'] ?? null) ? $banner['height'] : null,
+            ];
+        }
+
+        return array_slice($banners, 0, self::MAX_BANNERS);
     }
 
     /** Câu giới thiệu trang chủ (cũng là meta description trang chủ); trống thì theme dùng câu mặc định. */
@@ -174,6 +204,20 @@ class Site extends Model
             $previous = $site->getOriginal('settings')['logo'] ?? null;
 
             // Tính lại khi đổi logo, hoặc khi form quản trị lưu lại settings không kèm kích thước.
+            // Banner: ghi kích thước thật cho từng ảnh (width/height trên <img>, tránh xô lệch trang).
+            if (isset($settings['banners']) && is_array($settings['banners'])) {
+                $settings['banners'] = array_values(array_map(function ($banner) {
+                    $image = is_array($banner) ? ($banner['image'] ?? null) : null;
+                    $disk = Storage::disk('public');
+                    if (is_string($image) && $disk->exists($image) && ($size = @getimagesize($disk->path($image))) !== false) {
+                        [$banner['width'], $banner['height']] = [$size[0], $size[1]];
+                    }
+
+                    return $banner;
+                }, $settings['banners']));
+                $site->settings = $settings;
+            }
+
             if ($logo !== $previous || ! isset($settings['logo_width'], $settings['logo_height'])) {
                 unset($settings['logo_width'], $settings['logo_height']);
                 $disk = Storage::disk('public');
@@ -185,9 +229,19 @@ class Site extends Model
         });
 
         static::saved(function (Site $site): void {
-            $previous = $site->getOriginal('settings')['logo'] ?? null;
-            if ($site->wasChanged('settings') && is_string($previous) && $previous !== ($site->settings['logo'] ?? null)) {
-                Storage::disk('public')->delete($previous);
+            if (! $site->wasChanged('settings')) {
+                return;
+            }
+            $before = $site->getOriginal('settings') ?? [];
+            $after = $site->settings ?? [];
+
+            // Xoá file logo/banner không còn dùng.
+            $images = fn (array $settings) => array_filter([
+                $settings['logo'] ?? null,
+                ...array_map(fn ($banner) => is_array($banner) ? ($banner['image'] ?? null) : null, (array) ($settings['banners'] ?? [])),
+            ], 'is_string');
+            foreach (array_diff($images($before), $images($after)) as $unused) {
+                Storage::disk('public')->delete($unused);
             }
         });
 

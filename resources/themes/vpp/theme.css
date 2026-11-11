@@ -1,5 +1,5 @@
 /*
- * Theme VPP – tông màu theo trangthietbi.vn: đỏ (thương hiệu), xanh đậm, đen, trắng.
+ * Theme VPP – tông màu: đỏ (thương hiệu), xanh lá #1A7065 (màu phối), đen, trắng.
  * Màu đỏ đổi được theo site (trang quản trị → Site vệ tinh → Màu thương hiệu): layout ghi đè --color-brand.
  * Không dùng web font: chữ hệ thống, trang hiện ngay (tốt cho LCP/CLS).
  */
@@ -11,8 +11,8 @@
     --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
     --color-brand: #c1272d;
     --color-brand-dark: #9b1d22;
-    --color-navy: #0f2a44;
-    --color-navy-light: #1d4370;
+    --color-accent: #1a7065;
+    --color-accent-light: #145a51;
     --color-ink: #111827;
     --color-muted: #4b5563;
     --color-line: #e5e7eb;
@@ -22,7 +22,7 @@
 @layer base {
     html { -webkit-text-size-adjust: 100%; }
     body { @apply bg-white font-sans text-ink antialiased; }
-    a { @apply text-navy-light underline-offset-2 hover:text-brand; }
+    a { @apply text-accent-light underline-offset-2 hover:text-brand; }
     h1 { @apply text-2xl font-bold leading-tight text-ink md:text-3xl; }
     h2 { @apply text-xl font-bold leading-snug text-ink; }
     h3 { @apply text-lg font-semibold text-ink; }
@@ -34,7 +34,7 @@
     .container-site { @apply mx-auto w-full max-w-6xl px-4; }
 
     /* Nút */
-    .button { @apply inline-flex items-center justify-center gap-2 rounded-md border border-navy px-4 py-2.5 font-semibold text-navy no-underline transition hover:bg-navy hover:text-white; }
+    .button { @apply inline-flex items-center justify-center gap-2 rounded-md border border-accent px-4 py-2.5 font-semibold text-accent no-underline transition hover:bg-accent hover:text-white; }
     .button-primary { @apply border-brand bg-brand text-white hover:border-brand-dark hover:bg-brand-dark hover:text-white; }
 
     /* Breadcrumb */
@@ -92,7 +92,7 @@
     .quote-form { @apply grid max-w-2xl gap-4; }
     .quote-form label { @apply font-semibold; }
     .quote-form input[type='text'], .quote-form input[type='email'], .quote-form input[type='tel'], .quote-form textarea {
-        @apply mt-1 block w-full rounded-md border border-gray-300 px-3 py-2.5 text-base focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20;
+        @apply mt-1 block w-full rounded-md border border-gray-300 px-3 py-2.5 text-base focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20;
     }
     .quote-form input[type='checkbox'] { @apply mr-2 h-4 w-4 align-middle accent-brand; }
     .quote-form label:has(input[type='checkbox']) { @apply text-sm font-normal text-muted; }
@@ -123,8 +123,24 @@
     .main-menu li + li { @apply border-l border-white/25; }
 
     /* Banner trang chủ */
-    .home-banner { @apply relative overflow-hidden rounded-md bg-brand p-8 text-white md:p-12; background-image: linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-dark) 60%, var(--color-navy) 140%); }
+    .home-banner { @apply relative overflow-hidden rounded-md bg-brand p-8 text-white md:p-12; background-image: linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-dark) 60%, var(--color-accent) 140%); }
     .home-banner::after { content: ''; @apply pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full border-[40px] border-white/10; }
+
+    /* Banner tải lên: trượt ngang bằng scroll-snap (không cần JavaScript). */
+    .banner-slider-wrap { @apply relative overflow-hidden rounded-md bg-surface; }
+    .banner-slider { @apply flex snap-x snap-mandatory overflow-x-auto scroll-smooth; scrollbar-width: none; }
+    .banner-slider::-webkit-scrollbar { display: none; }
+    .banner-slide { @apply w-full shrink-0 snap-start; }
+    .banner-slide img { @apply block h-auto w-full object-cover; aspect-ratio: 8 / 3; }
+    .banner-dots { @apply absolute bottom-3 left-0 right-0 flex justify-center gap-2; }
+    .banner-dots a { @apply block h-2.5 w-2.5 rounded-full border border-white bg-white/50 hover:bg-white; }
+
+    /* Dải cam kết dưới banner */
+    .usp-bar { @apply mt-6 grid grid-cols-2 gap-3 rounded-md border border-line bg-white p-4 md:grid-cols-4; }
+    .usp-bar li { @apply flex items-center gap-3; }
+    .usp-icon { @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-lg font-bold text-white; }
+    .usp-bar strong { @apply block text-sm text-ink; }
+    .usp-bar small { @apply block text-xs text-muted; }
 
     /* Nhãn khối (Sản phẩm nổi bật, tên danh mục…) */
     .section-label { @apply mb-4 inline-block rounded-sm bg-brand px-4 py-2 text-sm font-bold uppercase tracking-wide text-white; }

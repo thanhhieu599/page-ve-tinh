@@ -16,6 +16,10 @@ use Filament\Tables\Table;
 
 class KeywordMapResource extends Resource
 {
+    protected static string|\UnitEnum|null $navigationGroup = 'SEO & báo cáo';
+
+    protected static ?int $navigationSort = 2;
+
     protected static ?string $model = KeywordMap::class;
 
     protected static ?string $slug = 'keyword-maps';
