@@ -79,7 +79,7 @@ class QuoteRequestController extends Controller
         ]);
         $lead->site_id = $site->id;
         $lead->is_verified = $isVerified;
-        $lead->consent_text = Consent::TEXT;
+        $lead->consent_text = Consent::text();
         $lead->consent_at = now();
         $lead->ip = $request->ip();
         $lead->save();

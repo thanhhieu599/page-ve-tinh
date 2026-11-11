@@ -156,6 +156,32 @@
     .product-card-link:hover .product-card-name { @apply underline; }
     .product-card-price { @apply mt-auto pt-2 font-bold text-ink; }
 
+    /* Trang tĩnh: liên hệ 2 cột (thông tin | form) trên máy tính */
+    .page-layout { @apply grid gap-8 lg:grid-cols-[1fr_28rem] lg:items-start; }
+    main > .page-layout > article { @apply max-w-none; }
+    .page-aside { @apply mt-0 rounded-md border border-line bg-white p-5 shadow-sm; }
+
+    /* Trang giới thiệu */
+    .about-hero { @apply grid items-center gap-8; }
+    .about-hero-image { @apply w-full rounded-md object-cover shadow; }
+    main > article.about-page { @apply max-w-none; }
+    .about-stats { @apply mt-10 grid grid-cols-2 gap-4 rounded-md bg-accent p-6 text-center text-white md:grid-cols-4; }
+    .about-stats strong { @apply block text-3xl font-extrabold md:text-4xl; }
+    .about-stats span { @apply mt-1 block text-sm text-white/85; }
+    .about-timeline { @apply relative ml-3 border-l-2 border-accent/30 pl-6; }
+    .about-timeline li { @apply relative mt-6 flex flex-col gap-1 md:flex-row md:gap-6; }
+    .about-timeline li::before { content: ''; @apply absolute -left-[33px] top-1.5 h-4 w-4 rounded-full border-4 border-white bg-accent shadow; }
+    .about-timeline-year { @apply w-20 shrink-0 text-xl font-extrabold text-brand; }
+    .about-timeline h3 { @apply text-base; }
+    .about-timeline p { @apply mt-1 text-sm text-muted; }
+    .about-values { @apply grid gap-4 sm:grid-cols-2 lg:grid-cols-3; }
+    .about-values li { @apply rounded-md border-t-4 border-accent bg-white p-5 shadow-sm; }
+    .about-values p { @apply mt-2 text-sm text-muted; }
+    .about-gallery { @apply grid grid-cols-2 gap-3 md:grid-cols-4; }
+    .about-gallery img { @apply aspect-[4/3] w-full rounded-md object-cover; }
+    .about-clients { @apply flex flex-wrap gap-3; }
+    .about-clients li { @apply rounded-full border border-line bg-white px-4 py-2 text-sm font-semibold text-ink shadow-sm; }
+
     /* Footer 4 cột */
     .site-footer { @apply mt-16 border-t-4 border-accent bg-surface text-sm text-muted; }
     .footer-columns { @apply mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4; }

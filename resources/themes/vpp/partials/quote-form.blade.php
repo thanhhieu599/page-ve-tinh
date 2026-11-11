@@ -33,7 +33,7 @@
     @endif
 
     <p><label><input type="checkbox" name="consent" value="1" required>
-        {{ \App\Support\Consent::TEXT }} <a href="{{ \App\Support\Consent::POLICY_PATH }}">Xem chính sách</a></label></p>
+        {{ \App\Support\Consent::text() }} <a href="{{ \App\Support\Consent::POLICY_PATH }}">Xem chính sách</a></label></p>
 
     <p><button type="submit">Gửi yêu cầu báo giá</button></p>
 </form>

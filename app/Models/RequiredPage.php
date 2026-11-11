@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 use Mews\Purifier\Facades\Purifier;
 
 /**
@@ -22,7 +23,9 @@ class RequiredPage extends Model
     // Giữ tên bảng ban đầu (đã có trong migration).
     protected $table = 'pages';
 
-    protected $fillable = ['title', 'content', 'meta_description', 'is_published'];
+    protected $fillable = ['title', 'content', 'extras', 'meta_description', 'is_published'];
+
+    public const IMAGE_DIRECTORY = 'page-images';
 
     /** @return array<string, string> */
     protected function casts(): array
@@ -30,6 +33,7 @@ class RequiredPage extends Model
         return [
             'kind' => PageKind::class,
             'is_published' => 'boolean',
+            'extras' => 'array',
         ];
     }
 
@@ -61,6 +65,56 @@ class RequiredPage extends Model
             $page->site_id = $site->id;
             $page->save();
         }
+    }
+
+    /**
+     * Danh sách trong khối có cấu trúc (bỏ dòng trống). Ví dụ list('milestones', ['year', 'title']).
+     *
+     * @param  list<string>  $requiredKeys
+     * @return list<array<string, string>>
+     */
+    public function extraList(string $key, array $requiredKeys): array
+    {
+        $rows = [];
+        foreach (array_values((array) ($this->extras[$key] ?? [])) as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $row = array_map(fn ($value) => trim((string) $value), $row);
+            if (array_filter($requiredKeys, fn (string $k) => ($row[$k] ?? '') === '') === []) {
+                $rows[] = $row;
+            }
+        }
+
+        return $rows;
+    }
+
+    /** @return list<string> giá trị chữ (vd. khách hàng tiêu biểu) */
+    public function extraTags(string $key): array
+    {
+        return array_values(array_filter(array_map(fn ($v) => trim((string) $v), (array) ($this->extras[$key] ?? []))));
+    }
+
+    /**
+     * Ảnh đã tải lên của trang, kèm kích thước thật (cho width/height, tránh xô lệch).
+     *
+     * @return list<array{url: string, width: ?int, height: ?int}>
+     */
+    public function extraImages(string $key): array
+    {
+        $paths = $this->extras[$key] ?? [];
+        $paths = is_string($paths) ? [$paths] : array_values((array) $paths);
+        $disk = Storage::disk('public');
+        $images = [];
+        foreach ($paths as $path) {
+            if (! is_string($path) || ! str_starts_with($path, self::IMAGE_DIRECTORY.'/') || ! $disk->exists($path)) {
+                continue;
+            }
+            $size = @getimagesize($disk->path($path));
+            $images[] = ['url' => $disk->url($path), 'width' => $size[0] ?? null, 'height' => $size[1] ?? null];
+        }
+
+        return $images;
     }
 
     public function path(): string

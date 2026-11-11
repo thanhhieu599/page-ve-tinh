@@ -58,7 +58,7 @@ class QuoteRequestTest extends TestCase
 
         // Khách vào từ quảng cáo, đọc bài, rồi mở form.
         $this->get('https://vpptrangthietbi.com.vn/kien-thuc/chon-giay-in?utm_source=google&utm_medium=cpc&utm_campaign=giay-a4-fdi')->assertOk();
-        $this->get(self::FORM)->assertOk()->assertSee(Consent::TEXT)->assertSee('name="consent"', escape: false)
+        $this->get(self::FORM)->assertOk()->assertSee(Consent::text())->assertSee('name="consent"', escape: false)
             ->assertDontSee('checked', escape: false);
 
         $this->post(self::FORM, $this->validInput(), ['REMOTE_ADDR' => '203.0.113.7'])
@@ -172,7 +172,7 @@ class QuoteRequestTest extends TestCase
         $this->actingAs($editor)
             ->get("https://admin.trangthietbi.test/admin/vpptrangthietbi.com.vn/leads/{$lead->id}/edit")
             ->assertSee('Giấy Double A A4 80gsm')
-            ->assertSee(Consent::TEXT);
+            ->assertSee(Consent::text());
     }
 
     public function test_every_post_ends_with_a_quote_form(): void
