@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Support\InitialsAvatarProvider;
+use App\Http\Middleware\AddSiteNavigationToCrm;
 use App\Models\Site;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -55,9 +56,10 @@ class CrmPanelProvider extends PanelProvider
                 NavigationGroup::make('Cấu hình'),
             ])
             ->navigationItems([
-                NavigationItem::make('Quản trị nội dung các site')
+                NavigationItem::make('Tất cả site (trang quản trị)')
                     ->group('Nội dung website')
-                    ->icon(Heroicon::OutlinedGlobeAlt)
+                    ->icon(Heroicon::OutlinedSquares2x2)
+                    ->sort(99)
                     ->url(fn (): string => '/admin')
                     ->visible(fn (): bool => (bool) auth()->user()?->canAccessAdmin()),
                 NavigationItem::make('Người dùng và phân quyền')
@@ -83,6 +85,8 @@ class CrmPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+                // Mỗi site vệ tinh một mục menu dẫn tới phần quản trị nội dung của site đó.
+                AddSiteNavigationToCrm::class,
             ]);
     }
 }

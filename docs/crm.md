@@ -25,7 +25,7 @@ Tạo tài khoản và gán vai trò: Admin → `/admin` → **Hệ thống → 
   - *Việc cần làm*: gọi lại, gửi báo giá, theo dõi, chăm sóc, nhắc tái đặt hàng, thu nợ; tab Hôm nay & quá hạn.
   - *Chăm sóc & tái đặt hàng*: khách đến kỳ mua lại; "Báo giá lại theo đơn gần nhất" một bấm.
 - **Sản phẩm**: sản phẩm của mọi site (gán thương hiệu, đơn vị tính); thương hiệu. Nội dung sản phẩm vẫn sửa ở `/admin` từng site.
-- **Nội dung website**: link sang `/admin` (banner, bài viết, trang tĩnh theo site).
+- **Nội dung website**: mỗi site đang hoạt động một mục (vd. *Văn phòng phẩm D&T*): Tổng quan site, Bài viết, Sản phẩm, Danh mục, Banner & cài đặt site, Giới thiệu/chính sách, Xem website; số bên cạnh = lead mới chưa giao của site. Site mới tự hiện. Chỉ người có quyền quản trị nội dung site đó thấy.
 - **Phân tích**: Báo cáo (theo site, theo nhân viên, phễu báo giá, lý do thua); Nhật ký thông báo; Xuất Excel MISA (chứng từ bán hàng, danh mục khách hàng).
 - **Cấu hình**: Cài đặt CRM (VAT, hiệu lực báo giá, điều kiện giao/thanh toán, tài khoản ngân hàng, hạn thanh toán, chu kỳ tái đặt hàng); Người dùng.
 

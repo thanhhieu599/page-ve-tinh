@@ -209,6 +209,29 @@ class CrmSalesTest extends TestCase
         $this->assertSame([1, 1_100_000], [$requote->items()->count(), $requote->total]);
     }
 
+    public function test_each_site_is_linked_into_the_crm_menu_for_admins(): void
+    {
+        $vpp = Site::query()->where('domain', 'vpptrangthietbi.com.vn')->firstOrFail();
+        $vpp->update(['name' => 'Văn phòng phẩm D&T']);
+        Site::factory()->create(['domain' => 'site-tat.vn', 'name' => 'Site đang tắt', 'is_active' => false]);
+
+        $html = (string) $this->actingAs(User::factory()->admin()->create())->get(self::CRM)->assertOk()->getContent();
+        $this->assertStringContainsString('Văn phòng phẩm D&amp;T', $html);
+        foreach (['posts', 'products', 'categories', 'cai-dat-site', 'required-pages'] as $area) {
+            $this->assertStringContainsString('href="https://admin.trangthietbi.test/admin/vpptrangthietbi.com.vn/'.$area.'"', $html, "Thiếu link {$area}");
+        }
+        $this->assertStringContainsString('href="https://vpptrangthietbi.com.vn"', $html, 'Có link xem website.');
+        $this->assertStringNotContainsString('Site đang tắt', $html);
+
+        // Gọi nhiều request trong cùng ứng dụng không nhân đôi menu.
+        $again = (string) $this->get(self::CRM)->getContent();
+        $this->assertSame(1, substr_count($again, 'admin/vpptrangthietbi.com.vn/posts"'));
+
+        // Nhân viên kinh doanh không có quyền quản trị nội dung: không thấy menu site.
+        $this->actingAs(User::factory()->sales()->create())->get(self::CRM)->assertOk()
+            ->assertDontSee('admin/vpptrangthietbi.com.vn/posts', escape: false);
+    }
+
     public function test_every_crm_screen_opens(): void
     {
         $this->actingAs($admin = User::factory()->admin()->create());
