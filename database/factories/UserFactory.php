@@ -60,6 +60,16 @@ class UserFactory extends Factory
         return $this->withRole(Role::Writer);
     }
 
+    public function salesManager(): static
+    {
+        return $this->withRole(Role::SalesManager);
+    }
+
+    public function sales(): static
+    {
+        return $this->withRole(Role::Sales);
+    }
+
     public function expertReviewer(): static
     {
         return $this->afterCreating(fn (User $user) => $user->givePermissionTo(Permission::ApproveExpertContent->value));

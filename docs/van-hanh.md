@@ -129,7 +129,7 @@ Cron (`crontab -u www-data -e`):
 ```
 
 Lịch đã có trong code (giờ Việt Nam): kéo Search Console 07:10; dọn sao lưu 01:40;
-sao lưu 02:10; kiểm tra sao lưu 08:20; mỗi phút xoá cache trang nếu có bài hẹn giờ vừa tới giờ đăng. Xem bằng `php artisan schedule:list`.
+sao lưu 02:10; kiểm tra sao lưu 08:20; mỗi phút xoá cache trang nếu có bài hẹn giờ vừa tới giờ đăng; CRM nhắc tái đặt hàng 07:40 (xem `docs/crm.md`). Xem bằng `php artisan schedule:list`.
 
 ## 6. Deploy
 

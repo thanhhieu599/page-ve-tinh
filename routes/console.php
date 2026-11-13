@@ -5,6 +5,7 @@ use App\Jobs\PullSearchConsoleData;
 use App\Models\RequiredPage;
 use App\Models\Site;
 use App\Models\User;
+use App\Support\Crm\ReorderReminders;
 use App\Support\PageCache\ClearPageCache;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -84,3 +85,9 @@ Schedule::command('backup:monitor')->dailyAt('08:20')->timezone(config('app.disp
 
 // Bài hẹn giờ vừa tới giờ đăng: xoá cache toàn trang để bài hiện đúng giờ.
 Schedule::call(fn () => ClearPageCache::clearIfPostsWentLive())->everyMinute()->name('page-cache:scheduled-posts');
+
+// CRM: nhắc tái đặt hàng (khách đến kỳ mua lại trong 7 ngày) – 07:40 giờ Việt Nam.
+Artisan::command('crm:nhac-tai-dat-hang', function () {
+    $this->info('Đã tạo '.ReorderReminders::run().' việc nhắc tái đặt hàng.');
+})->purpose('Tạo việc nhắc tái đặt hàng cho khách sắp đến kỳ mua lại');
+Schedule::command('crm:nhac-tai-dat-hang')->dailyAt('07:40')->timezone('Asia/Ho_Chi_Minh');

@@ -10,12 +10,12 @@ class ProductPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->canAccessAdmin();
+        return $user->canAccessAdmin() || $user->canAccessCrm();
     }
 
     public function view(User $user, Product $product): bool
     {
-        return $user->canAccessAdmin();
+        return $user->canAccessAdmin() || $user->canAccessCrm();
     }
 
     public function create(User $user): bool
@@ -23,9 +23,10 @@ class ProductPolicy
         return $user->canAccessAdmin();
     }
 
+    /** CRM: trưởng phòng KD gán thương hiệu/ĐVT; nội dung sản phẩm sửa ở quản trị site. */
     public function update(User $user, Product $product): bool
     {
-        return $user->canAccessAdmin();
+        return $user->canAccessAdmin() || $user->isSalesManager();
     }
 
     public function delete(User $user, Product $product): bool

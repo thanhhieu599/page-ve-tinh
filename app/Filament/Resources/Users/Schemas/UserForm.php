@@ -36,7 +36,7 @@ class UserForm
                 Section::make('Phân quyền')->schema([
                     Select::make('role')->label('Vai trò')->options($roleOptions)->required()
                         ->dehydrated(false)
-                        ->helperText('Admin thấy mọi site. Biên tập và Người viết chỉ thấy các site được gán.'),
+                        ->helperText('Admin thấy mọi site và CRM. Biên tập, Người viết: quản trị nội dung các site được gán. Trưởng phòng/Nhân viên kinh doanh: chỉ vào CRM (/crm); nhân viên chỉ thấy khách được giao.'),
                     Toggle::make('expert_reviewer')
                         ->label('Được duyệt chuyên môn')
                         ->helperText('Cần để đăng bài trên site yêu cầu duyệt chuyên môn (PPE: tiêu chuẩn, mức bảo vệ). Admin luôn có quyền này.')

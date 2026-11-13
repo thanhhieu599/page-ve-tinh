@@ -61,6 +61,12 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make('Hệ thống')->collapsed(),
             ])
             ->navigationItems([
+                NavigationItem::make('CRM bán hàng (mọi site)')
+                    ->group('Sản phẩm & bán hàng')
+                    ->icon(Heroicon::OutlinedBriefcase)
+                    ->sort(99)
+                    ->url(fn (): string => '/crm')
+                    ->visible(fn (): bool => (bool) auth()->user()?->canAccessCrm()),
                 NavigationItem::make('Cài đặt site')
                     ->group('Cài đặt site')
                     ->icon(Heroicon::OutlinedCog6Tooth)

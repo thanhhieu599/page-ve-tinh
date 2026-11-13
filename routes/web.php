@@ -4,6 +4,7 @@ use App\Enums\PageKind;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\Crm\QuotePrintController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProductController;
@@ -43,3 +44,8 @@ Route::middleware([IdentifySite::class, CaptureAttribution::class, CacheResponse
 
 // Mọi domain (kể cả trang quản trị) đều có robots.txt; site lấy từ RedirectToCanonicalUrl.
 Route::get('/robots.txt', RobotsController::class)->name('robots');
+
+// CRM: báo giá dạng in (A4 → Lưu PDF), trên tên miền quản trị.
+Route::domain((string) config('sites.admin_domain'))->middleware(['web'])->group(function () {
+    Route::get('/crm/bao-gia/{quote}/in', QuotePrintController::class)->name('crm.quotes.print');
+});

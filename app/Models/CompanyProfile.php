@@ -27,12 +27,15 @@ class CompanyProfile extends Model
 
     public const BADGE_DIRECTORY = 'company';
 
-    protected $fillable = [...self::FIELDS, ...self::LIST_FIELDS];
+    /** Cài đặt báo giá/đơn hàng của CRM (CRM → Cài đặt). */
+    public const CRM_FIELDS = ['quote_vat_rate', 'quote_valid_days', 'quote_delivery_terms', 'quote_payment_terms', 'bank_account', 'default_reorder_cycle_days', 'payment_due_days'];
+
+    protected $fillable = [...self::FIELDS, ...self::LIST_FIELDS, ...self::CRM_FIELDS];
 
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['addresses' => 'array', 'contacts' => 'array', 'socials' => 'array', 'payment_methods' => 'array'];
+        return ['addresses' => 'array', 'contacts' => 'array', 'socials' => 'array', 'payment_methods' => 'array', 'quote_vat_rate' => 'decimal:2', 'quote_valid_days' => 'integer', 'default_reorder_cycle_days' => 'integer', 'payment_due_days' => 'integer'];
     }
 
     /** Tên trong container: đọc một lần mỗi request (scoped), không giữ sang request sau. */

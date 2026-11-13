@@ -10,6 +10,7 @@ use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -67,15 +68,33 @@ class User extends Authenticatable implements FilamentUser, HasTenants
         $this->syncPermissions($expertReviewer ? [Permission::ApproveExpertContent->value] : []);
     }
 
-    /** Chỉ người có một trong ba vai trò mới vào được trang quản trị. */
+    /** Trang quản trị nội dung các site: Admin, Biên tập, Người viết. */
     public function canAccessAdmin(): bool
     {
-        return $this->hasAnyRole(Role::values());
+        return $this->hasAnyRole(Role::contentValues());
+    }
+
+    /** CRM chung: Admin, Trưởng phòng kinh doanh, Nhân viên kinh doanh. */
+    public function canAccessCrm(): bool
+    {
+        return $this->hasAnyRole(Role::crmValues());
+    }
+
+    /** Thấy mọi lead/khách/báo giá/đơn và phân lead (Admin, Trưởng phòng KD). */
+    public function isSalesManager(): bool
+    {
+        return $this->hasAnyRole([Role::Admin->value, Role::SalesManager->value]);
     }
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->canAccessAdmin();
+        return $panel->getId() === 'crm' ? $this->canAccessCrm() : $this->canAccessAdmin();
+    }
+
+    /** @return Builder<self> người nhận lead/việc trong CRM */
+    public static function salesPeople(): Builder
+    {
+        return static::query()->role(Role::crmValues())->orderBy('name');
     }
 
     /**

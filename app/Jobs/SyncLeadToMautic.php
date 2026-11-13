@@ -141,7 +141,8 @@ class SyncLeadToMautic implements ShouldBeUnique, ShouldQueue
 
         return array_values(array_filter([
             'rfq',
-            'site-'.$lead->site?->domain,
+            // Lead nhập tay trong CRM (điện thoại, Zalo, hội chợ) không có site: tag theo kênh.
+            $lead->site ? 'site-'.$lead->site->domain : 'crm-'.($lead->channel?->value ?? 'khac'),
             $industry !== null ? 'nganh-'.$industry : null,
             $lead->is_verified ? null : 'chua-xac-minh',
         ]));
@@ -150,7 +151,7 @@ class SyncLeadToMautic implements ShouldBeUnique, ShouldQueue
     private static function noteFor(Lead $lead): string
     {
         return implode("\n", array_filter([
-            'Yêu cầu báo giá từ '.$lead->site?->domain,
+            'Yêu cầu báo giá từ '.($lead->site?->domain ?? 'CRM ('.$lead->channel?->getLabel().')'),
             'Nhu cầu: '.$lead->need,
             $lead->product ? "Sản phẩm: {$lead->product->name} ({$lead->product->sku})" : null,
             $lead->page_url ? 'Trang gửi form: '.$lead->page_url : null,

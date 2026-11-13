@@ -16,6 +16,24 @@ enum Role: string
     /** Viết và gửi duyệt trên các site được gán, không tự đăng. */
     case Writer = 'writer';
 
+    /** CRM: trưởng phòng kinh doanh, thấy mọi khách hàng/lead, phân lead. */
+    case SalesManager = 'sales-manager';
+
+    /** CRM: nhân viên kinh doanh, chỉ thấy lead/khách/báo giá/đơn được giao. */
+    case Sales = 'sales';
+
+    /** Vai trò vào trang quản trị nội dung các site. @return list<string> */
+    public static function contentValues(): array
+    {
+        return [self::Admin->value, self::Editor->value, self::Writer->value];
+    }
+
+    /** Vai trò vào CRM. @return list<string> */
+    public static function crmValues(): array
+    {
+        return [self::Admin->value, self::SalesManager->value, self::Sales->value];
+    }
+
     /** @return list<string> */
     public static function values(): array
     {
@@ -28,6 +46,8 @@ enum Role: string
             self::Admin => 'Admin',
             self::Editor => 'Biên tập',
             self::Writer => 'Người viết',
+            self::SalesManager => 'Trưởng phòng kinh doanh',
+            self::Sales => 'Nhân viên kinh doanh',
         };
     }
 }
